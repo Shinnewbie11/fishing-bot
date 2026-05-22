@@ -6,9 +6,7 @@
 <title>🎣 Câu Cá Online</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+<!-- Firebase SDK duoc tai DONG ben duoi (co CDN du phong) -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -127,14 +125,25 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 #loadbar{width:240px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
 #loadfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px;width:0;transition:width .4s ease}
 #loadtxt{font-size:11px;color:var(--sub);font-weight:700}
-#autherr{position:fixed;inset:0;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:200}
-#autherr h2{font-family:'Press Start 2P',monospace;font-size:11px;color:#e74c3c}
-#autherr p{font-size:12px;color:var(--sub);text-align:center;max-width:280px;line-height:1.6}
+#autherr{position:fixed;inset:0;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:200;padding:24px}
+#autherr h2{font-family:'Press Start 2P',monospace;font-size:11px;color:#e74c3c;text-align:center}
+#autherr .ae-reason{font-size:14px;font-weight:900;color:var(--gold);text-align:center}
+#autherr p{font-size:12px;color:var(--sub);text-align:center;max-width:340px;line-height:1.6}
+#ae-detail{font-family:monospace;font-size:10px;color:#7a90a8;background:rgba(15,32,53,.7);
+  border:1px solid var(--border);border-radius:8px;padding:10px 12px;max-width:360px;
+  word-break:break-all;line-height:1.5;text-align:left;white-space:pre-wrap}
+#autherr .ae-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.ae-btn{padding:11px 18px;border:none;border-radius:var(--rsm);font-weight:900;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif}
+.ae-btn.demo{background:linear-gradient(135deg,#1a8f4a,#00e676);color:#000}
+.ae-btn.retry{background:rgba(0,212,255,.18);border:1px solid var(--accent);color:var(--accent)}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(60px);
   background:rgba(10,28,50,.96);border:1px solid var(--accent);border-radius:18px;
   padding:9px 18px;font-size:12px;font-weight:800;color:var(--text);
   transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:200;white-space:nowrap;pointer-events:none}
 #toast.show{transform:translateX(-50%) translateY(0)}
+#demo-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(46,204,113,.2);
+  border:1px solid var(--online);border-radius:14px;padding:2px 10px;font-size:9px;font-weight:800;
+  color:var(--online);z-index:7;display:none}
 @media(max-width:520px){#hdr h1{font-size:8px}#cd{font-size:13px}.mb{font-size:10px;padding:5px 10px}#cb{font-size:7px}#chatbox{width:155px}}
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
@@ -148,8 +157,14 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 </div>
 <div id="autherr">
   <div style="font-size:56px">🔒</div>
-  <h2>PHIÊN HẾT HẠN</h2>
-  <p>Link đã hết hạn.<br>Dùng lệnh <strong>tcauonline</strong> trong Discord để lấy link mới!</p>
+  <h2>KHÔNG VÀO ĐƯỢC</h2>
+  <div class="ae-reason" id="ae-reason">Phiên hết hạn</div>
+  <p id="ae-msg">Dùng lệnh <strong>tcauonline</strong> trong Discord để lấy link mới!</p>
+  <div id="ae-detail"></div>
+  <div class="ae-btns">
+    <button class="ae-btn retry" onclick="location.reload()">🔄 Thử lại</button>
+    <button class="ae-btn demo" onclick="startDemo()">🎮 Chơi thử (Demo)</button>
+  </div>
 </div>
 <div id="game">
   <div id="hdr">
@@ -170,6 +185,7 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
     <div id="vig"></div>
     <div id="xhair"></div>
     <div id="st"></div>
+    <div id="demo-badge">🎮 CHẾ ĐỘ DEMO</div>
     <button id="snd" onclick="toggleSound()">🔊</button>
     <div id="bf"></div>
     <div id="rb">
@@ -202,11 +218,6 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 <div id="toast"></div>
 
 <script>
-// ╔══════════════════════════════════════════════════════╗
-// ║        FIREBASE CONFIG — ĐIỀN VÀO ĐÂY               ║
-// ║  Lấy từ: Firebase Console → Project Settings        ║
-// ║           → General → Your apps → Firebase SDK      ║
-// ╚══════════════════════════════════════════════════════╝
 const firebaseConfig = {
   apiKey:            "AIzaSyA9Iv98Bcurd6bqXo79BbgEz58a3xrPH8o",
   authDomain:        "fishing-bot-e8d42.firebaseapp.com",
@@ -216,15 +227,10 @@ const firebaseConfig = {
   messagingSenderId: "404799504673",
   appId:             "1:404799504673:web:6128427eae7b29729cbe60"
 };
-// Secret key — phải GIỐNG HỆT trong fishing.js
 const GAME_SECRET = 'datBatKyChuan123';
-// ╔══════════════════════════════════════════════════════╗
 
-// Init Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+let db = null;   // sẽ được gán trong bootFirebase()
 
-// ── Game data ─────────────────────────────────────────────
 const FISH_LIST = [
   { id:'moi',  name:'Cá Mồi',       emoji:'🐟', value:10_000,      rate:35,   rar:'Thường',       rc:'r1', color:0x74b9ff },
   { id:'tram', name:'Cá Trắm',       emoji:'🐠', value:100_000,     rate:20,   rar:'Không Thường', rc:'r2', color:0xa29bfe },
@@ -239,62 +245,182 @@ let userData   = { userId:'', username:'', avatar:'', coins:0, rodUses:0, invent
 let gstate     = 'idle', curMap = 0, activeTab = 'bag';
 let wt, bt, resultFish = null, waitStart = 0, waitDur = 5000;
 let yaw = 0, pitch = 0;
+let DEMO = false;          // <— chế độ demo (không ghi Firebase)
 
-// ── Firebase Auth via Token ───────────────────────────────
+// ── Firebase Auth — HIỂN THỊ ĐÚNG LÝ DO LỖI ──────────────
 const URL_TOKEN = new URLSearchParams(window.location.search).get('t');
+
+async function readSessionWithRetry(token, maxRetry = 5) {
+  let lastErr = null;
+  for (let i = 0; i < maxRetry; i++) {
+    try {
+      console.log(`[Auth] Đọc session lần ${i+1}/${maxRetry}...`);
+      const snap = await db.ref(`sessions/${token}`).once('value');
+      const session = snap.val();
+      if (session) {
+        console.log('[Auth] Đọc session thành công:', session);
+        return { session, error:null };
+      }
+      console.warn(`[Auth] Session null lần ${i+1}, thử lại sau 1s...`);
+      await new Promise(r => setTimeout(r, 1000));
+    } catch(e) {
+      lastErr = e;
+      console.error(`[Auth] Lỗi đọc lần ${i+1}:`, e);
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+  return { session:null, error:lastErr };
+}
 
 async function initAuth() {
   setLoad('Xác thực tài khoản...', 20);
-  if (!URL_TOKEN) { showAuthError(); return; }
+
+  if (!db) {
+    showAuthError('Lỗi Firebase', 'Không khởi tạo được Firebase. Kiểm tra firebaseConfig và mạng.', 'firebase init failed');
+    return;
+  }
+
+  if (!URL_TOKEN) {
+    showAuthError('Thiếu token', 'URL không có ?t=... Bot chưa tạo link đúng định dạng: yourhost/?t=TOKEN', 'window.location.search = "' + window.location.search + '"');
+    return;
+  }
+
+  console.log('[Auth] Token:', URL_TOKEN);
 
   try {
-    // Đọc session từ Firebase
-    const snap = await db.ref(`sessions/${URL_TOKEN}`).once('value');
-    const session = snap.val();
+    await new Promise(r => setTimeout(r, 600)); // đợi SDK sẵn sàng
 
-    if (!session || Date.now() > session.expiresAt || session.secret !== GAME_SECRET) {
-      showAuthError(); return;
+    const res = await readSessionWithRetry(URL_TOKEN, 5);
+
+    // 1) Lỗi đọc (thường do Firebase Rules chặn .read)
+    if (res.error) {
+      showAuthError(
+        'Lỗi đọc Firebase',
+        'Không đọc được "sessions/". Khả năng cao do Database Rules chặn .read (set ".read": true cho sessions), hoặc sai databaseURL.',
+        'sessions/' + URL_TOKEN + '\n' + (res.error.code || '') + ' ' + (res.error.message || res.error)
+      );
+      return;
     }
 
-    // Lấy dữ liệu người chơi từ Firebase
-    const playerSnap = await db.ref(`players/${session.userId}`).once('value');
-    const playerData = playerSnap.val() || {};
+    const session = res.session;
 
-    userData.userId   = session.userId;
-    userData.username = session.username;
-    userData.avatar   = session.avatar || '';
-    userData.coins    = playerData.coins    ?? session.coins    ?? 0;
-    userData.rodUses  = playerData.rodUses  ?? session.rodUses  ?? 0;
+    // 2) Không có session
+    if (!session) {
+      showAuthError(
+        'Không tìm thấy session',
+        'sessions/' + URL_TOKEN + ' = null. Bot chưa ghi session, ghi sai đường dẫn, hoặc Rules chặn đọc.',
+        'Kiểm tra: bot có gọi db.ref("sessions/" + token).set({...}) trước khi gửi link không?'
+      );
+      return;
+    }
+
+    // 3) Hết hạn (hay sai đơn vị ms)
+    if (!session.expiresAt || Date.now() > session.expiresAt) {
+      const exp = session.expiresAt;
+      showAuthError(
+        'Session đã hết hạn',
+        'Kiểm tra expiresAt phải là milliseconds, ví dụ: Date.now() + 10*60*1000',
+        'expiresAt = ' + exp + (exp ? '  (' + new Date(exp).toLocaleString('vi-VN') + ')' : ' (THIẾU)') +
+        '\nnow       = ' + Date.now() + '  (' + new Date().toLocaleString('vi-VN') + ')'
+      );
+      return;
+    }
+
+    // 4) Secret sai
+    if (session.secret !== GAME_SECRET) {
+      showAuthError(
+        'Secret không khớp',
+        'Bot phải ghi secret giống hệt web.',
+        'Bot ghi : "' + session.secret + '"\nWeb cần : "' + GAME_SECRET + '"'
+      );
+      return;
+    }
+
+    console.log('[Auth] Xác thực thành công! User:', session.username);
+
+    // ── Lấy dữ liệu người chơi ──
+    setLoad('Tải dữ liệu người chơi...', 40);
+    let playerData = {};
+    try {
+      const playerSnap = await db.ref(`players/${session.userId}`).once('value');
+      playerData = playerSnap.val() || {};
+    } catch(e) { console.warn('[Auth] Đọc players lỗi (bỏ qua):', e); }
+
+    userData.userId    = session.userId;
+    userData.username  = session.username;
+    userData.avatar    = session.avatar || '';
+    userData.coins     = playerData.coins    ?? session.coins    ?? 0;
+    userData.rodUses   = playerData.rodUses  ?? session.rodUses  ?? 0;
     userData.inventory = playerData.inventory ?? session.inventory ?? {};
 
-    // Xóa session sau khi dùng
-    await db.ref(`sessions/${URL_TOKEN}`).remove();
+    console.log('[Auth] userData:', userData);
 
-    setLoad('Khởi tạo đồ họa 3D...', 55);
-    initThree();
-    setLoad('Kết nối multiplayer Firebase...', 80);
-    initMultiplayer();
-    setLoad('Hoàn tất!', 100);
+    // Xóa session sau khi đã lấy dữ liệu
     setTimeout(() => {
-      document.getElementById('loading').style.display = 'none';
-    }, 500);
+      db.ref(`sessions/${URL_TOKEN}`).remove().catch(e => console.warn('[Auth] Xóa session lỗi:', e));
+    }, 2000);
 
-    updateUI();
-    renderContent();
-    document.getElementById('cb').disabled = false;
-    document.getElementById('cb').textContent = userData.rodUses > 0 ? '🎣 THẢ CÂU' : '🏪 MUA CẦN';
-    setStatus(userData.rodUses > 0 ? '🎣 Nhấn THẢ CÂU để bắt đầu!' : '🏪 Mua cần câu ở Shop!');
+    startGame(true);
 
   } catch(e) {
-    console.error(e);
-    showAuthError();
+    console.error('[Auth] Lỗi nghiêm trọng:', e);
+    showAuthError('Lỗi nghiêm trọng', 'Có lỗi không xác định khi xác thực.', String(e && e.message || e));
   }
 }
 
-function showAuthError() {
-  document.getElementById('loading').style.display  = 'none';
-  document.getElementById('autherr').style.display  = 'flex';
+// Khởi động game thật (online) hoặc demo (online=false)
+function startGame(online) {
+  setLoad('Khởi tạo đồ họa 3D...', 55);
+  initThree();
+  if (online) {
+    setLoad('Kết nối multiplayer Firebase...', 80);
+    initMultiplayer();
+  }
+  setLoad('Hoàn tất!', 100);
+
+  setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 400);
+
+  updateUI();
+  renderContent();
+  const cb = document.getElementById('cb');
+  cb.disabled = false;
+  cb.textContent = userData.rodUses > 0 ? '🎣 THẢ CÂU' : '🏪 MUA CẦN';
+  setStatus(userData.rodUses > 0 ? '🎣 Nhấn THẢ CÂU để bắt đầu!' : '🏪 Mua cần câu ở Shop!');
 }
+
+// Demo: chơi cục bộ, KHÔNG ghi Firebase
+function startDemo() {
+  DEMO = true;
+  document.getElementById('autherr').style.display = 'none';
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('demo-badge').style.display = 'block';
+  userData = {
+    userId:'demo-' + Math.random().toString(36).slice(2,8),
+    username:'Người Chơi Thử',
+    avatar:'',
+    coins: 50_000,
+    rodUses: 5,
+    inventory:{}
+  };
+  setLoad('Vào chế độ demo...', 60);
+  startGame(false); // không multiplayer
+  document.getElementById('online-count').textContent = '1';
+  showToast('🎮 Demo: dữ liệu không lưu lại');
+}
+
+function showAuthError(reason, msg, detail) {
+  document.getElementById('loading').style.display = 'none';
+  const ae = document.getElementById('autherr');
+  ae.style.display = 'flex';
+  document.getElementById('ae-reason').textContent = reason || 'Phiên hết hạn';
+  document.getElementById('ae-msg').innerHTML = msg
+    ? msg + '<br><br>Hoặc dùng lệnh <strong>tcauonline</strong> trong Discord để lấy link mới.'
+    : 'Dùng lệnh <strong>tcauonline</strong> trong Discord để lấy link mới!';
+  const d = document.getElementById('ae-detail');
+  if (detail) { d.style.display = 'block'; d.textContent = detail; }
+  else d.style.display = 'none';
+}
+
 function setLoad(txt, pct) {
   document.getElementById('loadtxt').textContent  = txt;
   document.getElementById('loadfill').style.width = pct + '%';
@@ -302,6 +428,7 @@ function setLoad(txt, pct) {
 
 // ── Firebase: Đồng bộ dữ liệu ────────────────────────────
 async function syncToFirebase(delta = {}) {
+  if (DEMO || !db) return;
   try {
     await db.ref(`players/${userData.userId}`).set({
       coins:      userData.coins,
@@ -314,12 +441,11 @@ async function syncToFirebase(delta = {}) {
   } catch(e) { console.warn('Firebase sync error:', e); }
 }
 
-// Lắng nghe thay đổi coins realtime (nếu Discord bot cập nhật)
 function watchPlayerData() {
+  if (DEMO || !db) return;
   db.ref(`players/${userData.userId}`).on('value', snap => {
     const d = snap.val();
     if (!d) return;
-    // Chỉ cập nhật nếu thay đổi từ bên ngoài (bot Discord)
     if (d.updatedAt && Math.abs(d.coins - userData.coins) > 100) {
       userData.coins    = d.coins;
       userData.rodUses  = d.rodUses;
@@ -334,7 +460,7 @@ function watchPlayerData() {
 const STATE_LABEL = { idle:'💤', casting:'🎣', waiting:'⏳', biting:'🐟!', reeling:'⚡', result:'✅' };
 
 function initMultiplayer() {
-  // Ghi presence của mình
+  if (DEMO || !db) return;
   const presenceRef = db.ref(`presence/${userData.userId}`);
   presenceRef.set({
     username: userData.username,
@@ -345,10 +471,8 @@ function initMultiplayer() {
     online:   true,
     lastSeen: Date.now(),
   });
-  // Tự xóa khi offline
   presenceRef.onDisconnect().remove();
 
-  // Lắng nghe presence của tất cả người chơi
   db.ref('presence').on('value', snap => {
     const all = snap.val() || {};
     const others = Object.entries(all).filter(([id]) => id !== userData.userId);
@@ -357,16 +481,14 @@ function initMultiplayer() {
     updatePlayerSprites(others);
   });
 
-  // Lắng nghe fish catches
   db.ref('fishCatches').limitToLast(1).on('child_added', snap => {
     const d = snap.val();
     if (!d || d.userId === userData.userId) return;
-    if (Date.now() - d.timestamp < 5000) { // Chỉ hiện nếu mới trong 5s
+    if (Date.now() - d.timestamp < 5000) {
       addNotif(`${d.fish.emoji} <strong>${d.username}</strong> câu được <strong>${d.fish.name}</strong>!`);
     }
   });
 
-  // Lắng nghe chat
   db.ref('chat').limitToLast(1).on('child_added', snap => {
     const d = snap.val();
     if (!d) return;
@@ -375,18 +497,18 @@ function initMultiplayer() {
     }
   });
 
-  // Lắng nghe data của mình
   watchPlayerData();
 }
 
 function updatePresence(state) {
-  if (!userData.userId) return;
+  if (DEMO || !db || !userData.userId) return;
   db.ref(`presence/${userData.userId}`).update({
     state, mapIndex: curMap, yaw, lastSeen: Date.now()
   }).catch(()=>{});
 }
 
 function broadcastCatch(fish) {
+  if (DEMO || !db) return;
   const key = db.ref('fishCatches').push().key;
   db.ref(`fishCatches/${key}`).set({
     userId:    userData.userId,
@@ -394,14 +516,16 @@ function broadcastCatch(fish) {
     fish:      { id:fish.id, name:fish.name, emoji:fish.emoji, value:fish.value },
     timestamp: Date.now(),
   }).catch(()=>{});
-  // Tự xóa sau 10s để không đầy database
   setTimeout(() => db.ref(`fishCatches/${key}`).remove().catch(()=>{}), 10000);
 }
 
 function sendChat() {
   const inp = document.getElementById('chatinput');
   const txt = inp.value.trim();
-  if (!txt || !userData.userId) return;
+  if (!txt) return;
+  addChatMsg(userData.username, txt, true);
+  inp.value = '';
+  if (DEMO || !db || !userData.userId) return;
   const key = db.ref('chat').push().key;
   db.ref(`chat/${key}`).set({
     userId:    userData.userId,
@@ -409,9 +533,6 @@ function sendChat() {
     text:      txt,
     timestamp: Date.now(),
   });
-  addChatMsg(userData.username, txt, true);
-  inp.value = '';
-  // Xóa tin nhắn cũ sau 30s
   setTimeout(() => db.ref(`chat/${key}`).remove().catch(()=>{}), 30000);
 }
 
@@ -435,7 +556,6 @@ camera.position.set(0, 1.5, 0);
 camera.rotation.order = 'YXZ';
 scene.add(camera);
 
-// FPS controls
 let isDrag=false, px=0, py=0;
 function updCam(){ camera.rotation.y=yaw; camera.rotation.x=pitch; }
 cv.addEventListener('mousedown',e=>{isDrag=true;px=e.clientX;py=e.clientY;});
@@ -448,7 +568,6 @@ cv.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrag||!e.touches[0]
 function stdMat(color,rough=0.8,metal=0){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});}
 function rng(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;};}
 
-// Lights
 const ambLight=new THREE.AmbientLight(0xffffff,.35); scene.add(ambLight);
 const sunLight=new THREE.DirectionalLight(0xfff4d8,1.2); sunLight.position.set(8,14,5);
 sunLight.castShadow=true; sunLight.shadow.mapSize.set(2048,2048);
@@ -460,52 +579,19 @@ const fillLight=new THREE.DirectionalLight(0xaad4ff,.32); fillLight.position.set
 const hemi=new THREE.HemisphereLight(0x88bbee,0x4a6820,.55); scene.add(hemi);
 const bobLight=new THREE.PointLight(0xffee00,0,8); scene.add(bobLight);
 
-// Sky textures
 function paintSky(config){
   const c=document.createElement('canvas'); const cx=c.getContext('2d');
   c.width=2048; c.height=1024;
   const g=cx.createLinearGradient(0,0,0,600);
   config.sky.forEach(([s,col])=>g.addColorStop(s,col));
   cx.fillStyle=g; cx.fillRect(0,0,2048,1024);
-  if(config.sun){
-    const sg=cx.createRadialGradient(config.sun.x,config.sun.y,5,config.sun.x,config.sun.y,config.sun.r);
-    sg.addColorStop(0,config.sun.color+'ee'); sg.addColorStop(.4,config.sun.color+'55'); sg.addColorStop(1,config.sun.color+'00');
-    cx.fillStyle=sg; cx.beginPath(); cx.arc(config.sun.x,config.sun.y,config.sun.r,0,Math.PI*2); cx.fill();
-  }
-  if(config.clouds){
-    config.clouds.forEach(([cx2,cy,w,h])=>{
-      cx.fillStyle='rgba(255,255,255,.55)';
-      cx.beginPath(); cx.ellipse(cx2,cy,w*.5,h*.5,0,0,Math.PI*2); cx.fill();
-      cx.beginPath(); cx.ellipse(cx2+w*.25,cy-h*.12,w*.36,h*.44,0,0,Math.PI*2); cx.fill();
-    });
-  }
-  if(config.mountains){
-    config.mountains.forEach((m,i)=>{
-      cx.fillStyle=m.color;
-      cx.beginPath(); cx.moveTo(0,1024);
-      for(let x=0;x<=2048;x+=24) cx.lineTo(x,m.base+Math.sin(x*m.freq+i)*m.amp+Math.sin(x*m.freq*2+i)*m.amp*.4);
-      cx.lineTo(2048,1024); cx.closePath(); cx.fill();
-    });
-  }
+  if(config.sun){const sg=cx.createRadialGradient(config.sun.x,config.sun.y,5,config.sun.x,config.sun.y,config.sun.r);sg.addColorStop(0,config.sun.color+'ee');sg.addColorStop(.4,config.sun.color+'55');sg.addColorStop(1,config.sun.color+'00');cx.fillStyle=sg;cx.beginPath();cx.arc(config.sun.x,config.sun.y,config.sun.r,0,Math.PI*2);cx.fill();}
+  if(config.clouds){config.clouds.forEach(([cx2,cy,w,h])=>{cx.fillStyle='rgba(255,255,255,.55)';cx.beginPath();cx.ellipse(cx2,cy,w*.5,h*.5,0,0,Math.PI*2);cx.fill();cx.beginPath();cx.ellipse(cx2+w*.25,cy-h*.12,w*.36,h*.44,0,0,Math.PI*2);cx.fill();});}
+  if(config.mountains){config.mountains.forEach((m,i)=>{cx.fillStyle=m.color;cx.beginPath();cx.moveTo(0,1024);for(let x=0;x<=2048;x+=24)cx.lineTo(x,m.base+Math.sin(x*m.freq+i)*m.amp+Math.sin(x*m.freq*2+i)*m.amp*.4);cx.lineTo(2048,1024);cx.closePath();cx.fill();});}
   const pr=rng(config.seed||1);
-  if(config.trees){
-    cx.fillStyle=config.trees.color;
-    cx.beginPath(); cx.moveTo(0,1024);
-    for(let x=0;x<=2048;x+=18) cx.lineTo(x,config.trees.base+Math.sin(x*config.trees.freq)*config.trees.amp+Math.sin(x*config.trees.freq*2.5)*config.trees.amp*.35);
-    cx.lineTo(2048,1024); cx.closePath(); cx.fill();
-    for(let x=0;x<2048;x+=72){
-      const tx=x+pr()*18, ty=config.trees.base+Math.sin(tx*config.trees.freq)*config.trees.amp, th=42+pr()*52;
-      for(let l=0;l<3;l++){cx.fillStyle=`rgba(8,${35+l*10+pr()*20},12,.93)`;cx.beginPath();cx.moveTo(tx+4,ty-th*(1-l*.24));cx.lineTo(tx-(13-l*4),ty-th*l*.24);cx.lineTo(tx+(19-l*4),ty-th*l*.24);cx.closePath();cx.fill();}
-    }
-  }
-  if(config.stars){
-    for(let i=0;i<config.stars;i++){cx.fillStyle=`rgba(255,255,228,${.3+pr()*.7})`;cx.beginPath();cx.arc(pr()*2048,pr()*520,pr()*1.9+.3,0,Math.PI*2);cx.fill();}
-  }
-  if(config.moon){
-    const mg=cx.createRadialGradient(1620,72,5,1620,72,60);
-    mg.addColorStop(0,'#fffef4'); mg.addColorStop(.6,'#f5ecbe'); mg.addColorStop(1,'rgba(245,235,180,0)');
-    cx.fillStyle=mg; cx.beginPath(); cx.arc(1620,72,58,0,Math.PI*2); cx.fill();
-  }
+  if(config.trees){cx.fillStyle=config.trees.color;cx.beginPath();cx.moveTo(0,1024);for(let x=0;x<=2048;x+=18)cx.lineTo(x,config.trees.base+Math.sin(x*config.trees.freq)*config.trees.amp+Math.sin(x*config.trees.freq*2.5)*config.trees.amp*.35);cx.lineTo(2048,1024);cx.closePath();cx.fill();for(let x=0;x<2048;x+=72){const tx=x+pr()*18,ty=config.trees.base+Math.sin(tx*config.trees.freq)*config.trees.amp,th=42+pr()*52;for(let l=0;l<3;l++){cx.fillStyle=`rgba(8,${35+l*10+pr()*20},12,.93)`;cx.beginPath();cx.moveTo(tx+4,ty-th*(1-l*.24));cx.lineTo(tx-(13-l*4),ty-th*l*.24);cx.lineTo(tx+(19-l*4),ty-th*l*.24);cx.closePath();cx.fill();}}}
+  if(config.stars){for(let i=0;i<config.stars;i++){cx.fillStyle=`rgba(255,255,228,${.3+pr()*.7})`;cx.beginPath();cx.arc(pr()*2048,pr()*520,pr()*1.9+.3,0,Math.PI*2);cx.fill();}}
+  if(config.moon){const mg=cx.createRadialGradient(1620,72,5,1620,72,60);mg.addColorStop(0,'#fffef4');mg.addColorStop(.6,'#f5ecbe');mg.addColorStop(1,'rgba(245,235,180,0)');cx.fillStyle=mg;cx.beginPath();cx.arc(1620,72,58,0,Math.PI*2);cx.fill();}
   const wg=cx.createLinearGradient(0,config.waterY||660,0,1024);
   config.water.forEach(([s,col])=>wg.addColorStop(s,col));
   cx.fillStyle=wg; cx.fillRect(0,config.waterY||660,2048,1024-(config.waterY||660));
@@ -522,7 +608,6 @@ const SKY_TEX=[
 const skyMat=new THREE.MeshBasicMaterial({map:SKY_TEX[0],side:THREE.BackSide});
 const skySph=new THREE.Mesh(new THREE.SphereGeometry(95,64,32),skyMat); scene.add(skySph);
 
-// Map settings
 const MAPS=[
   {fog:0xa0c8dc,fn:30,ff:85,wD:[.10,.44,.72],wS:[.22,.62,.88],aI:.35,sL:0xfff4d8,sI:1.2,sP:[8,14,5],gc:0x4a7a2a},
   {fog:0x3a1018,fn:34,ff:90,wD:[.00,.28,.56],wS:[.00,.70,.86],aI:.30,sL:0xffaa55,sI:1.45,sP:[9,8,-3],gc:0x8a7060},
@@ -530,7 +615,6 @@ const MAPS=[
   {fog:0x020810,fn:20,ff:65,wD:[.04,.08,.20],wS:[.07,.16,.35],aI:.22,sL:0x5a7aff,sI:.80,sP:[16,12,-6],gc:0x1a1828},
 ];
 
-// Water shader
 const wVS=`uniform float uT;varying float vE;varying vec3 vWP;varying vec3 vN;void main(){vec3 p=position;float e=sin(p.x*3.2+uT*1.6)*.16+sin(p.z*2.5-uT*1.2)*.12+sin((p.x+p.z)*1.8+uT*.9)*.08+sin(p.x*1.1-p.z*.8+uT*2.2)*.045+sin(p.x*5.+uT*3.)*.025;p.y+=e;vE=e;vWP=p;float dx=cos(p.x*3.2+uT*1.6)*.16*3.2+cos(p.x*5.+uT*3.)*.025*5.;float dz=cos(p.z*2.5-uT*1.2)*.12*2.5;vN=normalize(vec3(-dx,1.,-dz));gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`;
 const wFS=`uniform vec3 uDeep,uShallow;uniform float uT;varying float vE;varying vec3 vWP,vN;void main(){float t=clamp((vE+.32)/.60,0.,1.);vec3 c=mix(uDeep,uShallow,t);float foam=smoothstep(.18,.34,vE);c=mix(c,vec3(.94,.97,1.),foam*.38);vec3 ld=normalize(vec3(.5,.8,.3));float spec=pow(max(0.,dot(vN,ld)),22.)*foam;c+=vec3(spec*.5);float nx=sin(vWP.x*9.+uT*5.)*sin(vWP.z*8.-uT*4.5);c+=vec3(pow(max(0.,nx),8.)*.3*foam);gl_FragColor=vec4(c,.88);}`;
 const waterMat=new THREE.ShaderMaterial({uniforms:{uT:{value:0},uDeep:{value:new THREE.Vector3(.10,.44,.72)},uShallow:{value:new THREE.Vector3(.22,.62,.88)}},vertexShader:wVS,fragmentShader:wFS,transparent:true,side:THREE.DoubleSide});
@@ -540,14 +624,12 @@ waterMesh.rotation.x=-Math.PI/2; waterMesh.position.y=.01; waterMesh.receiveShad
 const groundMesh=new THREE.Mesh(new THREE.BoxGeometry(130,.4,130),stdMat(0x4a7a2a,.92));
 groundMesh.position.set(0,-.22,0); groundMesh.receiveShadow=true; scene.add(groundMesh);
 
-// Dock
 const dockMat=stdMat(0x9B7722,.88); const dkGrp=new THREE.Group();
 for(let i=-2;i<=2;i++){const p=new THREE.Mesh(new THREE.BoxGeometry(.27,.065,5.0),dockMat);p.position.set(i*.29,.035,-.4);p.castShadow=true;p.receiveShadow=true;dkGrp.add(p);}
 const pm=stdMat(0x6b4f0f,.90);
 [[-.5,-2.2],[.5,-2.2],[-.5,2],[.5,2]].forEach(([px2,pz])=>{const po=new THREE.Mesh(new THREE.CylinderGeometry(.042,.062,1.5,8),pm);po.position.set(px2,-.72,pz);po.castShadow=true;dkGrp.add(po);});
 scene.add(dkGrp);
 
-// Rocks
 const rkMat=new THREE.MeshStandardMaterial({color:0x686666,roughness:.94,metalness:.04,flatShading:true});
 const rk=rng(5);
 [[4,0,3],[5.5,0,1.5],[-4,0,4],[-3.5,0,2],[3,0,-3],[6,0,-2]].forEach(([rx,ry,rz])=>{
@@ -555,7 +637,6 @@ const rk=rng(5);
   r.position.set(rx,.08,rz);r.rotation.set(rk()*3,rk()*3,rk()*2);r.castShadow=true;r.receiveShadow=true;scene.add(r);
 });
 
-// FPS Rod
 const rodMat=new THREE.MeshStandardMaterial({color:0xb87333,roughness:.65,metalness:.1,flatShading:true});
 const gripMat=new THREE.MeshStandardMaterial({color:0x181410,roughness:.96,metalness:0});
 const corkMat=new THREE.MeshStandardMaterial({color:0xb8825a,roughness:.90,metalness:0});
@@ -574,7 +655,6 @@ const blank=new THREE.Mesh(new THREE.CylinderGeometry(.0095,.026,3.1,8),rodMat);
 });
 const tipObj=new THREE.Object3D(); tipObj.position.y=3.06; fpRod.add(tipObj);
 
-// Bobber
 const bobGrp=new THREE.Group(); scene.add(bobGrp); bobGrp.visible=false;
 bobGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.105,10,8,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0xe74c3c,roughness:.52,metalness:.05})));
 bobGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.105,10,8,0,Math.PI*2,Math.PI/2,Math.PI/2),new THREE.MeshStandardMaterial({color:0xecf0f1,roughness:.62,metalness:0})));
@@ -583,23 +663,19 @@ ant.position.y=.30; bobGrp.add(ant);
 const ripMesh=new THREE.Mesh(new THREE.RingGeometry(.14,.18,24),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.42,side:THREE.DoubleSide,depthWrite:false}));
 ripMesh.rotation.x=-Math.PI/2; ripMesh.position.y=-.1; bobGrp.add(ripMesh);
 
-// Fishing line
 const LPTS=20; const lArr=new Float32Array(LPTS*3);
 const lineGeom=new THREE.BufferGeometry(); lineGeom.setAttribute('position',new THREE.Float32BufferAttribute(lArr,3));
 const lineMesh=new THREE.Line(lineGeom,new THREE.LineBasicMaterial({color:0xdddddd,transparent:true,opacity:.8}));
 scene.add(lineMesh); lineMesh.visible=false;
 
-// Fish
 const fishGrp=new THREE.Group(); scene.add(fishGrp); fishGrp.visible=false;
 const fbM=new THREE.Mesh(new THREE.SphereGeometry(.23,10,7),new THREE.MeshStandardMaterial({color:0x74b9ff,roughness:.62,metalness:.08,flatShading:true}));
 fbM.scale.set(1.65,.78,.62); fishGrp.add(fbM);
 const ftM=new THREE.Mesh(new THREE.ConeGeometry(.21,.32,5),new THREE.MeshStandardMaterial({color:0x74b9ff,roughness:.62,metalness:.08,flatShading:true}));
 ftM.position.set(-.44,0,0); ftM.rotation.z=-Math.PI/2; fishGrp.add(ftM);
 
-// Player sprites (other players)
 const playerSprites=new Map();
-
-function getOrCreateSprite(userId2, username2, avatar2){
+function getOrCreateSprite(userId2, username2){
   if(playerSprites.has(userId2)) return playerSprites.get(userId2);
   const grp=new THREE.Group(); scene.add(grp);
   const bMat=new THREE.MeshStandardMaterial({color:0x3388ff,roughness:.8,metalness:0});
@@ -619,11 +695,8 @@ function updatePlayerSprites(others){
   const seen=new Set();
   for(const[id,p] of others){
     seen.add(id);
-    if(p.mapIndex!==curMap){
-      if(playerSprites.has(id)) playerSprites.get(id).grp.visible=false;
-      continue;
-    }
-    const s=getOrCreateSprite(id,p.username,p.avatar);
+    if(p.mapIndex!==curMap){if(playerSprites.has(id))playerSprites.get(id).grp.visible=false;continue;}
+    const s=getOrCreateSprite(id,p.username);
     s.grp.visible=true;
     const angle=(parseInt(id.slice(-4),16)/65535)*Math.PI*2;
     const dist=1.8+(parseInt(id.slice(-2),16)/255)*1.2;
@@ -632,9 +705,7 @@ function updatePlayerSprites(others){
     const stateColor={idle:0x3388ff,casting:0xf39c12,waiting:0x00d4ff,biting:0xe74c3c,reeling:0x2ecc71,result:0x3388ff};
     s.bMat.color.set(stateColor[p.state]||0x3388ff);
   }
-  for(const [id,s] of playerSprites){
-    if(!seen.has(id)){ scene.remove(s.grp); playerSprites.delete(id); }
-  }
+  for(const[id,s] of playerSprites){if(!seen.has(id)){scene.remove(s.grp);playerSprites.delete(id);}}
 }
 
 function applyMap(i){
@@ -650,13 +721,13 @@ function initThree(){
   applyMap(0);
   let lineProgress=0,fishAnimT=0,fishAnimating=false,curRot=-.22;
   const RANG={idle:-.22,casting:-.94,waiting:-.52,biting:-.46,reeling:.34,result:-.22};
-  const tipWP=new THREE.Vector3(), fwd=new THREE.Vector3();
+  const tipWP=new THREE.Vector3();
   function waveY(x,z,t){return Math.sin(x*3.2+t*1.6)*.16+Math.sin(z*2.5-t*1.2)*.12+Math.sin((x+z)*1.8+t*.9)*.08+Math.sin(x*1.1-z*.8+t*2.2)*.045;}
   function animate(ts){
     requestAnimationFrame(animate);
     const t=ts*.001;
     waterMat.uniforms.uT.value=t; skySph.rotation.y=t*.006;
-    curRot+=(( RANG[gstate]??RANG.idle)-curRot)*.09; fpRod.rotation.x=curRot;
+    curRot+=((RANG[gstate]??RANG.idle)-curRot)*.09; fpRod.rotation.x=curRot;
     if(gstate==='casting') lineProgress=Math.min(lineProgress+.055,1);
     else if(gstate==='idle'||gstate==='result') lineProgress=Math.max(lineProgress-.09,0);
     if(gstate==='waiting'||gstate==='biting'){
@@ -740,10 +811,8 @@ async function doReelIn(){
   }
   setTimeout(async()=>{
     gstate='result'; showBanner(resultFish);
-    if(resultFish){
-      userData.inventory[resultFish.id]=(userData.inventory[resultFish.id]||0)+1;
-      showToast(`🎉 ${resultFish.emoji} ${resultFish.name}!`);
-    } else showToast('😅 Không câu được gì...');
+    if(resultFish){userData.inventory[resultFish.id]=(userData.inventory[resultFish.id]||0)+1;showToast(`🎉 ${resultFish.emoji} ${resultFish.name}!`);}
+    else showToast('😅 Không câu được gì...');
     await syncToFirebase(resultFish?{totalCaught:1}:{});
     updateUI();
     setTimeout(()=>{
@@ -765,8 +834,7 @@ function fishEscape(){
 async function buyRod(){
   if(userData.coins<ROD_PRICE){showToast('❌ Không đủ xu!');return;}
   userData.coins-=ROD_PRICE; userData.rodUses+=ROD_USES;
-  await syncToFirebase();
-  updateUI(); renderContent();
+  await syncToFirebase(); updateUI(); renderContent();
   showToast(`✅ Mua cần! +${ROD_USES} lần câu`);
   if(gstate==='idle'){document.getElementById('cb').textContent='🎣 THẢ CÂU';setStatus('🎣 Nhấn THẢ CÂU!');}
 }
@@ -785,7 +853,6 @@ async function sellAll(){
   showToast(`💰 Bán tất cả → +${fmt(total)} 🪙!`);
 }
 
-// ── UI helpers ────────────────────────────────────────────
 function fmt(n){if(n>=1e9)return(n/1e9).toFixed(1).replace(/\.0$/,'')+'B';if(n>=1e6)return(n/1e6).toFixed(1).replace(/\.0$/,'')+'M';if(n>=1e3)return(n/1e3).toFixed(1).replace(/\.0$/,'')+'K';return n.toLocaleString('vi-VN');}
 function setStatus(m){document.getElementById('st').textContent=m;}
 function updateUI(){document.getElementById('ct').textContent=fmt(userData.coins);document.getElementById('ut').textContent=userData.rodUses>0?userData.rodUses:'0';}
@@ -844,14 +911,62 @@ function renderContent(){
   }
 }
 
-// Audio
 let audioCtx=null,soundOn=false,masterGain=null;
 function initAudio(){if(audioCtx)return;audioCtx=new(window.AudioContext||window.webkitAudioContext)();masterGain=audioCtx.createGain();masterGain.gain.value=.13;masterGain.connect(audioCtx.destination);for(let l=0;l<3;l++){const dur=audioCtx.sampleRate*(4+l),buf=audioCtx.createBuffer(1,dur,audioCtx.sampleRate),data=buf.getChannelData(0);let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<dur;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.96900*b2+w*.1538520;b3=.86650*b3+w*.3104856;b4=.55000*b4+w*.5329522;b5=-.7616*b5-w*.0168980;data[i]=Math.max(-1,Math.min(1,(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.09));b6=w*.115926;}const src=audioCtx.createBufferSource();src.buffer=buf;src.loop=true;const flt=audioCtx.createBiquadFilter();flt.type='bandpass';flt.frequency.value=140+l*300;flt.Q.value=.75;const g=audioCtx.createGain();g.gain.value=.36-l*.08;const lfo=audioCtx.createOscillator();lfo.frequency.value=.16+l*.12;const lg=audioCtx.createGain();lg.gain.value=.035;lfo.connect(lg);lg.connect(g.gain);lfo.start();src.connect(flt);flt.connect(g);g.connect(masterGain);src.start(0,Math.random()*3);}soundOn=true;document.getElementById('snd').textContent='🔊';}
 function toggleSound(){if(!audioCtx){initAudio();return;}soundOn=!soundOn;if(masterGain)masterGain.gain.value=soundOn?.13:0;document.getElementById('snd').textContent=soundOn?'🔊':'🔇';}
 document.addEventListener('click',()=>{if(!audioCtx)initAudio();},{once:true});
 
-// Start
-initAuth();
+// ── Tải Firebase SDK chống lỗi: gstatic → jsDelivr → unpkg ──
+function loadScript(src){
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src=src; s.async=false;               // giữ đúng thứ tự thực thi
+    s.onload=()=>resolve(src);
+    s.onerror=()=>reject(new Error('Không tải được '+src));
+    document.head.appendChild(s);
+  });
+}
+async function loadFromCDN(base){
+  await loadScript(base+'firebase-app-compat.js');
+  await loadScript(base+'firebase-database-compat.js');
+}
+async function bootFirebase(){
+  setLoad('Tải thư viện Firebase...', 8);
+  const CDNS=[
+    'https://www.gstatic.com/firebasejs/10.11.0/',
+    'https://cdn.jsdelivr.net/npm/firebase@10.11.0/',
+    'https://unpkg.com/firebase@10.11.0/'
+  ];
+  if(typeof firebase==='undefined'){
+    let ok=false,lastErr=null;
+    for(const base of CDNS){
+      try{
+        console.log('[Firebase] Thử tải từ',base);
+        await loadFromCDN(base);
+        if(typeof firebase!=='undefined'){ok=true;console.log('[Firebase] Đã tải từ',base);break;}
+      }catch(e){lastErr=e;console.warn('[Firebase] CDN lỗi:',base,e.message);}
+    }
+    if(!ok){
+      showAuthError(
+        'Không tải được Firebase',
+        'Cả 3 CDN đều bị chặn. Mạng hoặc host của bạn đang chặn gstatic.com, jsdelivr.net và unpkg.com — hãy đổi host hoặc bỏ chặn các domain này.',
+        String(lastErr && lastErr.message || lastErr)
+      );
+      return;
+    }
+  }
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db=firebase.database();
+  }catch(e){
+    console.error('[Firebase] initializeApp lỗi:',e);
+    showAuthError('Lỗi khởi tạo Firebase','Kiểm tra lại firebaseConfig.',String(e&&e.message||e));
+    return;
+  }
+  initAuth();
+}
+
+bootFirebase();
 </script>
 </body>
 </html>
