@@ -6,33 +6,24 @@
 <title>🎣 Câu Cá Online</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- Firebase SDK duoc tai DONG ben duoi (co CDN du phong) -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#06101f;--panel:rgba(8,20,36,.92);--border:#1a3550;--accent:#00d4ff;
   --gold:#ffd660;--text:#d8eeff;--sub:#5a7a9a;--rad:10px;--rsm:7px;--online:#2ecc71
 }
-html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',sans-serif;
-  overflow-x:hidden;-webkit-user-select:none;user-select:none}
+html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',sans-serif;overflow-x:hidden;-webkit-user-select:none;user-select:none}
 #game{width:100%;max-width:900px;margin:0 auto;display:flex;flex-direction:column;min-height:100vh}
-#hdr{display:flex;justify-content:space-between;align-items:center;
-  padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border)}
-#hdr h1{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--accent);
-  text-shadow:0 0 18px rgba(0,212,255,.4)}
+#hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border)}
+#hdr h1{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--accent);text-shadow:0 0 18px rgba(0,212,255,.4)}
 #hdr-right{display:flex;align-items:center;gap:8px}
 #cd{display:flex;align-items:center;gap:4px;font-weight:900;font-size:15px;color:var(--gold)}
-#online-pill{display:flex;align-items:center;gap:4px;background:rgba(46,204,113,.15);
-  border:1px solid rgba(46,204,113,.3);border-radius:20px;padding:4px 10px;
-  font-size:11px;font-weight:800;color:var(--online)}
-#online-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--online);
-  box-shadow:0 0 6px var(--online);animation:pulse 2s infinite}
+#online-pill{display:flex;align-items:center;gap:4px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.3);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:800;color:var(--online)}
+#online-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--online);box-shadow:0 0 6px var(--online);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 #maps{display:flex;gap:6px;padding:6px 8px;background:rgba(6,16,31,.97);overflow-x:auto;scrollbar-width:none}
 #maps::-webkit-scrollbar{display:none}
-.mb{flex:0 0 auto;padding:6px 13px;background:rgba(10,25,45,.8);border:2px solid var(--border);
-  border-radius:16px;color:var(--sub);cursor:pointer;font-family:'Nunito',sans-serif;
-  font-weight:800;font-size:11px;transition:all .2s;white-space:nowrap}
+.mb{flex:0 0 auto;padding:6px 13px;background:rgba(10,25,45,.8);border:2px solid var(--border);border-radius:16px;color:var(--sub);cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;transition:all .2s;white-space:nowrap}
 .mb.on{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.1)}
 #cw{position:relative;width:100%;background:#000;overflow:hidden}
 #gc{width:100%;height:auto;display:block;cursor:grab;touch-action:none}
@@ -42,19 +33,12 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 #xhair::before,#xhair::after{content:'';position:absolute;background:rgba(255,255,255,.6);border-radius:1px}
 #xhair::before{width:1px;height:16px;left:50%;top:-4px;transform:translateX(-50%)}
 #xhair::after{width:16px;height:1px;top:50%;left:-4px;transform:translateY(-50%)}
-#st{position:absolute;top:10px;left:50%;transform:translateX(-50%);
-  font-family:'Press Start 2P',monospace;font-size:8px;color:#fff;
-  text-shadow:2px 2px 0 #000,-2px 2px 0 #000,2px -2px 0 #000,-2px -2px 0 #000;
-  pointer-events:none;z-index:6;white-space:nowrap}
-#snd{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);
-  border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 10px;
-  font-size:10px;font-weight:800;cursor:pointer;z-index:6;color:rgba(255,255,255,.7)}
+#st{position:absolute;top:10px;left:50%;transform:translateX(-50%);font-family:'Press Start 2P',monospace;font-size:8px;color:#fff;text-shadow:2px 2px 0 #000,-2px 2px 0 #000,2px -2px 0 #000,-2px -2px 0 #000;pointer-events:none;z-index:6;white-space:nowrap}
+#snd{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer;z-index:6;color:rgba(255,255,255,.7)}
 #bf{position:absolute;inset:0;background:rgba(255,60,0,.15);pointer-events:none;opacity:0;z-index:3}
 #bf.on{animation:bflash .28s infinite}
 @keyframes bflash{0%,100%{opacity:.1}50%{opacity:.55}}
-#rb{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);
-  background:rgba(4,12,28,.95);border:2px solid var(--gold);border-radius:var(--rad);
-  padding:16px 24px;text-align:center;min-width:180px;pointer-events:none;z-index:12;backdrop-filter:blur(10px)}
+#rb{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(4,12,28,.95);border:2px solid var(--gold);border-radius:var(--rad);padding:16px 24px;text-align:center;min-width:180px;pointer-events:none;z-index:12;backdrop-filter:blur(10px)}
 #rb.show{animation:rpop .4s cubic-bezier(.34,1.56,.64,1) forwards}
 @keyframes rpop{0%{transform:translate(-50%,-50%) scale(0) rotate(-8deg)}70%{transform:translate(-50%,-50%) scale(1.08) rotate(2deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(0)}}
 #rb .rem{font-size:48px;line-height:1.1}
@@ -72,8 +56,7 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 .ps-biting{color:#e74c3c;animation:blink .4s infinite}.ps-reeling{color:#2ecc71}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 #notifs{position:absolute;top:50px;right:10px;display:flex;flex-direction:column;gap:5px;z-index:9;pointer-events:none}
-.notif{background:rgba(4,12,28,.88);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;
-  padding:6px 10px;font-size:10px;font-weight:800;animation:slideIn .3s ease, fadeOut .4s 3.6s forwards;backdrop-filter:blur(4px)}
+.notif{background:rgba(4,12,28,.88);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:6px 10px;font-size:10px;font-weight:800;animation:slideIn .3s ease, fadeOut .4s 3.6s forwards;backdrop-filter:blur(4px)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes fadeOut{to{opacity:0;transform:translateX(100%)}}
 #chatbox{position:absolute;bottom:42px;left:8px;width:210px;z-index:8}
@@ -82,25 +65,19 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 .chatmsg strong{color:var(--accent)}
 @keyframes fadeMsg{0%,80%{opacity:1}100%{opacity:0}}
 #chatinput-row{display:flex;gap:4px;margin-top:4px}
-#chatinput{flex:1;background:rgba(8,20,36,.9);border:1px solid var(--border);border-radius:8px;
-  padding:4px 8px;font-size:9px;font-weight:700;color:var(--text);outline:none;font-family:'Nunito',sans-serif}
+#chatinput{flex:1;background:rgba(8,20,36,.9);border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:9px;font-weight:700;color:var(--text);outline:none;font-family:'Nunito',sans-serif}
 #chatinput:focus{border-color:var(--accent)}
-#chatsend{padding:4px 8px;background:rgba(0,212,255,.2);border:1px solid var(--accent);
-  border-radius:8px;font-size:9px;font-weight:800;color:var(--accent);cursor:pointer}
+#chatsend{padding:4px 8px;background:rgba(0,212,255,.2);border:1px solid var(--accent);border-radius:8px;font-size:9px;font-weight:800;color:var(--accent);cursor:pointer}
 #act{display:flex;gap:7px;padding:8px;background:rgba(6,16,31,.98);border-top:1px solid var(--border)}
-#cb{flex:1;padding:13px;font-family:'Press Start 2P',monospace;font-size:9px;
-  background:linear-gradient(135deg,#0058b0,#00c0f0);border:none;border-radius:var(--rad);
-  color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 3px 18px rgba(0,180,255,.35);min-height:50px}
+#cb{flex:1;padding:13px;font-family:'Press Start 2P',monospace;font-size:9px;background:linear-gradient(135deg,#0058b0,#00c0f0);border:none;border-radius:var(--rad);color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 3px 18px rgba(0,180,255,.35);min-height:50px}
 #cb:hover:not(:disabled){transform:translateY(-1px)}
 #cb:disabled{opacity:.4;cursor:not-allowed;transform:none}
 #cb.bite{background:linear-gradient(135deg,#8a0000,#dd0000);animation:bp .22s infinite;box-shadow:0 3px 22px rgba(200,0,0,.7)}
 @keyframes bp{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
-#ri{padding:8px 12px;background:rgba(10,25,45,.9);border:1px solid var(--border);border-radius:var(--rad);
-  font-size:10px;color:var(--sub);text-align:center;min-width:78px;display:flex;flex-direction:column;justify-content:center}
+#ri{padding:8px 12px;background:rgba(10,25,45,.9);border:1px solid var(--border);border-radius:var(--rad);font-size:10px;color:var(--sub);text-align:center;min-width:78px;display:flex;flex-direction:column;justify-content:center}
 #ri .us{font-weight:900;font-size:22px;color:var(--accent);display:block;line-height:1.2}
 #tabs{display:flex;background:rgba(8,20,36,.98);border-top:1px solid var(--border)}
-.tb{flex:1;padding:11px 5px;background:none;border:none;border-right:1px solid var(--border);
-  color:var(--sub);cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;transition:all .2s;min-height:44px}
+.tb{flex:1;padding:11px 5px;background:none;border:none;border-right:1px solid var(--border);color:var(--sub);cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;transition:all .2s;min-height:44px}
 .tb:last-child{border-right:none}.tb.on{background:rgba(0,212,255,.09);color:var(--accent)}
 #cp{background:rgba(8,20,36,.98);border-top:1px solid var(--border);padding:11px;min-height:155px}
 .stl{font-size:9px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:9px}
@@ -129,21 +106,18 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 #autherr h2{font-family:'Press Start 2P',monospace;font-size:11px;color:#e74c3c;text-align:center}
 #autherr .ae-reason{font-size:14px;font-weight:900;color:var(--gold);text-align:center}
 #autherr p{font-size:12px;color:var(--sub);text-align:center;max-width:340px;line-height:1.6}
-#ae-detail{font-family:monospace;font-size:10px;color:#7a90a8;background:rgba(15,32,53,.7);
-  border:1px solid var(--border);border-radius:8px;padding:10px 12px;max-width:360px;
-  word-break:break-all;line-height:1.5;text-align:left;white-space:pre-wrap}
+#ae-detail{font-family:monospace;font-size:10px;color:#7a90a8;background:rgba(15,32,53,.7);border:1px solid var(--border);border-radius:8px;padding:10px 12px;max-width:360px;word-break:break-all;line-height:1.5;text-align:left;white-space:pre-wrap}
 #autherr .ae-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
 .ae-btn{padding:11px 18px;border:none;border-radius:var(--rsm);font-weight:900;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif}
 .ae-btn.demo{background:linear-gradient(135deg,#1a8f4a,#00e676);color:#000}
 .ae-btn.retry{background:rgba(0,212,255,.18);border:1px solid var(--accent);color:var(--accent)}
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(60px);
-  background:rgba(10,28,50,.96);border:1px solid var(--accent);border-radius:18px;
-  padding:9px 18px;font-size:12px;font-weight:800;color:var(--text);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:200;white-space:nowrap;pointer-events:none}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(60px);background:rgba(10,28,50,.96);border:1px solid var(--accent);border-radius:18px;padding:9px 18px;font-size:12px;font-weight:800;color:var(--text);transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:200;white-space:nowrap;pointer-events:none}
 #toast.show{transform:translateX(-50%) translateY(0)}
-#demo-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(46,204,113,.2);
-  border:1px solid var(--online);border-radius:14px;padding:2px 10px;font-size:9px;font-weight:800;
-  color:var(--online);z-index:7;display:none}
+#demo-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(46,204,113,.2);border:1px solid var(--online);border-radius:14px;padding:2px 10px;font-size:9px;font-weight:800;color:var(--online);z-index:7;display:none}
+#sync-status{position:absolute;bottom:8px;right:8px;font-size:9px;font-weight:800;z-index:6;padding:3px 8px;border-radius:10px;background:rgba(0,0,0,.5)}
+#sync-status.ok{color:#2ecc71}
+#sync-status.saving{color:#f39c12}
+#sync-status.err{color:#e74c3c}
 @media(max-width:520px){#hdr h1{font-size:8px}#cd{font-size:13px}.mb{font-size:10px;padding:5px 10px}#cb{font-size:7px}#chatbox{width:155px}}
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
@@ -202,6 +176,7 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
         <button id="chatsend" onclick="sendChat()">→</button>
       </div>
     </div>
+    <div id="sync-status" class="ok">✓ Đã đồng bộ</div>
   </div>
   <div id="act">
     <button id="cb" disabled onclick="handleCast()">⏳ Đang tải...</button>
@@ -218,6 +193,9 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 <div id="toast"></div>
 
 <script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════
 const firebaseConfig = {
   apiKey:            "AIzaSyA9Iv98Bcurd6bqXo79BbgEz58a3xrPH8o",
   authDomain:        "fishing-bot-e8d42.firebaseapp.com",
@@ -229,7 +207,10 @@ const firebaseConfig = {
 };
 const GAME_SECRET = 'datBatKyChuan123';
 
-let db = null;   // sẽ được gán trong bootFirebase()
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let DB = null;  // Firebase database ref
 
 const FISH_LIST = [
   { id:'moi',  name:'Cá Mồi',       emoji:'🐟', value:10_000,      rate:35,   rar:'Thường',       rc:'r1', color:0x74b9ff },
@@ -241,339 +222,325 @@ const FISH_LIST = [
 const ROD_PRICE = 10_000;
 const ROD_USES  = 10;
 
-let userData   = { userId:'', username:'', avatar:'', coins:0, rodUses:0, inventory:{} };
-let gstate     = 'idle', curMap = 0, activeTab = 'bag';
+// Local player state — single source of truth for UI
+let player = {
+  userId:'', username:'', avatar:'', coins:0, rodUses:0, inventory:{},
+  totalCaught:0, totalEarned:0
+};
+let gstate = 'idle', curMap = 0, activeTab = 'bag';
 let wt, bt, resultFish = null, waitStart = 0, waitDur = 5000;
 let yaw = 0, pitch = 0;
-let DEMO = false;          // <— chế độ demo (không ghi Firebase)
+let DEMO = false;
+let saveDebounceTimer = null;
+let pendingSave = false;
 
-// ── Firebase Auth — HIỂN THỊ ĐÚNG LÝ DO LỖI ──────────────
+// 3D other-player data: Map<userId, {data, mesh group, bobGrp, lineMesh}>
+const otherPlayers = new Map();
+
+// ═══════════════════════════════════════════════════════════
+// FIREBASE BOOT (CDN fallback)
+// ═══════════════════════════════════════════════════════════
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = false;
+    s.onload  = () => res(src);
+    s.onerror = () => rej(new Error('Không tải: ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function loadFromCDN(base) {
+  await loadScript(base + 'firebase-app-compat.js');
+  await loadScript(base + 'firebase-database-compat.js');
+}
+async function bootFirebase() {
+  setLoad('Tải thư viện Firebase...', 8);
+  const CDNS = [
+    'https://www.gstatic.com/firebasejs/10.11.0/',
+    'https://cdn.jsdelivr.net/npm/firebase@10.11.0/',
+    'https://unpkg.com/firebase@10.11.0/'
+  ];
+  if (typeof firebase === 'undefined') {
+    let ok = false, lastErr = null;
+    for (const base of CDNS) {
+      try { await loadFromCDN(base); if (typeof firebase !== 'undefined') { ok = true; break; } }
+      catch(e) { lastErr = e; }
+    }
+    if (!ok) { showAuthError('Không tải được Firebase','Mạng đang chặn CDN.',String(lastErr?.message||lastErr)); return; }
+  }
+  try { firebase.initializeApp(firebaseConfig); DB = firebase.database(); }
+  catch(e) { showAuthError('Lỗi khởi tạo Firebase','Kiểm tra lại firebaseConfig.',String(e?.message||e)); return; }
+  initAuth();
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════
 const URL_TOKEN = new URLSearchParams(window.location.search).get('t');
 
-async function readSessionWithRetry(token, maxRetry = 5) {
-  let lastErr = null;
-  for (let i = 0; i < maxRetry; i++) {
+async function readSessionWithRetry(token, max = 5) {
+  for (let i = 0; i < max; i++) {
     try {
-      console.log(`[Auth] Đọc session lần ${i+1}/${maxRetry}...`);
-      const snap = await db.ref(`sessions/${token}`).once('value');
-      const session = snap.val();
-      if (session) {
-        console.log('[Auth] Đọc session thành công:', session);
-        return { session, error:null };
-      }
-      console.warn(`[Auth] Session null lần ${i+1}, thử lại sau 1s...`);
+      const snap = await DB.ref(`sessions/${token}`).once('value');
+      if (snap.val()) return { session: snap.val(), error: null };
       await new Promise(r => setTimeout(r, 1000));
-    } catch(e) {
-      lastErr = e;
-      console.error(`[Auth] Lỗi đọc lần ${i+1}:`, e);
-      await new Promise(r => setTimeout(r, 1000));
-    }
+    } catch(e) { await new Promise(r => setTimeout(r, 1000)); if (i === max-1) return { session:null, error:e }; }
   }
-  return { session:null, error:lastErr };
+  return { session:null, error:null };
 }
 
 async function initAuth() {
   setLoad('Xác thực tài khoản...', 20);
-
-  if (!db) {
-    showAuthError('Lỗi Firebase', 'Không khởi tạo được Firebase. Kiểm tra firebaseConfig và mạng.', 'firebase init failed');
-    return;
+  if (!URL_TOKEN) { showAuthError('Thiếu token','URL không có ?t=...','window.location.search = "' + window.location.search + '"'); return; }
+  await new Promise(r => setTimeout(r, 600));
+  const { session, error } = await readSessionWithRetry(URL_TOKEN);
+  if (error) { showAuthError('Lỗi đọc Firebase','Không đọc được sessions/. Kiểm tra Database Rules.',String(error.message||error)); return; }
+  if (!session) { showAuthError('Không tìm thấy session','sessions/' + URL_TOKEN + ' = null. Bot chưa ghi session.','Bot phải ghi sessions trước khi gửi link.'); return; }
+  if (!session.expiresAt || Date.now() > session.expiresAt) {
+    showAuthError('Session đã hết hạn','Dùng tcauonline để lấy link mới.','expiresAt=' + session.expiresAt + '\nnow=' + Date.now()); return;
   }
+  if (session.secret !== GAME_SECRET) { showAuthError('Secret không khớp','Bot ghi secret sai.','Bot: "' + session.secret + '" | Web cần: "' + GAME_SECRET + '"'); return; }
 
-  if (!URL_TOKEN) {
-    showAuthError('Thiếu token', 'URL không có ?t=... Bot chưa tạo link đúng định dạng: yourhost/?t=TOKEN', 'window.location.search = "' + window.location.search + '"');
-    return;
-  }
+  setLoad('Tải dữ liệu người chơi...', 40);
 
-  console.log('[Auth] Token:', URL_TOKEN);
+  // ── Load player data from Firebase (source of truth) ──
+  player.userId   = session.userId;
+  player.username = session.username;
+  player.avatar   = session.avatar || '';
 
   try {
-    await new Promise(r => setTimeout(r, 600)); // đợi SDK sẵn sàng
-
-    const res = await readSessionWithRetry(URL_TOKEN, 5);
-
-    // 1) Lỗi đọc (thường do Firebase Rules chặn .read)
-    if (res.error) {
-      showAuthError(
-        'Lỗi đọc Firebase',
-        'Không đọc được "sessions/". Khả năng cao do Database Rules chặn .read (set ".read": true cho sessions), hoặc sai databaseURL.',
-        'sessions/' + URL_TOKEN + '\n' + (res.error.code || '') + ' ' + (res.error.message || res.error)
-      );
-      return;
+    const pSnap = await DB.ref(`players/${session.userId}`).once('value');
+    const pData = pSnap.val();
+    if (pData) {
+      // Firebase có dữ liệu → dùng Firebase
+      player.coins        = pData.coins        ?? session.coins    ?? 0;
+      player.rodUses      = pData.rodUses      ?? session.rodUses  ?? 0;
+      player.inventory    = pData.inventory    ?? session.inventory ?? {};
+      player.totalCaught  = pData.totalCaught  ?? 0;
+      player.totalEarned  = pData.totalEarned  ?? 0;
+    } else {
+      // Lần đầu vào → lấy từ session (do bot ghi)
+      player.coins     = session.coins    ?? 0;
+      player.rodUses   = session.rodUses  ?? 0;
+      player.inventory = session.inventory ?? {};
+      // Ghi ngay lên Firebase
+      await writePlayerImmediate();
     }
-
-    const session = res.session;
-
-    // 2) Không có session
-    if (!session) {
-      showAuthError(
-        'Không tìm thấy session',
-        'sessions/' + URL_TOKEN + ' = null. Bot chưa ghi session, ghi sai đường dẫn, hoặc Rules chặn đọc.',
-        'Kiểm tra: bot có gọi db.ref("sessions/" + token).set({...}) trước khi gửi link không?'
-      );
-      return;
-    }
-
-    // 3) Hết hạn (hay sai đơn vị ms)
-    if (!session.expiresAt || Date.now() > session.expiresAt) {
-      const exp = session.expiresAt;
-      showAuthError(
-        'Session đã hết hạn',
-        'Kiểm tra expiresAt phải là milliseconds, ví dụ: Date.now() + 10*60*1000',
-        'expiresAt = ' + exp + (exp ? '  (' + new Date(exp).toLocaleString('vi-VN') + ')' : ' (THIẾU)') +
-        '\nnow       = ' + Date.now() + '  (' + new Date().toLocaleString('vi-VN') + ')'
-      );
-      return;
-    }
-
-    // 4) Secret sai
-    if (session.secret !== GAME_SECRET) {
-      showAuthError(
-        'Secret không khớp',
-        'Bot phải ghi secret giống hệt web.',
-        'Bot ghi : "' + session.secret + '"\nWeb cần : "' + GAME_SECRET + '"'
-      );
-      return;
-    }
-
-    console.log('[Auth] Xác thực thành công! User:', session.username);
-
-    // ── Lấy dữ liệu người chơi ──
-    setLoad('Tải dữ liệu người chơi...', 40);
-    let playerData = {};
-    try {
-      const playerSnap = await db.ref(`players/${session.userId}`).once('value');
-      playerData = playerSnap.val() || {};
-    } catch(e) { console.warn('[Auth] Đọc players lỗi (bỏ qua):', e); }
-
-    userData.userId    = session.userId;
-    userData.username  = session.username;
-    userData.avatar    = session.avatar || '';
-    userData.coins     = playerData.coins    ?? session.coins    ?? 0;
-    userData.rodUses   = playerData.rodUses  ?? session.rodUses  ?? 0;
-    userData.inventory = playerData.inventory ?? session.inventory ?? {};
-
-    console.log('[Auth] userData:', userData);
-
-    // KHÔNG xóa session ngay — để nó sống đủ 10 phút (link dùng lại được,
-    // tốt cho điện thoại khi trình duyệt tự reload). Web vẫn chặn bằng expiresAt,
-    // và bot tự dọn session sau 10 phút.
-
-    startGame(true);
-
   } catch(e) {
-    console.error('[Auth] Lỗi nghiêm trọng:', e);
-    showAuthError('Lỗi nghiêm trọng', 'Có lỗi không xác định khi xác thực.', String(e && e.message || e));
+    // Lỗi đọc → fallback session
+    player.coins     = session.coins    ?? 0;
+    player.rodUses   = session.rodUses  ?? 0;
+    player.inventory = session.inventory ?? {};
+  }
+
+  console.log('[Auth] OK — coins:', player.coins, 'rodUses:', player.rodUses);
+  startGame(true);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SAVE / SYNC — Debounced + immediate variants
+// ═══════════════════════════════════════════════════════════
+function setSyncStatus(state) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.className = 'sync-status ' + state;
+  if (state === 'ok')     { el.textContent = '✓ Đã đồng bộ'; el.style.color='#2ecc71'; }
+  if (state === 'saving') { el.textContent = '⟳ Đang lưu...'; el.style.color='#f39c12'; }
+  if (state === 'err')    { el.textContent = '✗ Lỗi lưu'; el.style.color='#e74c3c'; }
+}
+
+// Ghi toàn bộ player state lên Firebase (merge safe)
+async function writePlayerImmediate() {
+  if (DEMO || !DB || !player.userId) return;
+  setSyncStatus('saving');
+  try {
+    await DB.ref(`players/${player.userId}`).update({
+      coins:       player.coins,
+      rodUses:     player.rodUses,
+      inventory:   player.inventory,
+      totalCaught: player.totalCaught,
+      totalEarned: player.totalEarned,
+      updatedAt:   Date.now(),
+    });
+    setSyncStatus('ok');
+  } catch(e) {
+    console.error('[Save] lỗi:', e);
+    setSyncStatus('err');
   }
 }
 
-// Khởi động game thật (online) hoặc demo (online=false)
-function startGame(online) {
-  setLoad('Khởi tạo đồ họa 3D...', 55);
-  initThree();
-  if (online) {
-    setLoad('Kết nối multiplayer Firebase...', 80);
-    initMultiplayer();
-  }
-  setLoad('Hoàn tất!', 100);
-
-  setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 400);
-
-  updateUI();
-  renderContent();
-  const cb = document.getElementById('cb');
-  cb.disabled = false;
-  cb.textContent = userData.rodUses > 0 ? '🎣 THẢ CÂU' : '🏪 MUA CẦN';
-  setStatus(userData.rodUses > 0 ? '🎣 Nhấn THẢ CÂU để bắt đầu!' : '🏪 Mua cần câu ở Shop!');
+// Debounced save — gộp nhiều thay đổi nhỏ thành 1 lần ghi
+function scheduleSave(delayMs = 800) {
+  pendingSave = true;
+  setSyncStatus('saving');
+  clearTimeout(saveDebounceTimer);
+  saveDebounceTimer = setTimeout(async () => {
+    await writePlayerImmediate();
+    pendingSave = false;
+  }, delayMs);
 }
 
-// Demo: chơi cục bộ, KHÔNG ghi Firebase
+// Lưu ngay khi rời trang (keepalive fetch)
+function flushSaveOnExit() {
+  if (DEMO || !player.userId) return;
+  if (!pendingSave && saveDebounceTimer === null) return; // không có gì cần lưu
+  try {
+    const base = firebaseConfig.databaseURL.replace(/\/+$/, '');
+    const url  = `${base}/players/${player.userId}.json`;
+    fetch(url, {
+      method: 'PATCH', keepalive: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        coins: player.coins, rodUses: player.rodUses,
+        inventory: player.inventory, totalCaught: player.totalCaught,
+        totalEarned: player.totalEarned, updatedAt: Date.now(),
+      })
+    }).catch(() => {});
+  } catch(e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSaveOnExit(); });
+window.addEventListener('pagehide', flushSaveOnExit);
+
+// Lắng nghe thay đổi từ Firebase (đồng bộ 2 chiều)
+function watchPlayerData() {
+  if (DEMO || !DB) return;
+  DB.ref(`players/${player.userId}`).on('value', snap => {
+    const d = snap.val();
+    if (!d || !d.updatedAt) return;
+    // Chỉ nhận nếu data từ nguồn khác (bot Discord cập nhật coins)
+    // và không phải đang chờ lưu (tránh ghi đè local)
+    if (!pendingSave && gstate === 'idle') {
+      const remoteCoins = d.coins ?? player.coins;
+      if (remoteCoins !== player.coins) {
+        player.coins = remoteCoins;
+        updateUI();
+        if (remoteCoins > player.coins) showToast('💰 Xu đã được cập nhật!');
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// DEMO MODE
+// ═══════════════════════════════════════════════════════════
 function startDemo() {
   DEMO = true;
   document.getElementById('autherr').style.display = 'none';
   document.getElementById('loading').style.display = 'flex';
   document.getElementById('demo-badge').style.display = 'block';
-  userData = {
-    userId:'demo-' + Math.random().toString(36).slice(2,8),
-    username:'Người Chơi Thử',
-    avatar:'',
-    coins: 50_000,
-    rodUses: 5,
-    inventory:{}
-  };
+  player = { userId:'demo-'+Math.random().toString(36).slice(2,8), username:'Người Chơi Thử', avatar:'', coins:50_000, rodUses:5, inventory:{}, totalCaught:0, totalEarned:0 };
   setLoad('Vào chế độ demo...', 60);
-  startGame(false); // không multiplayer
+  startGame(false);
   document.getElementById('online-count').textContent = '1';
   showToast('🎮 Demo: dữ liệu không lưu lại');
+}
+
+// ═══════════════════════════════════════════════════════════
+// START GAME
+// ═══════════════════════════════════════════════════════════
+function startGame(online) {
+  setLoad('Khởi tạo đồ họa 3D...', 55);
+  initThree();
+  if (online) {
+    setLoad('Kết nối multiplayer...', 80);
+    initMultiplayer();
+    watchPlayerData();
+  }
+  setLoad('Hoàn tất!', 100);
+  setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 400);
+  updateUI();
+  renderContent();
+  const cb = document.getElementById('cb');
+  cb.disabled = false;
+  cb.textContent = player.rodUses > 0 ? '🎣 THẢ CÂU' : '🏪 MUA CẦN';
+  setStatus(player.rodUses > 0 ? '🎣 Nhấn THẢ CÂU để bắt đầu!' : '🏪 Mua cần câu ở Shop!');
 }
 
 function showAuthError(reason, msg, detail) {
   document.getElementById('loading').style.display = 'none';
   const ae = document.getElementById('autherr');
   ae.style.display = 'flex';
-  document.getElementById('ae-reason').textContent = reason || 'Phiên hết hạn';
-  document.getElementById('ae-msg').innerHTML = msg
-    ? msg + '<br><br>Hoặc dùng lệnh <strong>tcauonline</strong> trong Discord để lấy link mới.'
-    : 'Dùng lệnh <strong>tcauonline</strong> trong Discord để lấy link mới!';
+  document.getElementById('ae-reason').textContent = reason;
+  document.getElementById('ae-msg').innerHTML = (msg||'') + '<br><br>Hoặc dùng <strong>tcauonline</strong> trong Discord.';
   const d = document.getElementById('ae-detail');
-  if (detail) { d.style.display = 'block'; d.textContent = detail; }
-  else d.style.display = 'none';
+  if (detail) { d.style.display='block'; d.textContent=detail; } else d.style.display='none';
 }
+function setLoad(txt, pct) { document.getElementById('loadtxt').textContent=txt; document.getElementById('loadfill').style.width=pct+'%'; }
 
-function setLoad(txt, pct) {
-  document.getElementById('loadtxt').textContent  = txt;
-  document.getElementById('loadfill').style.width = pct + '%';
-}
-
-// ── Firebase: Đồng bộ dữ liệu ────────────────────────────
-async function syncToFirebase(delta = {}) {
-  if (DEMO || !db) return;
-  try {
-    const payload = {
-      coins:     userData.coins,
-      rodUses:   userData.rodUses,
-      inventory: userData.inventory,
-      updatedAt: Date.now(),
-    };
-    // Cộng dồn thống kê (không reset về 0 nữa)
-    if (delta.totalCaught) payload.totalCaught = firebase.database.ServerValue.increment(delta.totalCaught);
-    if (delta.totalEarned) payload.totalEarned = firebase.database.ServerValue.increment(delta.totalEarned);
-    await db.ref(`players/${userData.userId}`).update(payload);
-  } catch(e) { console.warn('Firebase sync error:', e); }
-}
-
-// ── Lưu khi RỜI TRANG (đóng tab / chuyển app / tắt trình duyệt) ──
-// Dùng fetch keepalive để request kịp gửi đi cả khi trang đang đóng.
-// PATCH (merge) nên không xóa totalCaught/totalEarned do bot ghi.
-function flushSaveOnExit() {
-  if (DEMO || !userData.userId) return;
-  try {
-    const base = firebaseConfig.databaseURL.replace(/\/+$/, '');
-    const url  = `${base}/players/${userData.userId}.json`;
-    const body = JSON.stringify({
-      coins:     userData.coins,
-      rodUses:   userData.rodUses,
-      inventory: userData.inventory,
-      updatedAt: Date.now(),
-    });
-    fetch(url, { method:'PATCH', body, keepalive:true }).catch(()=>{});
-    console.log('[Lưu] Đã gửi lưu lúc rời trang.');
-  } catch(e) { console.warn('[Lưu] flush lỗi:', e); }
-}
-// visibilitychange 'hidden' là cách ĐÁNG TIN nhất trên điện thoại
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') flushSaveOnExit();
-});
-window.addEventListener('pagehide', flushSaveOnExit);
-
-
-function watchPlayerData() {
-  if (DEMO || !db) return;
-  db.ref(`players/${userData.userId}`).on('value', snap => {
-    const d = snap.val();
-    if (!d) return;
-    if (d.updatedAt && Math.abs(d.coins - userData.coins) > 100) {
-      userData.coins    = d.coins;
-      userData.rodUses  = d.rodUses;
-      userData.inventory = d.inventory || {};
-      updateUI();
-      renderContent();
-    }
-  });
-}
-
-// ── Firebase: Multiplayer presence ───────────────────────
+// ═══════════════════════════════════════════════════════════
+// MULTIPLAYER / PRESENCE
+// ═══════════════════════════════════════════════════════════
 const STATE_LABEL = { idle:'💤', casting:'🎣', waiting:'⏳', biting:'🐟!', reeling:'⚡', result:'✅' };
 
 function initMultiplayer() {
-  if (DEMO || !db) return;
-  const presenceRef = db.ref(`presence/${userData.userId}`);
-  presenceRef.set({
-    username: userData.username,
-    avatar:   userData.avatar,
-    state:    'idle',
-    mapIndex: curMap,
-    yaw:      0,
-    online:   true,
-    lastSeen: Date.now(),
-  });
-  presenceRef.onDisconnect().remove();
+  if (DEMO || !DB) return;
+  const presRef = DB.ref(`presence/${player.userId}`);
+  presRef.set({ username:player.username, avatar:player.avatar, state:'idle', mapIndex:curMap, yaw:0, online:true, lastSeen:Date.now() });
+  presRef.onDisconnect().remove();
 
-  db.ref('presence').on('value', snap => {
+  // Lắng nghe tất cả players online
+  DB.ref('presence').on('value', snap => {
     const all = snap.val() || {};
-    const others = Object.entries(all).filter(([id]) => id !== userData.userId);
+    const others = Object.entries(all).filter(([id]) => id !== player.userId);
     document.getElementById('online-count').textContent = others.length + 1;
-    renderOtherPlayers(others);
-    updatePlayerSprites(others);
+    renderOtherPlayersList(others);
+    syncOtherPlayer3D(others);
   });
 
-  db.ref('fishCatches').limitToLast(1).on('child_added', snap => {
+  // Thông báo khi người khác câu được cá
+  DB.ref('fishCatches').limitToLast(5).on('child_added', snap => {
     const d = snap.val();
-    if (!d || d.userId === userData.userId) return;
-    if (Date.now() - d.timestamp < 5000) {
+    if (!d || d.userId === player.userId) return;
+    if (Date.now() - d.timestamp < 5000)
       addNotif(`${d.fish.emoji} <strong>${d.username}</strong> câu được <strong>${d.fish.name}</strong>!`);
-    }
   });
 
-  db.ref('chat').limitToLast(1).on('child_added', snap => {
+  // Chat
+  DB.ref('chat').limitToLast(1).on('child_added', snap => {
     const d = snap.val();
     if (!d) return;
-    if (Date.now() - d.timestamp < 3000) {
-      addChatMsg(d.username, d.text, d.userId === userData.userId);
-    }
+    if (Date.now() - d.timestamp < 3000)
+      addChatMsg(d.username, d.text, d.userId === player.userId);
   });
-
-  watchPlayerData();
 }
 
 function updatePresence(state) {
-  if (DEMO || !db || !userData.userId) return;
-  db.ref(`presence/${userData.userId}`).update({
-    state, mapIndex: curMap, yaw, lastSeen: Date.now()
-  }).catch(()=>{});
+  if (DEMO || !DB || !player.userId) return;
+  DB.ref(`presence/${player.userId}`).update({ state, mapIndex:curMap, yaw, lastSeen:Date.now() }).catch(()=>{});
 }
 
 function broadcastCatch(fish) {
-  if (DEMO || !db) return;
-  const key = db.ref('fishCatches').push().key;
-  db.ref(`fishCatches/${key}`).set({
-    userId:    userData.userId,
-    username:  userData.username,
-    fish:      { id:fish.id, name:fish.name, emoji:fish.emoji, value:fish.value },
-    timestamp: Date.now(),
-  }).catch(()=>{});
-  setTimeout(() => db.ref(`fishCatches/${key}`).remove().catch(()=>{}), 10000);
+  if (DEMO || !DB) return;
+  const key = DB.ref('fishCatches').push().key;
+  DB.ref(`fishCatches/${key}`).set({ userId:player.userId, username:player.username, fish:{id:fish.id,name:fish.name,emoji:fish.emoji,value:fish.value}, timestamp:Date.now() }).catch(()=>{});
+  setTimeout(() => DB.ref(`fishCatches/${key}`).remove().catch(()=>{}), 10000);
 }
 
 function sendChat() {
   const inp = document.getElementById('chatinput');
   const txt = inp.value.trim();
   if (!txt) return;
-  addChatMsg(userData.username, txt, true);
+  addChatMsg(player.username, txt, true);
   inp.value = '';
-  if (DEMO || !db || !userData.userId) return;
-  const key = db.ref('chat').push().key;
-  db.ref(`chat/${key}`).set({
-    userId:    userData.userId,
-    username:  userData.username,
-    text:      txt,
-    timestamp: Date.now(),
-  });
-  setTimeout(() => db.ref(`chat/${key}`).remove().catch(()=>{}), 30000);
+  if (DEMO || !DB || !player.userId) return;
+  const key = DB.ref('chat').push().key;
+  DB.ref(`chat/${key}`).set({ userId:player.userId, username:player.username, text:txt, timestamp:Date.now() });
+  setTimeout(() => DB.ref(`chat/${key}`).remove().catch(()=>{}), 30000);
 }
 
-// ── THREE.JS ──────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// THREE.JS — SCENE SETUP
+// ═══════════════════════════════════════════════════════════
 const cv = document.getElementById('gc');
 const W = 900, H = 480;
 const isMob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
 const renderer = new THREE.WebGLRenderer({ canvas:cv, antialias:true, powerPreference:'high-performance' });
 renderer.setSize(W, H);
 renderer.setPixelRatio(Math.min(devicePixelRatio, isMob?1.5:2));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
-renderer.outputEncoding    = THREE.sRGBEncoding;
-renderer.toneMapping       = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 
 const scene  = new THREE.Scene();
@@ -582,18 +549,20 @@ camera.position.set(0, 1.5, 0);
 camera.rotation.order = 'YXZ';
 scene.add(camera);
 
+// Camera drag
 let isDrag=false, px=0, py=0;
-function updCam(){ camera.rotation.y=yaw; camera.rotation.x=pitch; }
-cv.addEventListener('mousedown',e=>{isDrag=true;px=e.clientX;py=e.clientY;});
-document.addEventListener('mouseup',()=>isDrag=false);
-document.addEventListener('mousemove',e=>{if(!isDrag)return;yaw-=(e.clientX-px)*.0024;pitch=Math.max(-1.1,Math.min(1.1,pitch-(e.clientY-py)*.0024));px=e.clientX;py=e.clientY;updCam();});
-cv.addEventListener('touchstart',e=>{isDrag=true;px=e.touches[0].clientX;py=e.touches[0].clientY;},{passive:true});
-document.addEventListener('touchend',()=>isDrag=false);
-cv.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrag||!e.touches[0])return;yaw-=(e.touches[0].clientX-px)*.0028;pitch=Math.max(-1.1,Math.min(1.1,pitch-(e.touches[0].clientY-py)*.0028));px=e.touches[0].clientX;py=e.touches[0].clientY;updCam();},{passive:false});
+function updCam() { camera.rotation.y=yaw; camera.rotation.x=pitch; }
+cv.addEventListener('mousedown', e=>{isDrag=true;px=e.clientX;py=e.clientY;});
+document.addEventListener('mouseup', ()=>isDrag=false);
+document.addEventListener('mousemove', e=>{if(!isDrag)return;yaw-=(e.clientX-px)*.0024;pitch=Math.max(-1.1,Math.min(1.1,pitch-(e.clientY-py)*.0024));px=e.clientX;py=e.clientY;updCam();});
+cv.addEventListener('touchstart', e=>{isDrag=true;px=e.touches[0].clientX;py=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend', ()=>isDrag=false);
+cv.addEventListener('touchmove', e=>{e.preventDefault();if(!isDrag||!e.touches[0])return;yaw-=(e.touches[0].clientX-px)*.0028;pitch=Math.max(-1.1,Math.min(1.1,pitch-(e.touches[0].clientY-py)*.0028));px=e.touches[0].clientX;py=e.touches[0].clientY;updCam();},{passive:false});
 
 function stdMat(color,rough=0.8,metal=0){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});}
 function rng(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;};}
 
+// Lighting
 const ambLight=new THREE.AmbientLight(0xffffff,.35); scene.add(ambLight);
 const sunLight=new THREE.DirectionalLight(0xfff4d8,1.2); sunLight.position.set(8,14,5);
 sunLight.castShadow=true; sunLight.shadow.mapSize.set(2048,2048);
@@ -605,12 +574,13 @@ const fillLight=new THREE.DirectionalLight(0xaad4ff,.32); fillLight.position.set
 const hemi=new THREE.HemisphereLight(0x88bbee,0x4a6820,.55); scene.add(hemi);
 const bobLight=new THREE.PointLight(0xffee00,0,8); scene.add(bobLight);
 
+// ─── Sky & water textures ────────────────────────────────
 function paintSky(config){
-  const c=document.createElement('canvas'); const cx=c.getContext('2d');
-  c.width=2048; c.height=1024;
+  const c=document.createElement('canvas');const cx=c.getContext('2d');
+  c.width=2048;c.height=1024;
   const g=cx.createLinearGradient(0,0,0,600);
   config.sky.forEach(([s,col])=>g.addColorStop(s,col));
-  cx.fillStyle=g; cx.fillRect(0,0,2048,1024);
+  cx.fillStyle=g;cx.fillRect(0,0,2048,1024);
   if(config.sun){const sg=cx.createRadialGradient(config.sun.x,config.sun.y,5,config.sun.x,config.sun.y,config.sun.r);sg.addColorStop(0,config.sun.color+'ee');sg.addColorStop(.4,config.sun.color+'55');sg.addColorStop(1,config.sun.color+'00');cx.fillStyle=sg;cx.beginPath();cx.arc(config.sun.x,config.sun.y,config.sun.r,0,Math.PI*2);cx.fill();}
   if(config.clouds){config.clouds.forEach(([cx2,cy,w,h])=>{cx.fillStyle='rgba(255,255,255,.55)';cx.beginPath();cx.ellipse(cx2,cy,w*.5,h*.5,0,0,Math.PI*2);cx.fill();cx.beginPath();cx.ellipse(cx2+w*.25,cy-h*.12,w*.36,h*.44,0,0,Math.PI*2);cx.fill();});}
   if(config.mountains){config.mountains.forEach((m,i)=>{cx.fillStyle=m.color;cx.beginPath();cx.moveTo(0,1024);for(let x=0;x<=2048;x+=24)cx.lineTo(x,m.base+Math.sin(x*m.freq+i)*m.amp+Math.sin(x*m.freq*2+i)*m.amp*.4);cx.lineTo(2048,1024);cx.closePath();cx.fill();});}
@@ -620,7 +590,7 @@ function paintSky(config){
   if(config.moon){const mg=cx.createRadialGradient(1620,72,5,1620,72,60);mg.addColorStop(0,'#fffef4');mg.addColorStop(.6,'#f5ecbe');mg.addColorStop(1,'rgba(245,235,180,0)');cx.fillStyle=mg;cx.beginPath();cx.arc(1620,72,58,0,Math.PI*2);cx.fill();}
   const wg=cx.createLinearGradient(0,config.waterY||660,0,1024);
   config.water.forEach(([s,col])=>wg.addColorStop(s,col));
-  cx.fillStyle=wg; cx.fillRect(0,config.waterY||660,2048,1024-(config.waterY||660));
+  cx.fillStyle=wg;cx.fillRect(0,config.waterY||660,2048,1024-(config.waterY||660));
   return new THREE.CanvasTexture(c);
 }
 
@@ -630,7 +600,6 @@ const SKY_TEX=[
   paintSky({sky:[[0,'#20263a'],[.35,'#38485e'],[.65,'#556070'],[1,'#728085']],mountains:[{color:'rgba(22,32,46,.72)',base:700,freq:.006,amp:260},{color:'rgba(28,40,54,.82)',base:680,freq:.009,amp:310},{color:'rgba(34,48,62,.90)',base:650,freq:.012,amp:360}],trees:{color:'rgba(10,22,14,.9)',base:490,freq:.009,amp:55},water:[[0,'#186a22'],[1,'#0a2a10']],waterY:650,seed:3}),
   paintSky({sky:[[0,'#010710'],[1,'#020810']],stars:1400,moon:true,mountains:[{color:'rgba(4,7,16,.96)',base:590,freq:.008,amp:42}],water:[[0,'#040d20'],[1,'#010508']],waterY:482,seed:4}),
 ];
-
 const skyMat=new THREE.MeshBasicMaterial({map:SKY_TEX[0],side:THREE.BackSide});
 const skySph=new THREE.Mesh(new THREE.SphereGeometry(95,64,32),skyMat); scene.add(skySph);
 
@@ -641,21 +610,24 @@ const MAPS=[
   {fog:0x020810,fn:20,ff:65,wD:[.04,.08,.20],wS:[.07,.16,.35],aI:.22,sL:0x5a7aff,sI:.80,sP:[16,12,-6],gc:0x1a1828},
 ];
 
+// Water shader
 const wVS=`uniform float uT;varying float vE;varying vec3 vWP;varying vec3 vN;void main(){vec3 p=position;float e=sin(p.x*3.2+uT*1.6)*.16+sin(p.z*2.5-uT*1.2)*.12+sin((p.x+p.z)*1.8+uT*.9)*.08+sin(p.x*1.1-p.z*.8+uT*2.2)*.045+sin(p.x*5.+uT*3.)*.025;p.y+=e;vE=e;vWP=p;float dx=cos(p.x*3.2+uT*1.6)*.16*3.2+cos(p.x*5.+uT*3.)*.025*5.;float dz=cos(p.z*2.5-uT*1.2)*.12*2.5;vN=normalize(vec3(-dx,1.,-dz));gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`;
 const wFS=`uniform vec3 uDeep,uShallow;uniform float uT;varying float vE;varying vec3 vWP,vN;void main(){float t=clamp((vE+.32)/.60,0.,1.);vec3 c=mix(uDeep,uShallow,t);float foam=smoothstep(.18,.34,vE);c=mix(c,vec3(.94,.97,1.),foam*.38);vec3 ld=normalize(vec3(.5,.8,.3));float spec=pow(max(0.,dot(vN,ld)),22.)*foam;c+=vec3(spec*.5);float nx=sin(vWP.x*9.+uT*5.)*sin(vWP.z*8.-uT*4.5);c+=vec3(pow(max(0.,nx),8.)*.3*foam);gl_FragColor=vec4(c,.88);}`;
 const waterMat=new THREE.ShaderMaterial({uniforms:{uT:{value:0},uDeep:{value:new THREE.Vector3(.10,.44,.72)},uShallow:{value:new THREE.Vector3(.22,.62,.88)}},vertexShader:wVS,fragmentShader:wFS,transparent:true,side:THREE.DoubleSide});
 const waterMesh=new THREE.Mesh(new THREE.PlaneGeometry(160,160,110,110),waterMat);
-waterMesh.rotation.x=-Math.PI/2; waterMesh.position.y=.01; waterMesh.receiveShadow=true; scene.add(waterMesh);
+waterMesh.rotation.x=-Math.PI/2;waterMesh.position.y=.01;waterMesh.receiveShadow=true;scene.add(waterMesh);
 
 const groundMesh=new THREE.Mesh(new THREE.BoxGeometry(130,.4,130),stdMat(0x4a7a2a,.92));
-groundMesh.position.set(0,-.22,0); groundMesh.receiveShadow=true; scene.add(groundMesh);
+groundMesh.position.set(0,-.22,0);groundMesh.receiveShadow=true;scene.add(groundMesh);
 
-const dockMat=stdMat(0x9B7722,.88); const dkGrp=new THREE.Group();
+// Dock
+const dockMat=stdMat(0x9B7722,.88);const dkGrp=new THREE.Group();
 for(let i=-2;i<=2;i++){const p=new THREE.Mesh(new THREE.BoxGeometry(.27,.065,5.0),dockMat);p.position.set(i*.29,.035,-.4);p.castShadow=true;p.receiveShadow=true;dkGrp.add(p);}
 const pm=stdMat(0x6b4f0f,.90);
 [[-.5,-2.2],[.5,-2.2],[-.5,2],[.5,2]].forEach(([px2,pz])=>{const po=new THREE.Mesh(new THREE.CylinderGeometry(.042,.062,1.5,8),pm);po.position.set(px2,-.72,pz);po.castShadow=true;dkGrp.add(po);});
 scene.add(dkGrp);
 
+// Rocks
 const rkMat=new THREE.MeshStandardMaterial({color:0x686666,roughness:.94,metalness:.04,flatShading:true});
 const rk=rng(5);
 [[4,0,3],[5.5,0,1.5],[-4,0,4],[-3.5,0,2],[3,0,-3],[6,0,-2]].forEach(([rx,ry,rz])=>{
@@ -663,11 +635,13 @@ const rk=rng(5);
   r.position.set(rx,.08,rz);r.rotation.set(rk()*3,rk()*3,rk()*2);r.castShadow=true;r.receiveShadow=true;scene.add(r);
 });
 
+// ─── Player's fishing rod (first person) ────────────────
 const rodMat=new THREE.MeshStandardMaterial({color:0xb87333,roughness:.65,metalness:.1,flatShading:true});
 const gripMat=new THREE.MeshStandardMaterial({color:0x181410,roughness:.96,metalness:0});
 const corkMat=new THREE.MeshStandardMaterial({color:0xb8825a,roughness:.90,metalness:0});
 const ringMat=new THREE.MeshStandardMaterial({color:0x888888,roughness:.38,metalness:.72});
 const reelMat=new THREE.MeshStandardMaterial({color:0x2a2a2a,roughness:.28,metalness:.85});
+
 const fpRod=new THREE.Group(); camera.add(fpRod);
 fpRod.position.set(.21,-.55,-.60); fpRod.rotation.z=-.17;
 const grip=new THREE.Mesh(new THREE.CylinderGeometry(.027,.031,.54,10),gripMat); grip.position.y=.27; fpRod.add(grip);
@@ -681,6 +655,7 @@ const blank=new THREE.Mesh(new THREE.CylinderGeometry(.0095,.026,3.1,8),rodMat);
 });
 const tipObj=new THREE.Object3D(); tipObj.position.y=3.06; fpRod.add(tipObj);
 
+// Player's bobber
 const bobGrp=new THREE.Group(); scene.add(bobGrp); bobGrp.visible=false;
 bobGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.105,10,8,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0xe74c3c,roughness:.52,metalness:.05})));
 bobGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.105,10,8,0,Math.PI*2,Math.PI/2,Math.PI/2),new THREE.MeshStandardMaterial({color:0xecf0f1,roughness:.62,metalness:0})));
@@ -689,52 +664,182 @@ ant.position.y=.30; bobGrp.add(ant);
 const ripMesh=new THREE.Mesh(new THREE.RingGeometry(.14,.18,24),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.42,side:THREE.DoubleSide,depthWrite:false}));
 ripMesh.rotation.x=-Math.PI/2; ripMesh.position.y=-.1; bobGrp.add(ripMesh);
 
-const LPTS=20; const lArr=new Float32Array(LPTS*3);
+// Player's fishing line
+const LPTS=20;
+const lArr=new Float32Array(LPTS*3);
 const lineGeom=new THREE.BufferGeometry(); lineGeom.setAttribute('position',new THREE.Float32BufferAttribute(lArr,3));
 const lineMesh=new THREE.Line(lineGeom,new THREE.LineBasicMaterial({color:0xdddddd,transparent:true,opacity:.8}));
 scene.add(lineMesh); lineMesh.visible=false;
 
+// Fish result animation
 const fishGrp=new THREE.Group(); scene.add(fishGrp); fishGrp.visible=false;
 const fbM=new THREE.Mesh(new THREE.SphereGeometry(.23,10,7),new THREE.MeshStandardMaterial({color:0x74b9ff,roughness:.62,metalness:.08,flatShading:true}));
 fbM.scale.set(1.65,.78,.62); fishGrp.add(fbM);
 const ftM=new THREE.Mesh(new THREE.ConeGeometry(.21,.32,5),new THREE.MeshStandardMaterial({color:0x74b9ff,roughness:.62,metalness:.08,flatShading:true}));
 ftM.position.set(-.44,0,0); ftM.rotation.z=-Math.PI/2; fishGrp.add(ftM);
 
-const playerSprites=new Map();
-function getOrCreateSprite(userId2, username2){
-  if(playerSprites.has(userId2)) return playerSprites.get(userId2);
-  const grp=new THREE.Group(); scene.add(grp);
-  const bMat=new THREE.MeshStandardMaterial({color:0x3388ff,roughness:.8,metalness:0});
-  const body=new THREE.Mesh(new THREE.CylinderGeometry(.12,.14,.55,8),bMat); body.position.y=.28; grp.add(body);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.14,8,8),bMat); head.position.y=.72; grp.add(head);
-  const tc=document.createElement('canvas'); tc.width=256; tc.height=48;
-  const ctx2=tc.getContext('2d');
+// ═══════════════════════════════════════════════════════════
+// OTHER PLAYER 3D — Build full character with rod
+// ═══════════════════════════════════════════════════════════
+const PLAYER_COLORS = [0x3388ff, 0xff6633, 0x33cc66, 0xff33aa, 0xffcc33, 0xaa33ff, 0x33ffee];
+let colorIdx = 0;
+
+function buildOtherPlayerMesh(userId, username) {
+  const grp = new THREE.Group();
+  scene.add(grp);
+
+  const pColor = PLAYER_COLORS[colorIdx++ % PLAYER_COLORS.length];
+  const bodyMat = new THREE.MeshStandardMaterial({ color:pColor, roughness:.7, metalness:.05 });
+  const skinMat = new THREE.MeshStandardMaterial({ color:0xf0c090, roughness:.8, metalness:0 });
+  const shirtMat = bodyMat;
+  const pantsMat = new THREE.MeshStandardMaterial({ color:0x223355, roughness:.85, metalness:0 });
+  const hatMat = new THREE.MeshStandardMaterial({ color:0x8B5E3C, roughness:.9, metalness:0 });
+
+  // Body (torso)
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(.38,.42,.26), shirtMat);
+  torso.position.y = .65; torso.castShadow = true; grp.add(torso);
+  // Legs
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(.17,.44,.24), pantsMat);
+  legL.position.set(-.1,.21,.0); legL.castShadow = true; grp.add(legL);
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(.17,.44,.24), pantsMat);
+  legR.position.set(.1,.21,.0); legR.castShadow = true; grp.add(legR);
+  // Head
+  const head = new THREE.Mesh(new THREE.BoxGeometry(.3,.3,.3), skinMat);
+  head.position.y = 1.02; head.castShadow = true; grp.add(head);
+  // Hat
+  const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.035,12), hatMat);
+  hatBrim.position.y = 1.19; grp.add(hatBrim);
+  const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(.14,.18,.18,12), hatMat);
+  hatTop.position.y = 1.29; grp.add(hatTop);
+  // Right arm (rod arm)
+  const armR = new THREE.Group();
+  armR.position.set(.22,.82,0); grp.add(armR);
+  const upperArm = new THREE.Mesh(new THREE.BoxGeometry(.12,.32,.14), shirtMat);
+  upperArm.position.y = -.16; armR.add(upperArm);
+  const forearm = new THREE.Group();
+  forearm.position.y = -.34; armR.add(forearm);
+  const forearmMesh = new THREE.Mesh(new THREE.BoxGeometry(.1,.28,.12), skinMat);
+  forearmMesh.position.y = -.14; forearm.add(forearmMesh);
+
+  // Miniature fishing rod attached to right hand
+  const mpRod = new THREE.Group();
+  mpRod.position.set(0, -.3, 0.1);
+  forearm.add(mpRod);
+  const mGrip = new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,.35,7), new THREE.MeshStandardMaterial({color:0x181410,roughness:.96}));
+  mGrip.position.y=.18; mpRod.add(mGrip);
+  const mBlank = new THREE.Mesh(new THREE.CylinderGeometry(.006,.018,2.2,6), new THREE.MeshStandardMaterial({color:0xb87333,roughness:.65,flatShading:true}));
+  mBlank.position.y=1.25; mpRod.add(mBlank);
+
+  // Tip of miniature rod
+  const mTip = new THREE.Object3D(); mTip.position.y = 2.45; mpRod.add(mTip);
+
+  // Name label (sprite)
+  const tc = document.createElement('canvas'); tc.width=256; tc.height=48;
+  const ctx2 = tc.getContext('2d');
   ctx2.fillStyle='rgba(0,0,0,.65)'; ctx2.beginPath(); ctx2.roundRect(4,4,248,40,8); ctx2.fill();
-  ctx2.fillStyle='#d8eeff'; ctx2.font='bold 20px Nunito,sans-serif'; ctx2.textAlign='center';
-  ctx2.fillText(username2.slice(0,14),128,28);
-  const lMat=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(tc),transparent:true});
-  const label=new THREE.Sprite(lMat); label.scale.set(1.2,.24,1); label.position.y=1.1; grp.add(label);
-  const s={grp,bMat,visible:true}; playerSprites.set(userId2,s); return s;
+  ctx2.fillStyle='#d8eeff'; ctx2.font='bold 20px sans-serif'; ctx2.textAlign='center';
+  ctx2.fillText(username.slice(0,14), 128, 28);
+  const label = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(tc),transparent:true}));
+  label.scale.set(1.3,.26,1); label.position.y=1.32; grp.add(label);
+
+  // Bobber for this other player
+  const oBob = new THREE.Group(); scene.add(oBob); oBob.visible = false;
+  oBob.add(new THREE.Mesh(new THREE.SphereGeometry(.09,8,6,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0xe74c3c,roughness:.52})));
+  oBob.add(new THREE.Mesh(new THREE.SphereGeometry(.09,8,6,0,Math.PI*2,Math.PI/2,Math.PI/2),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.6})));
+  const oAnt=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.28,4),new THREE.MeshStandardMaterial({color:0x666666}));
+  oAnt.position.y=.26; oBob.add(oAnt);
+
+  // Line for other player
+  const oLArr=new Float32Array(LPTS*3);
+  const oLGeom=new THREE.BufferGeometry(); oLGeom.setAttribute('position',new THREE.Float32BufferAttribute(oLArr,3));
+  const oLine=new THREE.Line(oLGeom,new THREE.LineBasicMaterial({color:0xcccccc,transparent:true,opacity:.7}));
+  scene.add(oLine); oLine.visible=false;
+
+  return { grp, armR, forearm, mpRod, mTip, oBob, oLine, bodyMat, castProgress:0, castDir:new THREE.Vector3(0,0,-1) };
 }
 
-function updatePlayerSprites(others){
-  const seen=new Set();
-  for(const[id,p] of others){
+// Update or create 3D mesh for other players
+function syncOtherPlayer3D(others) {
+  const seen = new Set();
+
+  for (const [id, pData] of others) {
     seen.add(id);
-    if(p.mapIndex!==curMap){if(playerSprites.has(id))playerSprites.get(id).grp.visible=false;continue;}
-    const s=getOrCreateSprite(id,p.username);
-    s.grp.visible=true;
-    const angle=(parseInt(id.slice(-4),16)/65535)*Math.PI*2;
-    const dist=1.8+(parseInt(id.slice(-2),16)/255)*1.2;
-    s.grp.position.set(Math.cos(angle)*dist,0,Math.sin(angle)*dist-1.2);
-    if(p.yaw!==undefined) s.grp.rotation.y=p.yaw;
-    const stateColor={idle:0x3388ff,casting:0xf39c12,waiting:0x00d4ff,biting:0xe74c3c,reeling:0x2ecc71,result:0x3388ff};
-    s.bMat.color.set(stateColor[p.state]||0x3388ff);
+    if (pData.mapIndex !== curMap) {
+      if (otherPlayers.has(id)) otherPlayers.get(id).grp.visible = false;
+      continue;
+    }
+
+    if (!otherPlayers.has(id)) {
+      const mesh = buildOtherPlayerMesh(id, pData.username);
+      otherPlayers.set(id, { mesh, data: pData });
+    }
+
+    const entry = otherPlayers.get(id);
+    entry.data = pData;
+    const { mesh } = entry;
+
+    mesh.grp.visible = true;
+
+    // Position: spread players around dock area
+    const hash = parseInt(id.slice(-6), 16);
+    const angle = (hash / 0xffffff) * Math.PI * 2;
+    const dist = 1.5 + (parseInt(id.slice(-2), 16) / 255) * 1.8;
+    mesh.grp.position.set(
+      Math.cos(angle) * dist,
+      0,
+      Math.sin(angle) * dist - 1.5
+    );
+
+    // Face direction based on yaw
+    if (pData.yaw !== undefined) mesh.grp.rotation.y = pData.yaw + Math.PI;
+
+    // Update body/arm color based on state
+    const stateColors = { idle:pColor=>pColor, casting:0xf39c12, waiting:0x00d4ff, biting:0xe74c3c, reeling:0x2ecc71 };
+    const sColor = stateColors[pData.state];
+    if (typeof sColor === 'number') mesh.bodyMat.color.set(sColor);
+
+    // Animate arm / rod based on state
+    const state = pData.state || 'idle';
+    if (state === 'idle' || state === 'result') {
+      mesh.castProgress = Math.max(0, mesh.castProgress - 0.04);
+      // Arm resting: down
+      mesh.armR.rotation.x = THREE.MathUtils.lerp(mesh.armR.rotation.x, -0.2, 0.1);
+      mesh.forearm.rotation.x = THREE.MathUtils.lerp(mesh.forearm.rotation.x, 0.3, 0.1);
+      mesh.oBob.visible = false; mesh.oLine.visible = false;
+    } else if (state === 'casting') {
+      mesh.castProgress = Math.min(1, mesh.castProgress + 0.06);
+      // Arm raised for casting
+      mesh.armR.rotation.x = THREE.MathUtils.lerp(mesh.armR.rotation.x, -1.4, 0.12);
+      mesh.forearm.rotation.x = THREE.MathUtils.lerp(mesh.forearm.rotation.x, -0.5, 0.1);
+      mesh.oBob.visible = false; mesh.oLine.visible = false;
+    } else if (state === 'waiting' || state === 'biting') {
+      mesh.castProgress = 1;
+      // Arm slightly raised, line out
+      mesh.armR.rotation.x = THREE.MathUtils.lerp(mesh.armR.rotation.x, -0.6, 0.1);
+      mesh.forearm.rotation.x = THREE.MathUtils.lerp(mesh.forearm.rotation.x, 0.4, 0.1);
+      mesh.oBob.visible = true; mesh.oLine.visible = true;
+    } else if (state === 'reeling') {
+      mesh.castProgress = Math.max(0, mesh.castProgress - 0.06);
+      mesh.armR.rotation.x = THREE.MathUtils.lerp(mesh.armR.rotation.x, -1.0, 0.15);
+      mesh.forearm.rotation.x = THREE.MathUtils.lerp(mesh.forearm.rotation.x, -0.6, 0.12);
+    }
   }
-  for(const[id,s] of playerSprites){if(!seen.has(id)){scene.remove(s.grp);playerSprites.delete(id);}}
+
+  // Remove players no longer online
+  for (const [id, entry] of otherPlayers) {
+    if (!seen.has(id)) {
+      scene.remove(entry.mesh.grp);
+      scene.remove(entry.mesh.oBob);
+      scene.remove(entry.mesh.oLine);
+      otherPlayers.delete(id);
+    }
+  }
 }
 
-function applyMap(i){
+// ═══════════════════════════════════════════════════════════
+// MAP APPLY
+// ═══════════════════════════════════════════════════════════
+function applyMap(i) {
   const m=MAPS[i];
   skyMat.map=SKY_TEX[i]; skyMat.needsUpdate=true;
   scene.fog=new THREE.Fog(m.fog,m.fn,m.ff); renderer.setClearColor(m.fog);
@@ -743,255 +848,440 @@ function applyMap(i){
   groundMesh.material.color.set(m.gc);
 }
 
-function initThree(){
+// ═══════════════════════════════════════════════════════════
+// INIT THREE (animation loop)
+// ═══════════════════════════════════════════════════════════
+function initThree() {
   applyMap(0);
-  let lineProgress=0,fishAnimT=0,fishAnimating=false,curRot=-.22;
-  const RANG={idle:-.22,casting:-.94,waiting:-.52,biting:-.46,reeling:.34,result:-.22};
+  let lineProgress=0, fishAnimT=0, fishAnimating=false, curRot=-.22;
+  const RANG={ idle:-.22, casting:-.94, waiting:-.52, biting:-.46, reeling:.34, result:-.22 };
   const tipWP=new THREE.Vector3();
-  function waveY(x,z,t){return Math.sin(x*3.2+t*1.6)*.16+Math.sin(z*2.5-t*1.2)*.12+Math.sin((x+z)*1.8+t*.9)*.08+Math.sin(x*1.1-z*.8+t*2.2)*.045;}
-  function animate(ts){
-    requestAnimationFrame(animate);
-    const t=ts*.001;
-    waterMat.uniforms.uT.value=t; skySph.rotation.y=t*.006;
-    curRot+=((RANG[gstate]??RANG.idle)-curRot)*.09; fpRod.rotation.x=curRot;
-    if(gstate==='casting') lineProgress=Math.min(lineProgress+.055,1);
-    else if(gstate==='idle'||gstate==='result') lineProgress=Math.max(lineProgress-.09,0);
-    if(gstate==='waiting'||gstate==='biting'){
-      const wy=waveY(bobGrp.position.x,bobGrp.position.z,t);
-      const dip=gstate==='biting'?Math.abs(Math.sin(t*5.5))*.32+.22:0;
-      bobGrp.position.y=wy-dip;
-      if(gstate==='biting'){bobLight.position.copy(bobGrp.position);bobLight.position.y+=.4;bobLight.intensity=.6+Math.sin(t*8.5)*.24;bobGrp.children[0].material.color.set(0xff1111);}
-      else{bobLight.intensity=0;bobGrp.children[0].material.color.set(0xe74c3c);}
-      const rp=(t*.65)%1; ripMesh.scale.set(1+rp*3.8,1+rp*3.8,1); ripMesh.material.opacity=(1-rp)*.40;
-    } else bobLight.intensity=0;
-    bobGrp.visible=lineProgress>.8&&(gstate==='waiting'||gstate==='biting'||gstate==='reeling');
-    lineMesh.visible=lineProgress>.05;
-    if(lineMesh.visible){
-      tipObj.getWorldPosition(tipWP);
-      const pos=lineMesh.geometry.attributes.position.array;
-      for(let i=0;i<LPTS;i++){const ft=i/(LPTS-1);pos[i*3]=tipWP.x+(bobGrp.position.x-tipWP.x)*ft;pos[i*3+1]=tipWP.y+(bobGrp.position.y-tipWP.y)*ft+Math.sin(ft*Math.PI)*(-.52)*lineProgress;pos[i*3+2]=tipWP.z+(bobGrp.position.z-tipWP.z)*ft;}
-      lineMesh.geometry.attributes.position.needsUpdate=true;
-    }
-    if(fishAnimating&&resultFish){
-      fishAnimT=Math.min(fishAnimT+.02,1);
-      fishGrp.position.x=bobGrp.position.x+camera.position.x*fishAnimT*.38;
-      fishGrp.position.y=bobGrp.position.y+Math.sin(fishAnimT*Math.PI)*3.;
-      fishGrp.position.z=bobGrp.position.z+camera.position.z*fishAnimT*.30;
-      fishGrp.rotation.y=fishAnimT*Math.PI*.9; fishGrp.rotation.z=Math.sin(fishAnimT*Math.PI*3)*.30;
-      if(fishAnimT>=1){fishGrp.visible=false;fishAnimating=false;}
-    }
-    window._fishAnimating=fishAnimating; window._setFishAnimating=v=>fishAnimating=v; window._setFishAnimT=v=>fishAnimT=v;
-    window._lineProgress=lineProgress;
-    if(gstate==='waiting'&&waitStart>0){
-      const frac=Math.min((performance.now()-waitStart)/waitDur,1);
-      const wbf=document.getElementById('wbf');
-      wbf.style.width=(100-frac*100)+'%'; wbf.style.background=frac>.7?'#ff5252':frac>.4?'#ffd660':'#00d4ff';
-    } else document.getElementById('wbf').style.width='100%';
-    renderer.render(scene,camera);
+  const tmpWP=new THREE.Vector3();
+
+  function waveY(x,z,t) {
+    return Math.sin(x*3.2+t*1.6)*.16+Math.sin(z*2.5-t*1.2)*.12+Math.sin((x+z)*1.8+t*.9)*.08+Math.sin(x*1.1-z*.8+t*2.2)*.045;
   }
-  window._applyMap=applyMap; window._bobGrp=bobGrp; window._fbM=fbM; window._ftM=ftM;
-  window._fishGrp=fishGrp; window._lineProgress=0;
-  window._setLineProgress=v=>lineProgress=v;
-  window._setFishAnimating=v=>fishAnimating=v; window._setFishAnimT=v=>fishAnimT=v;
+
+  function updateOtherPlayerLines(t) {
+    for (const [id, entry] of otherPlayers) {
+      const { mesh } = entry;
+      if (!mesh.oBob.visible) { mesh.oLine.visible = false; continue; }
+      mesh.oLine.visible = true;
+
+      // Bobber floats on water
+      const bx = mesh.grp.position.x + mesh.castDir.x * 4 * mesh.castProgress;
+      const bz = mesh.grp.position.z + mesh.castDir.z * 4 * mesh.castProgress - 3;
+      const by  = waveY(bx, bz, t) + .02;
+      mesh.oBob.position.set(bx, by, bz);
+
+      // Get tip world position
+      mesh.mTip.getWorldPosition(tmpWP);
+
+      // Draw line from tip to bobber
+      const pos = mesh.oLine.geometry.attributes.position.array;
+      for (let i=0; i<LPTS; i++) {
+        const ft=i/(LPTS-1);
+        pos[i*3]   = tmpWP.x + (bx - tmpWP.x)*ft;
+        pos[i*3+1] = tmpWP.y + (by - tmpWP.y)*ft + Math.sin(ft*Math.PI)*(-.4)*mesh.castProgress;
+        pos[i*3+2] = tmpWP.z + (bz - tmpWP.z)*ft;
+      }
+      mesh.oLine.geometry.attributes.position.needsUpdate = true;
+
+      // Biting animation
+      if (entry.data && entry.data.state === 'biting') {
+        mesh.oBob.position.y = by - Math.abs(Math.sin(t*5.5))*.28;
+        mesh.oBob.children[0].material.color.set(0xff2222);
+      } else if (entry.data) {
+        mesh.oBob.children[0].material.color.set(0xe74c3c);
+      }
+    }
+  }
+
+  function animate(ts) {
+    requestAnimationFrame(animate);
+    const t = ts * .001;
+    waterMat.uniforms.uT.value = t;
+    skySph.rotation.y = t * .006;
+
+    // Rod angle animation
+    curRot += ((RANG[gstate]??RANG.idle) - curRot) * .09;
+    fpRod.rotation.x = curRot;
+
+    // Line cast animation
+    if (gstate === 'casting') lineProgress = Math.min(lineProgress+.055, 1);
+    else if (gstate === 'idle'||gstate === 'result') lineProgress = Math.max(lineProgress-.09, 0);
+
+    // Bobber animation
+    if (gstate==='waiting'||gstate==='biting') {
+      const wy = waveY(bobGrp.position.x, bobGrp.position.z, t);
+      const dip = gstate==='biting' ? Math.abs(Math.sin(t*5.5))*.32+.22 : 0;
+      bobGrp.position.y = wy - dip;
+      if (gstate==='biting') {
+        bobLight.position.copy(bobGrp.position); bobLight.position.y+=.4;
+        bobLight.intensity = .6 + Math.sin(t*8.5)*.24;
+        bobGrp.children[0].material.color.set(0xff1111);
+      } else { bobLight.intensity=0; bobGrp.children[0].material.color.set(0xe74c3c); }
+      const rp=(t*.65)%1; ripMesh.scale.set(1+rp*3.8, 1+rp*3.8, 1); ripMesh.material.opacity=(1-rp)*.40;
+    } else bobLight.intensity = 0;
+
+    bobGrp.visible  = lineProgress>.8 && (gstate==='waiting'||gstate==='biting'||gstate==='reeling');
+    lineMesh.visible = lineProgress>.05;
+
+    if (lineMesh.visible) {
+      tipObj.getWorldPosition(tipWP);
+      const pos = lineMesh.geometry.attributes.position.array;
+      for (let i=0; i<LPTS; i++) {
+        const ft=i/(LPTS-1);
+        pos[i*3]   = tipWP.x+(bobGrp.position.x-tipWP.x)*ft;
+        pos[i*3+1] = tipWP.y+(bobGrp.position.y-tipWP.y)*ft+Math.sin(ft*Math.PI)*(-.52)*lineProgress;
+        pos[i*3+2] = tipWP.z+(bobGrp.position.z-tipWP.z)*ft;
+      }
+      lineMesh.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // Fish anim
+    if (fishAnimating && resultFish) {
+      fishAnimT = Math.min(fishAnimT+.02, 1);
+      fishGrp.position.x = bobGrp.position.x + camera.position.x*fishAnimT*.38;
+      fishGrp.position.y = bobGrp.position.y + Math.sin(fishAnimT*Math.PI)*3.;
+      fishGrp.position.z = bobGrp.position.z + camera.position.z*fishAnimT*.30;
+      fishGrp.rotation.y = fishAnimT*Math.PI*.9;
+      fishGrp.rotation.z = Math.sin(fishAnimT*Math.PI*3)*.30;
+      if (fishAnimT >= 1) { fishGrp.visible=false; fishAnimating=false; }
+    }
+
+    // Other players
+    updateOtherPlayerLines(t);
+
+    // Wait bar
+    if (gstate==='waiting' && waitStart>0) {
+      const frac = Math.min((performance.now()-waitStart)/waitDur, 1);
+      const wbf = document.getElementById('wbf');
+      wbf.style.width = (100-frac*100)+'%';
+      wbf.style.background = frac>.7?'#ff5252':frac>.4?'#ffd660':'#00d4ff';
+    } else document.getElementById('wbf').style.width='100%';
+
+    // Expose for game logic
+    window._fishAnimating = fishAnimating;
+    window._setFishAnimating = v => { fishAnimating=v; };
+    window._setFishAnimT = v => { fishAnimT=v; };
+    window._lineProgress = lineProgress;
+    window._setLineProgress = v => { lineProgress=v; };
+
+    renderer.render(scene, camera);
+  }
+
+  window._applyMap = applyMap;
+  window._bobGrp   = bobGrp;
+  window._fbM = fbM; window._ftM = ftM;
+  window._fishGrp = fishGrp;
+
   requestAnimationFrame(animate);
 }
 
-// ── Game Logic ────────────────────────────────────────────
-function rollFish(){const r=Math.random()*100;let c=30;if(r<c)return null;for(const f of FISH_LIST){c+=f.rate;if(r<c)return f;}return null;}
+// ═══════════════════════════════════════════════════════════
+// GAME LOGIC
+// ═══════════════════════════════════════════════════════════
+function rollFish() {
+  const r = Math.random()*100; let c = 30;
+  if (r < c) return null;
+  for (const f of FISH_LIST) { c+=f.rate; if(r<c) return f; }
+  return null;
+}
 
-function handleCast(){
-  if(gstate==='biting'){clearTimeout(bt);doReelIn();return;}
-  if(gstate!=='idle'||!userData.userId) return;
-  if(userData.rodUses<=0){showToast('❌ Mua cần câu ở Shop!');swTab('shop');return;}
+function handleCast() {
+  if (gstate==='biting') { clearTimeout(bt); doReelIn(); return; }
+  if (gstate!=='idle' || !player.userId) return;
+  if (player.rodUses <= 0) { showToast('❌ Mua cần câu ở Shop!'); swTab('shop'); return; }
+
   resultFish=null; hideBanner(); gstate='casting';
   setStatus('🎣 Đang thả câu...');
-  document.getElementById('cb').disabled=true;
-  const fwd2=new THREE.Vector3(); camera.getWorldDirection(fwd2); fwd2.y=0; fwd2.normalize();
-  window._bobGrp.position.set(camera.position.x+fwd2.x*12,.05,camera.position.z+fwd2.z*12);
+  document.getElementById('cb').disabled = true;
+
+  const fwd2 = new THREE.Vector3();
+  camera.getWorldDirection(fwd2); fwd2.y=0; fwd2.normalize();
+  window._bobGrp.position.set(camera.position.x+fwd2.x*12, .05, camera.position.z+fwd2.z*12);
   updatePresence('casting');
-  setTimeout(()=>{
-    gstate='waiting'; setStatus('⏳ Đang chờ cá cắn...');
-    waitDur=3000+Math.random()*8000; waitStart=performance.now();
+
+  setTimeout(() => {
+    gstate = 'waiting'; setStatus('⏳ Đang chờ cá cắn...');
+    waitDur = 3000 + Math.random()*8000; waitStart = performance.now();
     updatePresence('waiting');
-    wt=setTimeout(startBite,waitDur);
-  },1200);
+    wt = setTimeout(startBite, waitDur);
+  }, 1200);
 }
-function startBite(){
-  gstate='biting'; setStatus('🐟 CÁ CẮN! CLICK KÉO!');
-  const b=document.getElementById('cb'); b.textContent='⚡ KÉO!'; b.classList.add('bite'); b.disabled=false;
+
+function startBite() {
+  gstate = 'biting'; setStatus('🐟 CÁ CẮN! CLICK KÉO!');
+  const b = document.getElementById('cb'); b.textContent='⚡ KÉO!'; b.classList.add('bite'); b.disabled=false;
   document.getElementById('bf').classList.add('on');
   updatePresence('biting');
-  bt=setTimeout(fishEscape,3000);
+  bt = setTimeout(fishEscape, 3000);
 }
-async function doReelIn(){
-  gstate='reeling'; setStatus('');
-  const b=document.getElementById('cb'); b.textContent='🎣 THẢ CÂU'; b.classList.remove('bite'); b.disabled=true;
+
+async function doReelIn() {
+  gstate = 'reeling'; setStatus('');
+  const b = document.getElementById('cb'); b.textContent='🎣 THẢ CÂU'; b.classList.remove('bite'); b.disabled=true;
   document.getElementById('bf').classList.remove('on');
-  userData.rodUses--; updateUI(); resultFish=rollFish();
+
+  // Deduct rod use IMMEDIATELY and save
+  player.rodUses--;
+  updateUI();
+  scheduleSave(300); // save fast after rod use
+
+  resultFish = rollFish();
   updatePresence('reeling');
-  if(resultFish){
-    window._fbM.material.color.set(resultFish.color); window._ftM.material.color.set(resultFish.color);
-    window._fishGrp.position.copy(window._bobGrp.position); window._fishGrp.visible=true;
+
+  if (resultFish) {
+    window._fbM.material.color.set(resultFish.color);
+    window._ftM.material.color.set(resultFish.color);
+    window._fishGrp.position.copy(window._bobGrp.position);
+    window._fishGrp.visible = true;
     window._setFishAnimT(0); window._setFishAnimating(true);
     broadcastCatch(resultFish);
   }
-  setTimeout(async()=>{
-    gstate='result'; showBanner(resultFish);
-    if(resultFish){userData.inventory[resultFish.id]=(userData.inventory[resultFish.id]||0)+1;showToast(`🎉 ${resultFish.emoji} ${resultFish.name}!`);}
-    else showToast('😅 Không câu được gì...');
-    await syncToFirebase(resultFish?{totalCaught:1}:{});
+
+  setTimeout(async () => {
+    gstate = 'result';
+    showBanner(resultFish);
+
+    if (resultFish) {
+      if (!player.inventory[resultFish.id]) player.inventory[resultFish.id] = 0;
+      player.inventory[resultFish.id]++;
+      player.totalCaught++;
+      showToast(`🎉 ${resultFish.emoji} ${resultFish.name}!`);
+    } else {
+      showToast('😅 Không câu được gì...');
+    }
+
+    // Save all changes
+    await writePlayerImmediate();
     updateUI();
-    setTimeout(()=>{
-      gstate='idle'; hideBanner(); updatePresence('idle');
-      const noRod=userData.rodUses<=0;
-      setStatus(noRod?'🏪 Hết cần! Mua thêm.':'🎣 Nhấn THẢ CÂU để tiếp tục!');
-      const btn=document.getElementById('cb'); btn.disabled=false;
-      btn.textContent=noRod?'🏪 MUA CẦN':'🎣 THẢ CÂU';
+
+    setTimeout(() => {
+      gstate = 'idle'; hideBanner(); updatePresence('idle');
+      const noRod = player.rodUses <= 0;
+      setStatus(noRod ? '🏪 Hết cần! Mua thêm.' : '🎣 Nhấn THẢ CÂU để tiếp tục!');
+      const btn = document.getElementById('cb'); btn.disabled=false;
+      btn.textContent = noRod ? '🏪 MUA CẦN' : '🎣 THẢ CÂU';
       renderContent();
-    },2600);
-  },1400);
+    }, 2600);
+  }, 1400);
 }
-function fishEscape(){
-  gstate='idle'; setStatus('😔 Cá thoát! Click ⚡ KÉO nhanh hơn!');
-  const b=document.getElementById('cb'); b.textContent='🎣 THẢ CÂU'; b.classList.remove('bite'); b.disabled=false;
+
+function fishEscape() {
+  gstate = 'idle'; setStatus('😔 Cá thoát! Kéo nhanh hơn!');
+  const b = document.getElementById('cb'); b.textContent='🎣 THẢ CÂU'; b.classList.remove('bite'); b.disabled=false;
   document.getElementById('bf').classList.remove('on');
   updatePresence('idle'); showToast('😔 Cá trốn mất!');
 }
-async function buyRod(){
-  if(userData.coins<ROD_PRICE){showToast('❌ Không đủ xu!');return;}
-  userData.coins-=ROD_PRICE; userData.rodUses+=ROD_USES;
-  await syncToFirebase(); updateUI(); renderContent();
-  showToast(`✅ Mua cần! +${ROD_USES} lần câu`);
-  if(gstate==='idle'){document.getElementById('cb').textContent='🎣 THẢ CÂU';setStatus('🎣 Nhấn THẢ CÂU!');}
+
+async function buyRod(qty) {
+  qty = Math.min(parseInt(qty)||1, 100);
+  const cost = ROD_PRICE * qty;
+  if (player.coins < cost) { showToast('❌ Không đủ xu!'); return; }
+
+  player.coins   -= cost;
+  player.rodUses += ROD_USES * qty;
+  updateUI();
+  renderContent();
+  showToast(`✅ Mua ${qty} cần! +${ROD_USES*qty} lần câu`);
+
+  // Save immediately (money changed)
+  await writePlayerImmediate();
+
+  if (gstate === 'idle') {
+    document.getElementById('cb').textContent = '🎣 THẢ CÂU';
+    setStatus('🎣 Nhấn THẢ CÂU!');
+  }
 }
-async function sellFish(id){
-  const cnt=userData.inventory[id]||0; if(!cnt)return;
-  const f=FISH_LIST.find(x=>x.id===id),got=f.value*cnt;
-  userData.coins+=got; delete userData.inventory[id];
-  await syncToFirebase({totalEarned:got}); renderContent();
+
+async function sellFish(id) {
+  const cnt = player.inventory[id]||0; if (!cnt) return;
+  const f = FISH_LIST.find(x=>x.id===id), got = f.value*cnt;
+
+  player.coins += got;
+  player.totalEarned += got;
+  delete player.inventory[id];
+
+  updateUI();
+  renderContent();
   showToast(`💰 Bán ${cnt} ${f.emoji} → +${fmt(got)} 🪙`);
+
+  // Save immediately (money changed)
+  await writePlayerImmediate();
 }
-async function sellAll(){
-  let total=0; for(const[id,cnt] of Object.entries(userData.inventory)){const f=FISH_LIST.find(x=>x.id===id);total+=f.value*cnt;}
-  if(!total){showToast('❌ Túi cá trống!');return;}
-  userData.coins+=total; const earned=total; userData.inventory={};
-  await syncToFirebase({totalEarned:earned}); renderContent();
+
+async function sellAll() {
+  let total=0;
+  for (const [id,cnt] of Object.entries(player.inventory)) {
+    const f=FISH_LIST.find(x=>x.id===id); if(f) total+=f.value*cnt;
+  }
+  if (!total) { showToast('❌ Túi cá trống!'); return; }
+
+  player.coins += total;
+  player.totalEarned += total;
+  player.inventory = {};
+
+  updateUI();
+  renderContent();
   showToast(`💰 Bán tất cả → +${fmt(total)} 🪙!`);
+
+  // Save immediately
+  await writePlayerImmediate();
 }
 
-function fmt(n){if(n>=1e9)return(n/1e9).toFixed(1).replace(/\.0$/,'')+'B';if(n>=1e6)return(n/1e6).toFixed(1).replace(/\.0$/,'')+'M';if(n>=1e3)return(n/1e3).toFixed(1).replace(/\.0$/,'')+'K';return n.toLocaleString('vi-VN');}
-function setStatus(m){document.getElementById('st').textContent=m;}
-function updateUI(){document.getElementById('ct').textContent=fmt(userData.coins);document.getElementById('ut').textContent=userData.rodUses>0?userData.rodUses:'0';}
-function selMap(i){curMap=i;window._applyMap&&window._applyMap(i);document.querySelectorAll('.mb').forEach((b,j)=>b.classList.toggle('on',j===i));updatePresence(gstate);}
-function swTab(tab){activeTab=tab;const keys=['bag','shop','sell','rates'];document.querySelectorAll('.tb').forEach((b,i)=>b.classList.toggle('on',keys[i]===tab));renderContent();}
-function showBanner(fish){
-  const b=document.getElementById('rb');
-  if(fish){document.getElementById('rem').textContent=fish.emoji;document.getElementById('rn').textContent=fish.name;document.getElementById('rv').textContent='Bán: +'+fmt(fish.value)+' 🪙';document.getElementById('rr').innerHTML=`<span class="${fish.rc}">${fish.rar}</span>`;b.style.borderColor='#'+fish.color.toString(16).padStart(6,'0');}
-  else{document.getElementById('rem').textContent='💨';document.getElementById('rn').textContent='Hụt rồi!';document.getElementById('rv').textContent='Cá trốn...';document.getElementById('rr').textContent='';b.style.borderColor='#555';}
-  b.classList.remove('show');void b.offsetWidth;b.classList.add('show');
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function fmt(n) {
+  if (n>=1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'')+'B';
+  if (n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M';
+  if (n>=1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'')+'K';
+  return n.toLocaleString('vi-VN');
 }
-function hideBanner(){document.getElementById('rb').classList.remove('show');}
-let toastT=null;
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3200);}
+function setStatus(m)  { document.getElementById('st').textContent=m; }
+function updateUI()    { document.getElementById('ct').textContent=fmt(player.coins); document.getElementById('ut').textContent=player.rodUses>0?player.rodUses:'0'; }
+function selMap(i)     { curMap=i; window._applyMap&&window._applyMap(i); document.querySelectorAll('.mb').forEach((b,j)=>b.classList.toggle('on',j===i)); updatePresence(gstate); }
+function swTab(tab)    { activeTab=tab; const keys=['bag','shop','sell','rates']; document.querySelectorAll('.tb').forEach((b,i)=>b.classList.toggle('on',keys[i]===tab)); renderContent(); }
 
-function renderOtherPlayers(others){
-  const el=document.getElementById('players-overlay');
-  let html='';
-  for(const[id,p] of others){
-    if(p.mapIndex!==curMap) continue;
-    const av=p.avatar?`https://cdn.discordapp.com/avatars/${id}/${p.avatar}.webp?size=32`:`https://cdn.discordapp.com/embed/avatars/0.png`;
-    html+=`<div class="po"><img src="${av}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"><span class="pn">${p.username.slice(0,12)}</span><span class="ps ps-${p.state||'idle'}">${STATE_LABEL[p.state||'idle']||''}</span></div>`;
+function showBanner(fish) {
+  const b = document.getElementById('rb');
+  if (fish) {
+    document.getElementById('rem').textContent = fish.emoji;
+    document.getElementById('rn').textContent  = fish.name;
+    document.getElementById('rv').textContent  = 'Bán: +'+fmt(fish.value)+' 🪙';
+    document.getElementById('rr').innerHTML    = `<span class="${fish.rc}">${fish.rar}</span>`;
+    b.style.borderColor = '#'+fish.color.toString(16).padStart(6,'0');
+  } else {
+    document.getElementById('rem').textContent = '💨';
+    document.getElementById('rn').textContent  = 'Hụt rồi!';
+    document.getElementById('rv').textContent  = 'Cá trốn...';
+    document.getElementById('rr').textContent  = '';
+    b.style.borderColor = '#555';
   }
-  el.innerHTML=html;
+  b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
 }
-function addNotif(html){const el=document.getElementById('notifs');const d=document.createElement('div');d.className='notif';d.innerHTML=html;el.appendChild(d);setTimeout(()=>d.remove(),4000);if(el.children.length>5)el.removeChild(el.children[0]);}
-function addChatMsg(username,text,isSelf=false){const el=document.getElementById('chatlog');const d=document.createElement('div');d.className='chatmsg';d.innerHTML=`<strong style="color:${isSelf?'var(--gold)':'var(--accent)'}">${username}:</strong> ${text}`;el.appendChild(d);el.scrollTop=el.scrollHeight;setTimeout(()=>d.remove(),9000);if(el.children.length>8)el.removeChild(el.children[0]);}
+function hideBanner() { document.getElementById('rb').classList.remove('show'); }
 
-function renderContent(){
-  const p=document.getElementById('cp');
-  if(activeTab==='bag'){
-    const keys=Object.keys(userData.inventory).filter(k=>userData.inventory[k]>0);
-    if(!keys.length){p.innerHTML=`<div class="stl">🎒 TÚI CÁ</div><div class="es"><div class="ei">🎣</div><p>Túi trống. Thả câu bắt cá!</p></div>`;return;}
+let toastT = null;
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3200); }
+
+function renderOtherPlayersList(others) {
+  const el = document.getElementById('players-overlay');
+  let html = '';
+  for (const [id, p] of others) {
+    if (p.mapIndex !== curMap) continue;
+    const av = p.avatar
+      ? `https://cdn.discordapp.com/avatars/${id}/${p.avatar}.webp?size=32`
+      : `https://cdn.discordapp.com/embed/avatars/0.png`;
+    html += `<div class="po"><img src="${av}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"><span class="pn">${p.username.slice(0,12)}</span><span class="ps ps-${p.state||'idle'}">${STATE_LABEL[p.state||'idle']||''}</span></div>`;
+  }
+  el.innerHTML = html;
+}
+
+function addNotif(html) {
+  const el=document.getElementById('notifs');
+  const d=document.createElement('div'); d.className='notif'; d.innerHTML=html;
+  el.appendChild(d); setTimeout(()=>d.remove(),4000);
+  if (el.children.length>5) el.removeChild(el.children[0]);
+}
+
+function addChatMsg(username, text, isSelf=false) {
+  const el=document.getElementById('chatlog');
+  const d=document.createElement('div'); d.className='chatmsg';
+  d.innerHTML=`<strong style="color:${isSelf?'var(--gold)':'var(--accent)'}">${username}:</strong> ${text}`;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+  setTimeout(()=>d.remove(),9000);
+  if (el.children.length>8) el.removeChild(el.children[0]);
+}
+
+function invValue(inv) {
+  let t=0;
+  for (const [id,cnt] of Object.entries(inv)) { const f=FISH_LIST.find(x=>x.id===id); if(f)t+=f.value*cnt; }
+  return t;
+}
+
+function renderContent() {
+  const p = document.getElementById('cp');
+  if (activeTab === 'bag') {
+    const keys = Object.keys(player.inventory).filter(k=>player.inventory[k]>0);
+    if (!keys.length) { p.innerHTML=`<div class="stl">🎒 TÚI CÁ</div><div class="es"><div class="ei">🎣</div><p>Túi trống. Thả câu bắt cá!</p></div>`; return; }
     let h=`<div class="stl">🎒 TÚI CÁ</div><div class="ig">`;
-    for(const id of keys){const f=FISH_LIST.find(x=>x.id===id),cnt=userData.inventory[id];const hc='#'+f.color.toString(16).padStart(6,'0');h+=`<div class="ii" style="border-color:${hc}40"><div class="fe">${f.emoji}</div><div class="fn">${f.name}</div><div class="fc">×${cnt} con</div><div class="fv"><span class="${f.rc}">${f.rar}</span></div><div class="fv" style="color:var(--gold)">${fmt(f.value)}/con</div><div class="fv" style="font-weight:800">=${fmt(f.value*cnt)}🪙</div></div>`;}
-    p.innerHTML=h+'</div>';return;
+    for (const id of keys) {
+      const f=FISH_LIST.find(x=>x.id===id), cnt=player.inventory[id];
+      const hc='#'+f.color.toString(16).padStart(6,'0');
+      h+=`<div class="ii" style="border-color:${hc}40"><div class="fe">${f.emoji}</div><div class="fn">${f.name}</div><div class="fc">×${cnt} con</div><div class="fv"><span class="${f.rc}">${f.rar}</span></div><div class="fv" style="color:var(--gold)">${fmt(f.value)}/con</div><div class="fv" style="font-weight:800">=${fmt(f.value*cnt)}🪙</div></div>`;
+    }
+    p.innerHTML=h+'</div>'; return;
   }
-  if(activeTab==='shop'){
-    const ok=userData.coins>=ROD_PRICE;
-    p.innerHTML=`<div class="stl">🏪 CỬA HÀNG</div><div class="shoprow"><div style="font-size:38px">🎣</div><div class="si"><div class="sn">Cần Câu Đồng</div><div class="sd">Câu được ${ROD_USES} lần • Online Firebase</div><div class="sp">${fmt(ROD_PRICE)} 🪙</div></div><button class="buybtn ${ok?'':'dis'}" onclick="${ok?'buyRod()':'void 0'}">${ok?'MUA NGAY':'THIẾU XU'}</button></div><div style="padding:9px;background:rgba(15,32,53,.8);border-radius:var(--rsm);font-size:11px;color:var(--sub)">💰 <strong style="color:var(--gold)">${fmt(userData.coins)} 🪙</strong> | 🎣 <strong style="color:var(--accent)">${userData.rodUses}</strong> lần còn</div>`;return;
+  if (activeTab === 'shop') {
+    const ok = player.coins >= ROD_PRICE;
+    p.innerHTML=`<div class="stl">🏪 CỬA HÀNG</div>
+      <div class="shoprow">
+        <div style="font-size:38px">🎣</div>
+        <div class="si"><div class="sn">Cần Câu Đồng</div><div class="sd">Câu được ${ROD_USES} lần</div><div class="sp">${fmt(ROD_PRICE)} 🪙</div></div>
+        <button class="buybtn ${ok?'':'dis'}" onclick="${ok?'buyRod(1)':'void 0'}">${ok?'MUA 1':'THIẾU XU'}</button>
+      </div>
+      ${player.coins >= ROD_PRICE*5 ? `<div class="shoprow"><div style="font-size:38px">🎣</div><div class="si"><div class="sn">Gói 5 Cần Câu</div><div class="sd">+${ROD_USES*5} lần câu (tiết kiệm 0%)</div><div class="sp">${fmt(ROD_PRICE*5)} 🪙</div></div><button class="buybtn" onclick="buyRod(5)">MUA 5</button></div>` : ''}
+      <div style="padding:9px;background:rgba(15,32,53,.8);border-radius:var(--rsm);font-size:11px;color:var(--sub)">
+        💰 <strong style="color:var(--gold)">${fmt(player.coins)} 🪙</strong> | 🎣 <strong style="color:var(--accent)">${player.rodUses}</strong> lần còn
+      </div>`; return;
   }
-  if(activeTab==='sell'){
-    const keys=Object.keys(userData.inventory).filter(k=>userData.inventory[k]>0);
-    if(!keys.length){p.innerHTML=`<div class="stl">💰 BÁN CÁ</div><div class="es"><div class="ei">🐟</div><p>Không có cá. Hãy đi câu trước!</p></div>`;return;}
-    let total=0;for(const[id,cnt] of Object.entries(userData.inventory)){const f=FISH_LIST.find(x=>x.id===id);if(f)total+=f.value*cnt;}
+  if (activeTab === 'sell') {
+    const keys = Object.keys(player.inventory).filter(k=>player.inventory[k]>0);
+    if (!keys.length) { p.innerHTML=`<div class="stl">💰 BÁN CÁ</div><div class="es"><div class="ei">🐟</div><p>Không có cá. Hãy đi câu trước!</p></div>`; return; }
+    let total=0; for(const[id,cnt] of Object.entries(player.inventory)){const f=FISH_LIST.find(x=>x.id===id);if(f)total+=f.value*cnt;}
     let h=`<div class="stl">💰 BÁN CÁ</div><div class="sg">`;
-    for(const id of keys){const f=FISH_LIST.find(x=>x.id===id),cnt=userData.inventory[id];const hc='#'+f.color.toString(16).padStart(6,'0');h+=`<div class="si2" style="border-color:${hc}40"><div style="font-size:30px">${f.emoji}</div><div style="font-weight:800;font-size:12px;margin:3px 0">${f.name}</div><div style="font-size:10px;color:var(--sub)">×${cnt} con</div><div style="font-size:11px;color:var(--gold);font-weight:800;margin:2px 0 4px">${fmt(f.value*cnt)}🪙</div><button class="sb" onclick="sellFish('${id}')">BÁN</button></div>`;}
+    for (const id of keys) {
+      const f=FISH_LIST.find(x=>x.id===id), cnt=player.inventory[id];
+      const hc='#'+f.color.toString(16).padStart(6,'0');
+      h+=`<div class="si2" style="border-color:${hc}40"><div style="font-size:30px">${f.emoji}</div><div style="font-weight:800;font-size:12px;margin:3px 0">${f.name}</div><div style="font-size:10px;color:var(--sub)">×${cnt} con</div><div style="font-size:11px;color:var(--gold);font-weight:800;margin:2px 0 4px">${fmt(f.value*cnt)}🪙</div><button class="sb" onclick="sellFish('${id}')">BÁN</button></div>`;
+    }
     h+=`</div><div style="text-align:right;font-size:12px;font-weight:800;color:var(--gold);margin-bottom:7px">Tổng: +${fmt(total)} 🪙</div><button id="sab" onclick="sellAll()">💰 BÁN TẤT CẢ → +${fmt(total)} 🪙</button>`;
-    p.innerHTML=h;return;
+    p.innerHTML=h; return;
   }
-  if(activeTab==='rates'){
+  if (activeTab === 'rates') {
     let h=`<div class="stl">📊 TỈ LỆ</div><table class="rt"><tr style="background:rgba(15,32,53,.8);font-weight:800"><td>Cá</td><td>Độ Hiếm</td><td>Tỉ Lệ</td><td>Giá</td></tr><tr><td>💨 Hụt</td><td>—</td><td>30%</td><td>—</td></tr>`;
-    for(const f of FISH_LIST) h+=`<tr><td>${f.emoji} ${f.name}</td><td><span class="${f.rc}">${f.rar}</span></td><td>${f.rate}%</td><td style="color:var(--gold);font-weight:800">${fmt(f.value)}🪙</td></tr>`;
+    for (const f of FISH_LIST) h+=`<tr><td>${f.emoji} ${f.name}</td><td><span class="${f.rc}">${f.rar}</span></td><td>${f.rate}%</td><td style="color:var(--gold);font-weight:800">${fmt(f.value)}🪙</td></tr>`;
     h+=`</table>`;
     p.innerHTML=h;
   }
 }
 
-let audioCtx=null,soundOn=false,masterGain=null;
-function initAudio(){if(audioCtx)return;audioCtx=new(window.AudioContext||window.webkitAudioContext)();masterGain=audioCtx.createGain();masterGain.gain.value=.13;masterGain.connect(audioCtx.destination);for(let l=0;l<3;l++){const dur=audioCtx.sampleRate*(4+l),buf=audioCtx.createBuffer(1,dur,audioCtx.sampleRate),data=buf.getChannelData(0);let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<dur;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.96900*b2+w*.1538520;b3=.86650*b3+w*.3104856;b4=.55000*b4+w*.5329522;b5=-.7616*b5-w*.0168980;data[i]=Math.max(-1,Math.min(1,(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.09));b6=w*.115926;}const src=audioCtx.createBufferSource();src.buffer=buf;src.loop=true;const flt=audioCtx.createBiquadFilter();flt.type='bandpass';flt.frequency.value=140+l*300;flt.Q.value=.75;const g=audioCtx.createGain();g.gain.value=.36-l*.08;const lfo=audioCtx.createOscillator();lfo.frequency.value=.16+l*.12;const lg=audioCtx.createGain();lg.gain.value=.035;lfo.connect(lg);lg.connect(g.gain);lfo.start();src.connect(flt);flt.connect(g);g.connect(masterGain);src.start(0,Math.random()*3);}soundOn=true;document.getElementById('snd').textContent='🔊';}
-function toggleSound(){if(!audioCtx){initAudio();return;}soundOn=!soundOn;if(masterGain)masterGain.gain.value=soundOn?.13:0;document.getElementById('snd').textContent=soundOn?'🔊':'🔇';}
-document.addEventListener('click',()=>{if(!audioCtx)initAudio();},{once:true});
-
-// ── Tải Firebase SDK chống lỗi: gstatic → jsDelivr → unpkg ──
-function loadScript(src){
-  return new Promise((resolve,reject)=>{
-    const s=document.createElement('script');
-    s.src=src; s.async=false;               // giữ đúng thứ tự thực thi
-    s.onload=()=>resolve(src);
-    s.onerror=()=>reject(new Error('Không tải được '+src));
-    document.head.appendChild(s);
-  });
-}
-async function loadFromCDN(base){
-  await loadScript(base+'firebase-app-compat.js');
-  await loadScript(base+'firebase-database-compat.js');
-}
-async function bootFirebase(){
-  setLoad('Tải thư viện Firebase...', 8);
-  const CDNS=[
-    'https://www.gstatic.com/firebasejs/10.11.0/',
-    'https://cdn.jsdelivr.net/npm/firebase@10.11.0/',
-    'https://unpkg.com/firebase@10.11.0/'
-  ];
-  if(typeof firebase==='undefined'){
-    let ok=false,lastErr=null;
-    for(const base of CDNS){
-      try{
-        console.log('[Firebase] Thử tải từ',base);
-        await loadFromCDN(base);
-        if(typeof firebase!=='undefined'){ok=true;console.log('[Firebase] Đã tải từ',base);break;}
-      }catch(e){lastErr=e;console.warn('[Firebase] CDN lỗi:',base,e.message);}
-    }
-    if(!ok){
-      showAuthError(
-        'Không tải được Firebase',
-        'Cả 3 CDN đều bị chặn. Mạng hoặc host của bạn đang chặn gstatic.com, jsdelivr.net và unpkg.com — hãy đổi host hoặc bỏ chặn các domain này.',
-        String(lastErr && lastErr.message || lastErr)
-      );
-      return;
-    }
+// ═══════════════════════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════════════════════
+let audioCtx=null, soundOn=false, masterGain=null;
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  masterGain=audioCtx.createGain(); masterGain.gain.value=.13; masterGain.connect(audioCtx.destination);
+  for (let l=0;l<3;l++) {
+    const dur=audioCtx.sampleRate*(4+l),buf=audioCtx.createBuffer(1,dur,audioCtx.sampleRate),data=buf.getChannelData(0);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(let i=0;i<dur;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.96900*b2+w*.1538520;b3=.86650*b3+w*.3104856;b4=.55000*b4+w*.5329522;b5=-.7616*b5-w*.0168980;data[i]=Math.max(-1,Math.min(1,(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.09));b6=w*.115926;}
+    const src=audioCtx.createBufferSource(); src.buffer=buf; src.loop=true;
+    const flt=audioCtx.createBiquadFilter(); flt.type='bandpass'; flt.frequency.value=140+l*300; flt.Q.value=.75;
+    const g=audioCtx.createGain(); g.gain.value=.36-l*.08;
+    const lfo=audioCtx.createOscillator(); lfo.frequency.value=.16+l*.12;
+    const lg=audioCtx.createGain(); lg.gain.value=.035;
+    lfo.connect(lg); lg.connect(g.gain); lfo.start();
+    src.connect(flt); flt.connect(g); g.connect(masterGain); src.start(0,Math.random()*3);
   }
-  try{
-    firebase.initializeApp(firebaseConfig);
-    db=firebase.database();
-  }catch(e){
-    console.error('[Firebase] initializeApp lỗi:',e);
-    showAuthError('Lỗi khởi tạo Firebase','Kiểm tra lại firebaseConfig.',String(e&&e.message||e));
-    return;
-  }
-  initAuth();
+  soundOn=true; document.getElementById('snd').textContent='🔊';
 }
+function toggleSound() {
+  if (!audioCtx) { initAudio(); return; }
+  soundOn=!soundOn;
+  if (masterGain) masterGain.gain.value = soundOn?.13:0;
+  document.getElementById('snd').textContent = soundOn?'🔊':'🔇';
+}
+document.addEventListener('click', ()=>{ if(!audioCtx)initAudio(); },{once:true});
 
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
 bootFirebase();
 </script>
 </body>
