@@ -121,6 +121,10 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
   <h2>CÂU CÁ 3D</h2>
   <div id="loadbar"><div id="loadfill"></div></div>
   <div id="loadtxt">Khởi tạo...</div>
+  <!-- Nút Demo ngay trên loading để fix lỗi treo -->
+  <div id="demo-btn-container" style="display:none;margin-top:10px">
+    <button class="ae-btn demo" onclick="startDemo()">🎮 VÀO GAME DEMO (KHÔNG CẦN MẠNG)</button>
+  </div>
 </div>
 <div id="autherr">
   <div style="font-size:48px">🔒</div>
@@ -130,7 +134,7 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
   <div id="ae-detail"></div>
   <div class="ae-btns">
     <button class="ae-btn retry" onclick="location.reload()">🔄 Thử lại</button>
-    <button class="ae-btn demo" onclick="startDemo()">🎮 Demo</button>
+    <button class="ae-btn demo" onclick="startDemo()">🎮 Chơi Demo</button>
   </div>
 </div>
 <div id="game">
@@ -234,21 +238,88 @@ const otherPlayers=new Map();
 // FIREBASE & SYNC
 // ═══════════════════════════════════════════════════════════
 function loadScript(s){return new Promise((r,j)=>{const e=document.createElement('script');e.src=s;e.async=false;e.onload=()=>r(s);e.onerror=()=>j(new Error('Lỗi tải'));document.head.appendChild(e);});}
-async function loadFB(){await loadScript('https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js');}
+async function loadFB(){
+  // Sử dụng CDN ổn định hơn để tránh lỗi chặn
+  await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+  await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js');
+}
 async function bootFirebase(){
-  setLoad('Kết nối...',8);
-  if(typeof firebase==='undefined')try{await loadFB();}catch(e){showAuthError('Lỗi mạng','Không tải Firebase.',e.message);return;}
-  try{firebase.initializeApp(firebaseConfig);DB=firebase.database();}catch(e){showAuthError('Lỗi Firebase','',e.message);return;}
+  setLoad('Kết nối Firebase...',10);
+  
+  // Timeout xử lý loading: nếu 8s mà chưa xong thì hiện nút Demo
+  const loadingTimeout = setTimeout(()=>{
+    console.warn('Loading quá lâu, chuyển sang chế độ cho phép Demo.');
+    document.getElementById('demo-btn-container').style.display='block';
+  }, 8000);
+
+  if(typeof firebase==='undefined'){
+    try{await loadFB();console.log('✅ Firebase script loaded');}
+    catch(e){
+      clearTimeout(loadingTimeout);
+      console.error('❌ Lỗi tải script Firebase:', e);
+      showAuthError('Lỗi mạng','Không tải được Firebase.',e.message);
+      return;
+    }
+  }
+  
+  try{
+    firebase.initializeApp(firebaseConfig);
+    DB=firebase.database();
+    console.log('✅ Firebase initialized');
+    clearTimeout(loadingTimeout); // Hủy timeout nếu thành công
+  }catch(e){
+    clearTimeout(loadingTimeout);
+    console.error('❌ Lỗi init Firebase:', e);
+    showAuthError('Lỗi Firebase','',e.message);
+    return;
+  }
+  
   initAuth();
 }
 const URL_TOKEN=new URLSearchParams(window.location.search).get('t');
-async function readSession(t,m=5){for(let i=0;i<m;i++){try{const s=await DB.ref(`sessions/${t}`).once('value');if(s.val())return{session:s.val(),error:null};await new Promise(r=>setTimeout(r,800));}catch(e){await new Promise(r=>setTimeout(r,800));if(i===m-1)return{session:null,error:e};}}return{session:null,error:null};}
+
+// Hàm readSession có Timeout 5s để tránh treo
+function readSessionWithTimeout(token, maxRetries=3, timeoutPerReq=4000) {
+  return new Promise(async (resolve, reject) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        // Race giữa request Firebase và timeout
+        const result = await Promise.race([
+          DB.ref(`sessions/${token}`).once('value'),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout reading session')), timeoutPerReq))
+        ]);
+        if (result.val()) return resolve({ session: result.val(), error: null });
+        await new Promise(r => setTimeout(r, 500)); // Chờ nhẹ trước khi retry
+      } catch (err) {
+        console.warn(`Retry ${i+1} failed:`, err.message);
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+    resolve({ session: null, error: new Error('Không đọc được session sau 3 lần thử.') });
+  });
+}
+
 async function initAuth(){
-  setLoad('Xác thực...',20);if(!URL_TOKEN){showAuthError('Thiếu token','','');return;}
-  const{session,error}=await readSession(URL_TOKEN);
-  if(error||!session){showAuthError('Lỗi session','Dùng tcauonline để lấy link mới.',error?.message||'');return;}
-  if(Date.now()>session.expiresAt||session.secret!==GAME_SECRET){showAuthError('Phiên hết hạn/Sai secret','','');return;}
-  setLoad('Tải dữ liệu...',40);player.userId=session.userId;player.username=session.username;player.avatar=session.avatar||'';
+  setLoad('Xác thực...',20);
+  if(!URL_TOKEN){
+    // Nếu không có token, hiện nút Demo ngay
+    document.getElementById('demo-btn-container').style.display='block';
+    setLoad('Chưa có link vào game',100);
+    return;
+  }
+  
+  const{session,error}=await readSessionWithTimeout(URL_TOKEN);
+  if(error||!session){
+    console.error('Auth Error:', error);
+    showAuthError('Lỗi phiên','Không tìm thấy phiên hoặc hết hạn.', error?.message || '');
+    return;
+  }
+  if(Date.now()>session.expiresAt||session.secret!==GAME_SECRET){
+    showAuthError('Phiên hết hạn/Sai secret','Dùng tcauonline để lấy link mới.','');
+    return;
+  }
+  setLoad('Tải dữ liệu...',40);
+  player.userId=session.userId;player.username=session.username;player.avatar=session.avatar||'';
   try{
     const p=await DB.ref(`players/${session.userId}`).once('value');const d=p.val();
     if(d&&typeof d==='object'){
@@ -280,8 +351,19 @@ function watchPlayerData(){if(DEMO||!DB)return;DB.ref(`players/${player.userId}`
 // ═══════════════════════════════════════════════════════════
 // DEMO & START
 // ═══════════════════════════════════════════════════════════
-function startDemo(){DEMO=true;document.getElementById('autherr').style.display='none';document.getElementById('loading').style.display='flex';document.getElementById('demo-badge').style.display='block';player={userId:'demo-'+Math.random().toString(36).slice(2,8),username:'Người Chơi Thử',avatar:'',coins:500_000,rodUses:20,inventory:{},totalCaught:0,totalEarned:0};setLoad('Demo...',60);startGame(false);document.getElementById('online-count').textContent='1';showToast('🎮 Demo: không lưu dữ liệu');}
-function startGame(online){setLoad('Đồ họa 3D...',55);initThree();if(online){setLoad('Multiplayer...',80);initMultiplayer();watchPlayerData();}setLoad('Sẵn sàng!',100);setTimeout(()=>{document.getElementById('loading').style.display='none';},400);updateUI();renderContent();const cb=document.getElementById('cb');cb.disabled=false;cb.textContent=player.rodUses>0?'🎣 THẢ CÂU':'🏪 MUA CẦN';updateMapUI();setStatus(player.rodUses>0?'Nhấn THẢ CÂU để bắt đầu':'Mua cần câu ở Shop!');}
+function startDemo(){
+  DEMO=true;
+  document.getElementById('autherr').style.display='none';
+  document.getElementById('loading').style.display='flex'; // Hiện lại loading để mượt mà
+  document.getElementById('demo-btn-container').style.display='none'; // Ẩn nút demo
+  document.getElementById('demo-badge').style.display='block';
+  player={userId:'demo-'+Math.random().toString(36).slice(2,8),username:'Người Chơi Thử',avatar:'',coins:500_000,rodUses:20,inventory:{},totalCaught:0,totalEarned:0};
+  setLoad('Chế độ Demo...',80);
+  setTimeout(()=>startGame(false), 500);
+  document.getElementById('online-count').textContent='1';
+  showToast('🎮 Demo: Dữ liệu không được lưu lại');
+}
+function startGame(online){setLoad('Đang vào game...',90);initThree();if(online){initMultiplayer();watchPlayerData();}setLoad('Hoàn tất!',100);setTimeout(()=>{document.getElementById('loading').style.display='none';},400);updateUI();renderContent();const cb=document.getElementById('cb');cb.disabled=false;cb.textContent=player.rodUses>0?'🎣 THẢ CÂU':'🏪 MUA CẦN';updateMapUI();setStatus(player.rodUses>0?'Nhấn THẢ CÂU để bắt đầu':'Mua cần câu ở Shop!');}
 
 // ═══════════════════════════════════════════════════════════
 // MULTIPLAYER
@@ -531,6 +613,8 @@ let audioCtx=null,soundOn=false,masterGain=null;
 function initAudio(){if(audioCtx)return;audioCtx=new(window.AudioContext||window.webkitAudioContext)();masterGain=audioCtx.createGain();masterGain.gain.value=.15;masterGain.connect(audioCtx.destination);soundOn=true;document.getElementById('snd').textContent='🔊';}
 function toggleSound(){if(!audioCtx){initAudio();return;}soundOn=!soundOn;masterGain.gain.value=soundOn?.15:0;document.getElementById('snd').textContent=soundOn?'🔊':'🔇';}
 document.addEventListener('click',()=>{if(!audioCtx)initAudio();},{once:true});
+
+// Khởi động
 bootFirebase();
 </script>
 </body>
