@@ -2,25 +2,22 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>🎣 Câu Cá Online 3D</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>🎣 Câu Cá 3D</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#06101f;--panel:rgba(8,20,36,.92);--border:#1a3550;--accent:#00d4ff;--gold:#ffd660;--text:#d8eeff;--sub:#5a7a9a;--rad:10px}
-html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',sans-serif;overflow:hidden}
-
-/* Loading Screen - Chỉ hiện 1s rồi biến mất */
-#loading{position:fixed;inset:0;background:#020c18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;transition:opacity .5s}
+html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',sans-serif;overflow:hidden;touch-action:manipulation}
+#loading{position:fixed;inset:0;background:#020c18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;transition:opacity .4s}
 #loading.hidden{opacity:0;pointer-events:none}
-#loading h2{font-family:'Press Start 2P';font-size:14px;color:var(--accent);margin-bottom:20px}
-#loadbar{width:200px;height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
-#loadfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));width:0%;animation:loadAnim 1.5s ease-out forwards}
-@keyframes loadAnim{0%{width:0}100%{width:100%}}
-
-/* Game UI */
-#game{width:100%;max-width:900px;margin:0 auto;flex-direction:column;min-height:100vh;display:none}
+#loading h2{font-family:'Press Start 2P';font-size:14px;color:var(--accent);margin-bottom:15px}
+#loadbar{width:180px;height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
+#loadfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));width:0;animation:load 1.2s ease-out forwards}
+@keyframes load{0%{width:0}100%{width:100%}}
+#game{width:100%;max-width:900px;margin:0 auto;flex-direction:column;min-height:100vh;display:none;animation:fadeIn .5s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 #hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--panel);border-bottom:2px solid var(--border)}
 #hdr h1{font-family:'Press Start 2P';font-size:11px;color:var(--accent)}
 #cw{position:relative;width:100%;background:#000;overflow:hidden;aspect-ratio:900/480}
@@ -29,56 +26,41 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 #xhair::before,#xhair::after{content:'';position:absolute;background:rgba(255,255,255,.9);border-radius:1px}
 #xhair::before{width:2px;height:28px;left:13px;top:0}
 #xhair::after{width:28px;height:2px;top:13px;left:0}
-#st{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:'Press Start 2P';font-size:8px;color:#fff;text-shadow:2px 2px 0 #000;pointer-events:none;z-index:5;background:rgba(0,0,0,.6);padding:6px 12px;border-radius:20px}
+#st{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:'Press Start 2P';font-size:8px;color:#fff;text-shadow:2px 2px 0 #000,0 0 10px rgba(0,212,255,.5);pointer-events:none;z-index:5;background:rgba(0,0,0,.6);padding:6px 12px;border-radius:20px;border:1px solid rgba(0,212,255,.3);white-space:nowrap}
 #maps{display:flex;gap:8px;padding:8px 10px;background:rgba(6,16,31,.97);overflow-x:auto;border-bottom:1px solid var(--border)}
-.mb{flex:0 0 auto;padding:8px 14px;background:rgba(10,25,45,.8);border:2px solid var(--border);border-radius:14px;color:var(--sub);cursor:pointer;font-size:10px;font-weight:800;white-space:nowrap}
-.mb.on{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.15)}
+.mb{flex:0 0 auto;padding:8px 14px;background:rgba(10,25,45,.8);border:2px solid var(--border);border-radius:14px;color:var(--sub);cursor:pointer;font-size:10px;font-weight:800;white-space:nowrap;transition:all .2s}
+.mb:hover{border-color:var(--accent);transform:translateY(-2px)}
+.mb.on{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.15);box-shadow:0 0 12px rgba(0,212,255,.4)}
 #act{display:flex;gap:8px;padding:10px;background:rgba(6,16,31,.98);border-top:2px solid var(--border)}
-#cb{flex:1;padding:14px;font-family:'Press Start 2P';font-size:9px;background:linear-gradient(135deg,#0058b0,#00c0f0);border:none;border-radius:var(--rad);color:#fff;cursor:pointer}
-#cb:disabled{opacity:.4;cursor:not-allowed}
+#cb{flex:1;padding:14px;font-family:'Press Start 2P';font-size:9px;background:linear-gradient(135deg,#0058b0,#00c0f0);border:none;border-radius:var(--rad);color:#fff;cursor:pointer;box-shadow:0 4px 12px rgba(0,192,240,.4);transition:all .2s}
+#cb:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,192,240,.6)}
+#cb:disabled{opacity:.4;cursor:not-allowed;transform:none}
 #ri{padding:10px 14px;background:rgba(10,25,45,.9);border:2px solid var(--border);border-radius:var(--rad);text-align:center;min-width:80px}
 #ri .us{font-weight:900;font-size:20px;color:var(--accent)}
 #tabs{display:flex;background:var(--panel);border-top:2px solid var(--border)}
-.tb{flex:1;padding:12px;background:none;border:none;border-right:2px solid var(--border);color:var(--sub);cursor:pointer;font-weight:800;font-size:11px}
-.tb:last-child{border-right:none}.tb.on{background:rgba(0,212,255,.15);color:var(--accent)}
+.tb{flex:1;padding:12px;background:none;border:none;border-right:2px solid var(--border);color:var(--sub);cursor:pointer;font-weight:800;font-size:11px;transition:all .2s}
+.tb:last-child{border-right:none}.tb:hover{background:rgba(0,212,255,.05)}.tb.on{background:rgba(0,212,255,.15);color:var(--accent)}
 #cp{background:var(--panel);border-top:2px solid var(--border);padding:12px;min-height:150px;overflow-y:auto}
-
-/* Password Modal Overlay */
-#auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeIn .5s}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.auth-box{background:rgba(15,32,53,.98);border:2px solid var(--accent);border-radius:20px;padding:30px;text-align:center;max-width:380px;width:90%;box-shadow:0 0 50px rgba(0,212,255,.3)}
-.auth-icon{font-size:60px;margin-bottom:15px}
-.auth-title{font-family:'Press Start 2P';font-size:12px;color:var(--accent);margin-bottom:15px}
-.auth-desc{font-size:12px;color:var(--sub);margin-bottom:20px;line-height:1.6}
-.auth-input{width:100%;padding:15px;border:2px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.5);color:#fff;font-size:18px;margin-bottom:15px;text-align:center;letter-spacing:6px;font-family:'Press Start 2P',monospace;text-transform:uppercase}
-.auth-input:focus{border-color:var(--accent);outline:none}
-.auth-btn{width:100%;padding:15px;border:none;border-radius:12px;font-weight:900;font-size:12px;cursor:pointer;margin-bottom:8px;transition:transform .2s}
-.auth-btn.confirm{background:linear-gradient(135deg,#0058b0,#00c0f0);color:#fff;box-shadow:0 4px 15px rgba(0,192,240,.4)}
-.auth-btn.confirm:hover{transform:translateY(-2px)}
-.auth-btn.cancel{background:transparent;border:2px solid var(--border);color:var(--sub)}
-.auth-btn.cancel:hover{border-color:var(--accent);color:var(--accent)}
-#pw-error{color:#ff6b6b;font-size:10px;margin-top:10px;display:none;padding:8px;background:rgba(255,107,107,.1);border-radius:8px}
-
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(10,28,50,.98);border:2px solid var(--accent);border-radius:16px;padding:12px 20px;font-size:12px;font-weight:800;z-index:9999;opacity:0;transition:all .3s;pointer-events:none}
-.toast.show{opacity:1;bottom:40px}
-::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:rgba(10,28,50,.98);border:2px solid var(--accent);border-radius:16px;padding:12px 20px;font-size:12px;font-weight:800;z-index:9999;opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 8px 24px rgba(0,212,255,.4)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#result-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(4,12,28,.98);border:3px solid var(--gold);border-radius:var(--rad);padding:18px 24px;text-align:center;min-width:200px;pointer-events:none;z-index:10;backdrop-filter:blur(12px);box-shadow:0 0 40px rgba(255,214,96,.5)}
+#result-banner.show{animation:pop .5s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(0) rotate(-10deg)}50%{transform:translate(-50%,-50%) scale(1.1) rotate(3deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(0)}}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-track{background:rgba(0,0,0,.2)}
 </style>
 </head>
 <body>
 
-<!-- 1. LOADING NHANH (1.5s) -->
 <div id="loading">
-  <div style="font-size:60px;margin-bottom:15px">🎣</div>
+  <div style="font-size:56px;margin-bottom:12px">🎣</div>
   <h2>CÂU CÁ 3D</h2>
   <div id="loadbar"><div id="loadfill"></div></div>
-  <div style="font-size:11px;color:var(--sub);margin-top:15px">Đang khởi tạo thế giới...</div>
 </div>
 
-<!-- 2. GAME CHẠY NỀN (NƯỚC CHẢY LUÔN) -->
 <div id="game">
   <div id="hdr">
-    <h1>🎣 CÂU CÁ ONLINE</h1>
-    <div style="color:var(--gold);font-weight:800">🪙 <span id="coins">0</span></div>
+    <h1>🎣 CÂU CÁ 3D</h1>
+    <div style="color:var(--gold);font-weight:800;font-size:14px">🪙 <span id="coins">100,000</span></div>
   </div>
   <div id="maps">
     <button class="mb on" onclick="selMap(0)">🏡 Hồ Làng</button>
@@ -90,10 +72,16 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
     <canvas id="gc" width="900" height="480"></canvas>
     <div id="xhair"></div>
     <div id="st">Nhấn THẢ CÂU để bắt đầu!</div>
+    <div id="result-banner">
+      <div id="res-emoji" style="font-size:48px;margin-bottom:6px"></div>
+      <div id="res-name" style="font-weight:900;font-size:14px;margin-bottom:4px"></div>
+      <div id="res-info" style="font-size:11px;color:var(--sub);margin-bottom:6px"></div>
+      <div id="res-value" style="font-size:13px;color:var(--gold);font-weight:800"></div>
+    </div>
   </div>
   <div id="act">
     <button id="cb" onclick="handleCast()">🎣 THẢ CÂU</button>
-    <div id="ri"><span class="us" id="rods">0</span> lần</div>
+    <div id="ri"><span class="us" id="rods">10</span> lần</div>
   </div>
   <div id="tabs">
     <button class="tb on" onclick="swTab('bag')">🎒 Túi cá</button>
@@ -103,27 +91,12 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
   </div>
   <div id="cp"></div>
 </div>
-
-<!-- 3. MÀN HÌNH NHẬP PASS (HIỆN LÊN TRÊN GAME) -->
-<div id="auth-overlay" style="display:none">
-  <div class="auth-box">
-    <div class="auth-icon">🔑</div>
-    <div class="auth-title">NHẬP MẬT KHẨU</div>
-    <div class="auth-desc">Bot đã gửi mật khẩu vào Discord DM.<br><span style="color:var(--gold)">💡 Không thấy? Kiểm tra "Tin nhắn chờ"</span></div>
-    <input type="text" id="game-password" class="auth-input" placeholder="••••••" maxlength="6" inputmode="text" autocomplete="off">
-    <button class="auth-btn confirm" onclick="verifyPassword()">🎣 VÀO GAME ONLINE</button>
-    <button class="auth-btn cancel" onclick="enterDemo()">🎮 CHƠI DEMO (KHÔNG LƯU)</button>
-    <div id="pw-error">❌ Sai mật khẩu hoặc link hết hạn!</div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════════
-const firebaseConfig = { apiKey:"AIzaSyA9Iv98Bcurd6bqXo79BbgEz58a3xrPH8o", authDomain:"fishing-bot-e8d42.firebaseapp.com", databaseURL:"https://fishing-bot-e8d42-default-rtdb.firebaseio.com", projectId:"fishing-bot-e8d42" };
 const MAP_DEFS=[
   {id:'ho',name:'🏡 Hồ Làng',pool:['moi','tram','chep','vang'],rates:{miss:45,moi:35,tram:12,chep:6,vang:2},sky:0x87ceeb,water:0x3d8fcc},
   {id:'bien',name:'🌊 Biển',pool:['bien','ngua','mattroi','rong'],rates:{miss:42,bien:36,ngua:14,mattroi:6,rong:2},sky:0x0077b6,water:0x0096c7},
@@ -149,41 +122,20 @@ const ALL_FISH={
   thanhailong:{id:'thanhailong',name:'Thần Hải Long',emoji:'🐉',value:500_000_000,rar:'Vô Tiền',color:0xff00ff,minW:1000,maxW:9999}
 };
 
-let DB=null, ROD_PRICE=10000, ROD_USES=10, DEMO=false, onlineMode=false;
-let player={userId:'',username:'',coins:100000,rodUses:10,inventory:{},totalCaught:0};
-let gstate='idle', curMap=0, activeTab='bag', wt, bt, resultFish=null, resultWeight=0;
-let yaw=0, pitch=0, sessionData=null;
-const URL_TOKEN=new URLSearchParams(window.location.search).get('t');
+let ROD_PRICE=10000, ROD_USES=10;
+let player={userId:'local',username:'Người Chơi',coins:100000,rodUses:10,inventory:{},totalCaught:0};
+let gstate='idle', curMap=0, activeTab='bag', wt, bt, resultFish=null, resultWeight=0, waitStart=0, waitDur=4000;
+let yaw=0, pitch=0;
 
 // ═══════════════════════════════════════════════════════════
-// START GAME IMMEDIATELY (NO WAITING)
-// ═══════════════════════════════════════════════════════════
-window.onload = function(){
-  // 1. Hiện game ngay lập tức
-  setTimeout(()=>{
-    document.getElementById('loading').classList.add('hidden');
-    document.getElementById('game').style.display='flex';
-    initThree(); // Khởi tạo đồ họa
-    updateUI();
-    renderContent();
-    
-    // 2. Nếu có link token -> Hiện bảng nhập pass
-    if(URL_TOKEN){
-      document.getElementById('auth-overlay').style.display='flex';
-      document.getElementById('game-password').focus();
-    } else {
-      // Không có link -> Vào Demo luôn
-      enterDemo();
-    }
-  }, 1500); // Chờ 1.5s cho mượt mà
-};
-
-// ═══════════════════════════════════════════════════════════
-// THREE.JS & GRAPHICS
+// THREE.JS SETUP
 // ═══════════════════════════════════════════════════════════
 const cv=document.getElementById('gc');
-const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
 renderer.setSize(900,480);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(70,900/480,0.1,200);
 camera.position.set(0,1.5,0);camera.rotation.order='YXZ';scene.add(camera);
 let isDrag=false,px=0,py=0;
@@ -196,32 +148,58 @@ cv.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrag||!e.touches[0]
 
 function stdMat(c,r=.8,m=0){return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});}
 scene.add(new THREE.AmbientLight(0xffffff,.5));
-const sun=new THREE.DirectionalLight(0xfff4d8,1.2);sun.position.set(8,14,5);scene.add(sun);
+const sun=new THREE.DirectionalLight(0xfff4d8,1.2);sun.position.set(8,14,5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
 
+// WATER SHADER
 const waterGeo=new THREE.PlaneGeometry(120,120,80,80);
 const waterMat=new THREE.ShaderMaterial({uniforms:{uT:{value:0},uD:{value:new THREE.Vector3(.1,.4,.7)},uS:{value:new THREE.Vector3(.2,.6,.9)}},
   vertexShader:`uniform float uT;varying float vE;void main(){vec3 p=position;p.y+=sin(p.x*3.2+uT*1.6)*.16+sin(p.z*2.5-uT*1.2)*.12;vE=p.y;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`,
   fragmentShader:`uniform vec3 uD,uS;varying float vE;void main(){float m=(vE+.32)/.60;gl_FragColor=vec4(mix(uD,uS,m),.88);}`,transparent:true,side:THREE.DoubleSide});
 const water=new THREE.Mesh(waterGeo,waterMat);water.rotation.x=-Math.PI/2;scene.add(water);
+
+// GROUND
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(120,120),stdMat(0x4a7a2a));ground.rotation.x=-Math.PI/2;ground.position.y=-.2;scene.add(ground);
 
+// ROD
 const rodGrp=new THREE.Group();camera.add(rodGrp);rodGrp.position.set(.28,-.7,-.6);
 rodGrp.add(new THREE.Mesh(new THREE.CylinderGeometry(.035,.04,.5,10),stdMat(0x181410,.96)).translateY(.25));
 rodGrp.add(new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.06,14),stdMat(0x2a2a2a,.3)).translateY(.55).rotateX(Math.PI/2));
 const rodTip=new THREE.Object3D();rodTip.position.y=3.0;rodGrp.add(new THREE.Mesh(new THREE.CylinderGeometry(.008,.02,2.5,8),stdMat(0xb87333)).translateY(1.5));rodGrp.add(rodTip);
 
+// BOBBER
 const bobGrp=new THREE.Group();scene.add(bobGrp);bobGrp.visible=false;
 bobGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.12,10,8,0,Math.PI*2,0,Math.PI/2),stdMat(0xe74c3c)));
 bobGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.12,10,8,0,Math.PI*2,Math.PI/2,Math.PI/2),stdMat(0xecf0f1)));
 
+// LINE
 const linePts=30,lineArr=new Float32Array(linePts*3),lineGeo=new THREE.BufferGeometry();lineGeo.setAttribute('position',new THREE.Float32BufferAttribute(lineArr,3));
 const lineMesh=new THREE.Line(lineGeo,new THREE.LineBasicMaterial({color:0xdddddd,transparent:true,opacity:.9}));scene.add(lineMesh);
 
+// GIANT FISH MODEL
 const fishGrp=new THREE.Group();scene.add(fishGrp);fishGrp.visible=false;
-fishGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.5,16,12),stdMat(0x74b9ff,.4)).scale.set(2.5,.8,.9));
-fishGrp.add(new THREE.Mesh(new THREE.ConeGeometry(.4,1.2,5),stdMat(0x74b9ff,.4)).translateX(-1.6).rotateZ(-Math.PI/2));
-fishGrp.add(new THREE.Mesh(new THREE.ConeGeometry(.25,.5,4),stdMat(0x74b9ff,.4)).translateY(.55));
+// Body
+fishGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.5,16,12),stdMat(0x74b9ff,.3,.2)).scale.set(2.5,.8,.9));
+// Tail
+const tail=new THREE.Mesh(new THREE.ConeGeometry(.4,1.2,5),stdMat(0x74b9ff,.3));tail.position.x=-1.6;tail.rotation.z=-Math.PI/2;fishGrp.add(tail);
+// Fins
+fishGrp.add(new THREE.Mesh(new THREE.ConeGeometry(.25,.5,4),stdMat(0x74b9ff,.3)).translateY(.55));
+fishGrp.add(new THREE.Mesh(new THREE.ConeGeometry(.15,.3,4),stdMat(0x74b9ff,.3)).translateY(-.45));
+// Eyes
+const eyeMat=new THREE.MeshBasicMaterial({color:0xffffff});
+fishGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.08,8,8),eyeMat).translateY(.2).translateZ(.35));
+fishGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.08,8,8),eyeMat).translateY(.2).translateZ(-.35));
+// Glow
+const fishLight=new THREE.PointLight(0x74b9ff,2,15);fishGrp.add(fishLight);
+// Bubbles
+for(let i=0;i<12;i++){
+  const b=new THREE.Mesh(new THREE.SphereGeometry(.04+Math.random()*.06,6,6),new THREE.MeshBasicMaterial({color:0xaaddff,transparent:true,opacity:.7}));
+  b.userData={off:Math.random()*6.28,speed:1+Math.random()*2,yBase:Math.random()*2};
+  fishGrp.add(b);
+}
 
+// ═══════════════════════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════════════════════
 let lineLen=10, fishRiseT=0, fishState='none', castT=0;
 const bobTarget=new THREE.Vector3();
 
@@ -229,12 +207,15 @@ function animate(){
   requestAnimationFrame(animate);
   const t=Date.now()*.001;
   waterMat.uniforms.uT.value=t;
+  
+  // Rod animation
   const tRot=gstate==='casting'?.35:gstate==='biting'?.15+Math.sin(t*8)*.08:gstate==='reeling'?.25:.05;
   rodGrp.rotation.x+=(tRot-rodGrp.rotation.x)*.08;
 
+  // Bobber & Line
   if(gstate==='casting'){castT=Math.min(castT+.06,1);bobGrp.position.lerpVectors(new THREE.Vector3(camera.position.x,1.2,camera.position.z-3),bobTarget,castT);lineLen=castT*8;}
   else if(gstate==='waiting'){castT=1;bobGrp.position.x=bobTarget.x+Math.sin(t*.5)*.8;bobGrp.position.z=bobTarget.z+Math.cos(t*.4)*.5;bobGrp.position.y=Math.sin(t)*.1;lineLen=8;}
-  else if(gstate==='biting'){bobGrp.position.y=-.15;lineLen=7.5;}
+  else if(gstate==='biting'){bobGrp.position.y=-.2;lineLen=7.5;}
   else if(gstate==='reeling'){lineLen=Math.max(.5,lineLen-.15);bobGrp.position.y=Math.sin(t)*.05;}
   else{bobGrp.visible=false;lineMesh.visible=false;lineLen=10;}
   bobGrp.visible=lineLen>1&&(gstate==='waiting'||gstate==='biting'||gstate==='reeling');
@@ -246,18 +227,23 @@ function animate(){
     lineMesh.geometry.attributes.position.needsUpdate=true;
   }
 
+  // Giant Fish Animation
   if(fishState==='rising'){
-    fishGrp.visible=true;fishRiseT+=.015;
-    fishGrp.position.set(0,-1.5+fishRiseT*3.5,0);fishGrp.rotation.y+=.06;fishGrp.rotation.z=Math.sin(t*2)*.15;
-    const s=.3+fishRiseT*2.5;fishGrp.scale.set(s,s,s);
+    fishGrp.visible=true;fishRiseT+=.012;
+    fishGrp.position.set(0,-1.5+fishRiseT*4,0);fishGrp.rotation.y+=.05;fishGrp.rotation.z=Math.sin(t*2)*.15;
+    const s=.3+fishRiseT*2.8;fishGrp.scale.set(s,s,s);
+    // Bubbles rise
+    fishGrp.children.filter(c=>c.userData.speed).forEach((b,i)=>{
+      b.position.set(Math.sin(t*2+b.userData.off)*.6, fishRiseT*2.5 + b.userData.yBase, Math.cos(t*1.5+b.userData.off)*.5);
+    });
     if(fishRiseT>=1)fishState='holding';
   }else if(fishState==='holding'){
-    fishGrp.position.y=.8+Math.sin(t*1.2)*.15;fishGrp.rotation.y+=.04;fishGrp.rotation.z=Math.sin(t*3)*.1;
-    if(t%4<.1)fishState='pulling';
+    fishGrp.position.y=.8+Math.sin(t*1.2)*.15;fishGrp.rotation.y+=.03;fishGrp.rotation.z=Math.sin(t*3)*.1;
+    if(t%3<.1)fishState='pulling';
   }else if(fishState==='pulling'){
-    const pt=Math.min((t%4)/1.5,1);
-    fishGrp.position.lerp(new THREE.Vector3(camera.position.x*.3,.5,camera.position.z*.3+.8),pt*.08);
-    fishGrp.rotation.y+=.08;fishGrp.rotation.z=Math.sin(t*5)*.2;
+    const pt=Math.min((t%3)/1.2,1);
+    fishGrp.position.lerp(new THREE.Vector3(camera.position.x*.2,.4,camera.position.z*.2+.8),pt*.1);
+    fishGrp.rotation.y+=.1;fishGrp.rotation.z=Math.sin(t*6)*.25;
     if(pt>=1){fishGrp.visible=false;fishState='none';triggerCatch();}
   }
   renderer.render(scene,camera);
@@ -283,7 +269,7 @@ function handleCast(){
   const fwd=new THREE.Vector3();camera.getWorldDirection(fwd);fwd.y=0;fwd.normalize();
   bobTarget.set(camera.position.x+fwd.x*8,0,camera.position.z+fwd.z*8);
   bobGrp.position.set(camera.position.x,1.2,camera.position.z-3);
-  setTimeout(()=>{gstate='waiting';setStatus('⏳ Chờ cá cắn...');wt=setTimeout(startBite,3000+Math.random()*4000);},800);
+  setTimeout(()=>{gstate='waiting';setStatus('⏳ Chờ cá cắn...');waitDur=3000+Math.random()*4000;waitStart=performance.now();wt=setTimeout(startBite,waitDur);},800);
 }
 function startBite(){gstate='biting';setStatus('🐟 CÁ CẮN! NHẤN KÉO!');const b=document.getElementById('cb');b.textContent='⚡ KÉO!';b.disabled=false;bt=setTimeout(escape,3000);}
 function doReel(){
@@ -291,9 +277,12 @@ function doReel(){
   player.rodUses--;updateUI();
   resultFish=rollFish(curMap);resultWeight=resultFish?rollWeight(resultFish):0;
   if(resultFish){
-    fishGrp.children[0].material.color.setHex(resultFish.color);
-    fishGrp.children[1].material.color.setHex(resultFish.color);
-    fishGrp.children[2].material.color.setHex(resultFish.color);
+    const c=resultFish.color;
+    fishGrp.children[0].material.color.setHex(c);
+    fishGrp.children[1].material.color.setHex(c);
+    fishGrp.children[2].material.color.setHex(c);
+    fishGrp.children[3].material.color.setHex(c);
+    fishLight.color.setHex(c);
     fishState='rising';fishRiseT=0;
   }else setTimeout(escape,1500);
 }
@@ -303,8 +292,17 @@ function triggerCatch(){
   if(!player.inventory[resultFish.id])player.inventory[resultFish.id]=[];
   player.inventory[resultFish.id].push({weight:resultWeight,value:resultFish.value});
   player.totalCaught++;
-  showToast(`🎉 Bắt được ${resultFish.emoji} ${resultFish.name} - ${fmtWeight(resultWeight)}!`);
+  showBanner(resultFish,resultWeight);
   setTimeout(()=>{gstate='idle';setStatus('🎉 Bắt thành công! Nhấn THẢ CÂU tiếp!');document.getElementById('cb').disabled=false;renderContent();},2000);
+}
+function showBanner(f,w){
+  const b=document.getElementById('result-banner');
+  document.getElementById('res-emoji').textContent=f.emoji;
+  document.getElementById('res-name').textContent=f.name;
+  document.getElementById('res-info').textContent=f.rar+' | ⚖️ '+fmtWeight(w);
+  document.getElementById('res-value').textContent='+'+f.value.toLocaleString()+' 🪙';
+  b.style.borderColor='#'+f.color.toString(16).padStart(6,'0');
+  b.classList.remove('show');void b.offsetWidth;b.classList.add('show');
 }
 
 function selMap(i){
@@ -319,7 +317,7 @@ function renderContent(){
   const p=document.getElementById('cp');
   if(activeTab==='bag'){
     const k=Object.keys(player.inventory).filter(k=>player.inventory[k]?.length>0);
-    if(!k.length){p.innerHTML='<div style="text-align:center;padding:50px;color:var(--sub)"><div style="font-size:56px;margin-bottom:15px">🎒</div><p>Túi cá trống!</p></div>';return;}
+    if(!k.length){p.innerHTML='<div style="text-align:center;padding:50px;color:var(--sub)"><div style="font-size:56px;margin-bottom:15px">🎒</div><p style="font-size:13px">Túi cá trống!<br>Hãy đi câu nhé!</p></div>';return;}
     let h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">';
     k.forEach(id=>{const f=ALL_FISH[id],arr=player.inventory[id],tv=arr.reduce((s,e)=>s+e.value,0);
       h+=`<div style="background:rgba(15,32,53,.8);border:2px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:36px">${f.emoji}</div><div style="font-weight:800;font-size:11px;margin:6px 0">${f.name}</div><div style="font-size:10px;color:var(--sub)">×${arr.length} con</div><div style="color:var(--gold);font-size:10px;margin-top:6px;font-weight:800">${tv.toLocaleString()}🪙</div></div>`;});
@@ -330,7 +328,7 @@ function renderContent(){
       <button onclick="buyRod()" style="padding:12px 22px;background:linear-gradient(135deg,#1a8f4a,#00e676);border:none;border-radius:10px;color:#000;font-weight:900;cursor:pointer">MUA NGAY</button></div>`;
   }else if(activeTab==='sell'){
     const k=Object.keys(player.inventory).filter(k=>player.inventory[k]?.length>0);
-    if(!k.length){p.innerHTML='<div style="text-align:center;padding:50px;color:var(--sub)"><div style="font-size:56px;margin-bottom:15px">🐟</div><p>Không có cá để bán</p></div>';return;}
+    if(!k.length){p.innerHTML='<div style="text-align:center;padding:50px;color:var(--sub)"><div style="font-size:56px;margin-bottom:15px">🐟</div><p style="font-size:13px">Không có cá để bán<br>Đi câu thêm nhé!</p></div>';return;}
     let total=0,h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">';
     k.forEach(id=>{const f=ALL_FISH[id],arr=player.inventory[id],val=arr.reduce((s,e)=>s+e.value,0);total+=val;
       h+=`<div style="background:rgba(15,32,53,.8);border:2px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:36px">${f.emoji}</div><div style="font-weight:800;font-size:11px;margin:6px 0">${f.name}</div><div style="font-size:10px;color:var(--sub)">×${arr.length}</div><div style="color:var(--gold);font-size:10px;margin:8px 0;font-weight:800">${val.toLocaleString()}🪙</div><button onclick="sellFish('${id}')" style="width:100%;padding:8px;background:linear-gradient(135deg,#e74c3c,#ff6b6b);border:none;border-radius:6px;color:#fff;font-size:10px;cursor:pointer">BÁN</button></div>`;});
@@ -345,65 +343,19 @@ function renderContent(){
 
 function buyRod(){if(player.coins<ROD_PRICE){showToast('❌ Không đủ xu!');return;}player.coins-=ROD_PRICE;player.rodUses+=ROD_USES;updateUI();showToast('✅ Mua '+ROD_USES+' lần câu!');renderContent();}
 function sellFish(id){if(!player.inventory[id])return;const tv=player.inventory[id].reduce((s,e)=>s+e.value,0);player.coins+=tv;delete player.inventory[id];updateUI();showToast('💰 +'+tv.toLocaleString()+' 🪙');renderContent();}
+
 document.getElementById('cb').addEventListener('click',()=>{if(gstate==='biting')doReel();});
 
 // ═══════════════════════════════════════════════════════════
-// AUTH & FIREBASE (LOAD BACKGROUND)
+// INIT
 // ═══════════════════════════════════════════════════════════
-async function verifyPassword(){
-  const input=document.getElementById('game-password').value.trim().toUpperCase();
-  const errEl=document.getElementById('pw-error');
-  if(input.length!==6){errEl.textContent='❌ Mật khẩu phải đủ 6 ký tự!';errEl.style.display='block';return;}
-  
-  errEl.style.display='none';
-  showToast('🔄 Đang kết nối máy chủ...');
-  
-  // Load Firebase script dynamically (chỉ load khi user bấm nút)
-  if(!DB){
-    try{
-      const s1=document.createElement('script');s1.src='https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';document.head.appendChild(s1);
-      await new Promise(r=>setTimeout(r,1000)); // Chờ script load
-      const s2=document.createElement('script');s2.src='https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js';document.head.appendChild(s2);
-      await new Promise(r=>setTimeout(r,1000));
-      
-      firebase.initializeApp(firebaseConfig);
-      DB=firebase.database();
-      onlineMode=true;
-    }catch(e){
-      showToast('❌ Lỗi mạng! Không kết nối được Firebase.');
-      return;
-    }
-  }
-  
-  // Check password
-  try{
-    const snap=await Promise.race([
-      DB.ref(`sessions/${URL_TOKEN}`).once('value'),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),3000))
-    ]);
-    const session=snap.val();
-    
-    if(!session||Date.now()>session.expiresAt||session.password!==input){
-      errEl.textContent='❌ Sai mật khẩu hoặc link hết hạn!';
-      errEl.style.display='block';
-    }else{
-      sessionData=session;
-      player.userId=session.userId;player.username=session.username;
-      player.coins=session.coins||0;player.rodUses=session.rodUses||0;
-      document.getElementById('auth-overlay').style.display='none';
-      updateUI();renderContent();
-      showToast('✅ Đăng nhập thành công!');
-    }
-  }catch(e){
-    showToast('❌ Lỗi xác thực!');
-  }
-}
-
-function enterDemo(){
-  DEMO=true;
-  document.getElementById('auth-overlay').style.display='none';
-  showToast('🎮 Chế độ Demo');
-}
+window.addEventListener('DOMContentLoaded', ()=>{
+  setTimeout(()=>{
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('game').style.display='flex';
+    updateUI();renderContent();setStatus('🎮 Game đã sẵn sàng! Nhấn THẢ CÂU!');
+  },1200);
+});
 </script>
 </body>
 </html>
