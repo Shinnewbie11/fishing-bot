@@ -355,10 +355,9 @@ async function initAuth() {
 
     console.log('[Auth] userData:', userData);
 
-    // Xóa session sau khi đã lấy dữ liệu
-    setTimeout(() => {
-      db.ref(`sessions/${URL_TOKEN}`).remove().catch(e => console.warn('[Auth] Xóa session lỗi:', e));
-    }, 2000);
+    // KHÔNG xóa session ngay — để nó sống đủ 10 phút (link dùng lại được,
+    // tốt cho điện thoại khi trình duyệt tự reload). Web vẫn chặn bằng expiresAt,
+    // và bot tự dọn session sau 10 phút.
 
     startGame(true);
 
