@@ -429,16 +429,43 @@ function setLoad(txt, pct) {
 async function syncToFirebase(delta = {}) {
   if (DEMO || !db) return;
   try {
-    await db.ref(`players/${userData.userId}`).set({
-      coins:      userData.coins,
-      rodUses:    userData.rodUses,
-      inventory:  userData.inventory,
-      updatedAt:  Date.now(),
-      totalCaught: (delta.totalCaught || 0),
-      totalEarned: (delta.totalEarned || 0),
-    });
+    const payload = {
+      coins:     userData.coins,
+      rodUses:   userData.rodUses,
+      inventory: userData.inventory,
+      updatedAt: Date.now(),
+    };
+    // Cộng dồn thống kê (không reset về 0 nữa)
+    if (delta.totalCaught) payload.totalCaught = firebase.database.ServerValue.increment(delta.totalCaught);
+    if (delta.totalEarned) payload.totalEarned = firebase.database.ServerValue.increment(delta.totalEarned);
+    await db.ref(`players/${userData.userId}`).update(payload);
   } catch(e) { console.warn('Firebase sync error:', e); }
 }
+
+// ── Lưu khi RỜI TRANG (đóng tab / chuyển app / tắt trình duyệt) ──
+// Dùng fetch keepalive để request kịp gửi đi cả khi trang đang đóng.
+// PATCH (merge) nên không xóa totalCaught/totalEarned do bot ghi.
+function flushSaveOnExit() {
+  if (DEMO || !userData.userId) return;
+  try {
+    const base = firebaseConfig.databaseURL.replace(/\/+$/, '');
+    const url  = `${base}/players/${userData.userId}.json`;
+    const body = JSON.stringify({
+      coins:     userData.coins,
+      rodUses:   userData.rodUses,
+      inventory: userData.inventory,
+      updatedAt: Date.now(),
+    });
+    fetch(url, { method:'PATCH', body, keepalive:true }).catch(()=>{});
+    console.log('[Lưu] Đã gửi lưu lúc rời trang.');
+  } catch(e) { console.warn('[Lưu] flush lỗi:', e); }
+}
+// visibilitychange 'hidden' là cách ĐÁNG TIN nhất trên điện thoại
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushSaveOnExit();
+});
+window.addEventListener('pagehide', flushSaveOnExit);
+
 
 function watchPlayerData() {
   if (DEMO || !db) return;
