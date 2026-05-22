@@ -90,11 +90,11 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 .es{text-align:center;padding:20px 15px;color:var(--sub)}.es .ei{font-size:32px;margin-bottom:8px}.es p{font-size:11px;line-height:1.6}
 .r1{color:#88aacc}.r2{color:#a29bfe}.r3{color:#fdcb6e}.r4{color:#e17055}.r5{color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,.6)}.r6{color:#ff6fff;text-shadow:0 0 10px rgba(255,0,255,.7);animation:rainbow .8s infinite}
 @keyframes rainbow{0%{color:#ff6fff}25%{color:#ffff00}50%{color:#00ffff}75%{color:#ff8800}100%{color:#ff6fff}}
-#loading{position:fixed;inset:0;background:#020c18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:16px}
-#loading h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--accent)}
+#loading{position:fixed;inset:0;background:#020c18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:16px;overflow-y:auto}
+#loading h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--accent);margin-bottom:15px}
 #loadbar{width:200px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
 #loadfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px;width:0;transition:width .4s ease}
-#loadtxt{font-size:10px;color:var(--sub);font-weight:700}
+#loadtxt{font-size:10px;color:var(--sub);font-weight:700;margin-bottom:15px}
 #autherr{position:fixed;inset:0;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:200;padding:20px}
 #autherr h2{font-family:'Press Start 2P',monospace;font-size:10px;color:#e74c3c;text-align:center}
 #autherr .ae-reason{font-size:13px;font-weight:900;color:var(--gold);text-align:center}
@@ -111,25 +111,39 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 #result-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(4,12,28,.95);border:2px solid var(--gold);border-radius:var(--rad);padding:14px 20px;text-align:center;min-width:180px;pointer-events:none;z-index:10;backdrop-filter:blur(8px);box-shadow:0 0 30px rgba(0,0,0,.7)}
 #result-banner.show{animation:rpop .4s cubic-bezier(.34,1.56,.64,1) forwards}
 @keyframes rpop{0%{transform:translate(-50%,-50%) scale(0) rotate(-6deg)}70%{transform:translate(-50%,-50%) scale(1.06) rotate(1.5deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(0)}}
+
+/* 🔐 AUTH UI */
+.auth-box{background:rgba(15,32,53,.95);border:2px solid var(--accent);border-radius:16px;padding:24px;text-align:center;max-width:360px;width:90%;box-shadow:0 0 40px rgba(0,212,255,0.2)}
+.auth-icon{font-size:48px;margin-bottom:10px}
+.auth-title{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--accent);margin-bottom:15px}
+.auth-desc{font-size:11px;color:var(--sub);margin-bottom:15px;line-height:1.6}
+.auth-id{background:rgba(255,255,255,0.05);padding:8px;border-radius:6px;font-family:monospace;font-size:10px;color:var(--gold);word-break:break-all;margin-bottom:15px}
+.auth-input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:rgba(0,0,0,0.3);color:#fff;font-size:11px;margin-bottom:12px;text-align:center}
+.auth-input:focus{border-color:var(--accent);outline:none}
+.auth-btn{width:100%;padding:10px;border:none;border-radius:8px;font-weight:900;font-size:11px;cursor:pointer;margin-bottom:8px}
+.auth-btn.confirm{background:linear-gradient(135deg,#0058b0,#00c0f0);color:#fff}
+.auth-btn.cancel{background:transparent;border:1px solid var(--border);color:var(--sub)}
+
 @media(max-width:520px){#hdr h1{font-size:8px}#cd{font-size:12px}.mb{font-size:9px;padding:4px 9px}#cb{font-size:7px;padding:10px}#chatbox{width:140px;bottom:42px}}
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
 </head>
 <body>
 <div id="loading">
+  <!-- Nội dung loading sẽ được JS thay đổi -->
   <div style="font-size:48px">🎣</div>
   <h2>CÂU CÁ 3D</h2>
   <div id="loadbar"><div id="loadfill"></div></div>
   <div id="loadtxt">Khởi tạo...</div>
-  <!-- Nút Demo ngay trên loading để fix lỗi treo -->
   <div id="demo-btn-container" style="display:none;margin-top:10px">
-    <button class="ae-btn demo" onclick="startDemo()">🎮 VÀO GAME DEMO (KHÔNG CẦN MẠNG)</button>
+    <button class="ae-btn demo" onclick="startDemo()">🎮 VÀO GAME DEMO</button>
   </div>
 </div>
+
 <div id="autherr">
   <div style="font-size:48px">🔒</div>
   <h2>KHÔNG VÀO ĐƯỢC</h2>
-  <div class="ae-reason" id="ae-reason">Phiên hết hạn</div>
+  <div class="ae-reason" id="ae-reason">Lỗi</div>
   <p id="ae-msg">Dùng <strong>tcauonline</strong> trong Discord để lấy link mới!</p>
   <div id="ae-detail"></div>
   <div class="ae-btns">
@@ -137,6 +151,7 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
     <button class="ae-btn demo" onclick="startDemo()">🎮 Chơi Demo</button>
   </div>
 </div>
+
 <div id="game">
   <div id="hdr">
     <h1>🎣 CÂU CÁ 3D</h1>
@@ -233,30 +248,27 @@ let player={userId:'',username:'',avatar:'',coins:0,rodUses:0,inventory:{},total
 let gstate='idle',curMap=0,activeTab='bag',wt,bt,resultFish=null,resultWeight=0,waitStart=0,waitDur=4000;
 let yaw=0,pitch=0,DEMO=false,pendingSave=false;
 const otherPlayers=new Map();
+let sessionData=null; // Lưu session để xác thực sau
 
 // ═══════════════════════════════════════════════════════════
 // FIREBASE & SYNC
 // ═══════════════════════════════════════════════════════════
 function loadScript(s){return new Promise((r,j)=>{const e=document.createElement('script');e.src=s;e.async=false;e.onload=()=>r(s);e.onerror=()=>j(new Error('Lỗi tải'));document.head.appendChild(e);});}
 async function loadFB(){
-  // Sử dụng CDN ổn định hơn để tránh lỗi chặn
   await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
   await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js');
 }
 async function bootFirebase(){
   setLoad('Kết nối Firebase...',10);
   
-  // Timeout xử lý loading: nếu 8s mà chưa xong thì hiện nút Demo
   const loadingTimeout = setTimeout(()=>{
-    console.warn('Loading quá lâu, chuyển sang chế độ cho phép Demo.');
     document.getElementById('demo-btn-container').style.display='block';
   }, 8000);
 
   if(typeof firebase==='undefined'){
-    try{await loadFB();console.log('✅ Firebase script loaded');}
+    try{await loadFB();}
     catch(e){
       clearTimeout(loadingTimeout);
-      console.error('❌ Lỗi tải script Firebase:', e);
       showAuthError('Lỗi mạng','Không tải được Firebase.',e.message);
       return;
     }
@@ -265,11 +277,9 @@ async function bootFirebase(){
   try{
     firebase.initializeApp(firebaseConfig);
     DB=firebase.database();
-    console.log('✅ Firebase initialized');
-    clearTimeout(loadingTimeout); // Hủy timeout nếu thành công
+    clearTimeout(loadingTimeout);
   }catch(e){
     clearTimeout(loadingTimeout);
-    console.error('❌ Lỗi init Firebase:', e);
     showAuthError('Lỗi Firebase','',e.message);
     return;
   }
@@ -278,60 +288,118 @@ async function bootFirebase(){
 }
 const URL_TOKEN=new URLSearchParams(window.location.search).get('t');
 
-// Hàm readSession có Timeout 5s để tránh treo
+// Hàm đọc session có Timeout để tránh treo
 function readSessionWithTimeout(token, maxRetries=3, timeoutPerReq=4000) {
   return new Promise(async (resolve, reject) => {
     for (let i = 0; i < maxRetries; i++) {
       try {
-        // Race giữa request Firebase và timeout
         const result = await Promise.race([
           DB.ref(`sessions/${token}`).once('value'),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout reading session')), timeoutPerReq))
+          new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout')), timeoutPerReq))
         ]);
         if (result.val()) return resolve({ session: result.val(), error: null });
-        await new Promise(r => setTimeout(r, 500)); // Chờ nhẹ trước khi retry
+        await new Promise(r => setTimeout(r, 500));
       } catch (err) {
-        console.warn(`Retry ${i+1} failed:`, err.message);
         await new Promise(r => setTimeout(r, 500));
       }
     }
-    resolve({ session: null, error: new Error('Không đọc được session sau 3 lần thử.') });
+    resolve({ session: null, error: new Error('Timeout') });
   });
 }
 
-async function initAuth(){
-  setLoad('Xác thực...',20);
-  if(!URL_TOKEN){
-    // Nếu không có token, hiện nút Demo ngay
-    document.getElementById('demo-btn-container').style.display='block';
-    setLoad('Chưa có link vào game',100);
+// Hiển thị màn hình xác thực Discord ID
+function showDiscordIdPrompt(sessionUserId) {
+  const loadingDiv = document.getElementById('loading');
+  loadingDiv.innerHTML = `
+    <div class="auth-box">
+      <div class="auth-icon">🔐</div>
+      <div class="auth-title">XÁC THỰC TÀI KHOẢN</div>
+      <div class="auth-desc">
+        Link này được tạo riêng cho Discord ID:<br>
+        <span class="auth-id">${sessionUserId}</span>
+        <br>Nếu bạn không phải chủ sở hữu, bạn sẽ không thể vào game.
+      </div>
+      <input type="text" id="discord-id-input" class="auth-input" placeholder="Nhập Discord ID của bạn (17-19 số)">
+      <button class="auth-btn confirm" onclick="submitDiscordId('${sessionUserId}')">XÁC NHẬN VÀO GAME</button>
+      <button class="auth-btn cancel" onclick="location.reload()">HỦY</button>
+      <p style="font-size:9px;color:var(--sub);margin-top:10px">
+        💡 Cách lấy ID: Bật Developer Mode trong Discord → Chuột phải tên bạn → Copy ID
+      </p>
+    </div>
+  `;
+}
+
+// Xử lý submit Discord ID
+function submitDiscordId(targetId) {
+  const inputId = document.getElementById('discord-id-input').value.trim();
+  
+  if (!inputId) {
+    showToast('❌ Vui lòng nhập Discord ID!');
+    return;
+  }
+  if (!/^\d{17,19}$/.test(inputId)) {
+    showToast('❌ Discord ID không hợp lệ (17-19 chữ số)!');
     return;
   }
   
+  if (inputId === targetId) {
+    // ✅ Trùng khớp -> Vào game
+    document.getElementById('loading').innerHTML = `
+      <div style="font-size:48px">🎣</div>
+      <h2>CÂU CÁ 3D</h2>
+      <div id="loadbar"><div id="loadfill"></div></div>
+      <div id="loadtxt">Xác thực thành công... Đang tải game</div>
+    `;
+    startGame(true);
+  } else {
+    // ❌ Sai ID
+    document.getElementById('loading').innerHTML = `
+      <div class="auth-box" style="border-color:#e74c3c">
+        <div class="auth-icon">🚫</div>
+        <div class="auth-title" style="color:#e74c3c">SAI DISCORD ID</div>
+        <div class="auth-desc">
+          Discord ID bạn nhập không khớp với chủ sở hữu link.<br>
+          <strong style="color:var(--gold)">Link này chỉ dành cho:</strong>
+          <span class="auth-id">${targetId}</span>
+        </div>
+        <button class="auth-btn retry" onclick="location.reload()">THỬ LẠI</button>
+        <button class="auth-btn cancel" onclick="startDemo()">VÀO DEMO</button>
+      </div>
+    `;
+  }
+}
+
+async function initAuth(){
+  if(!URL_TOKEN){
+    // Nếu không có token, hiện nút Demo
+    document.getElementById('demo-btn-container').style.display='block';
+    setLoad('Chưa có link vào game (Dùng tcauonline)',100);
+    return;
+  }
+  
+  setLoad('Kiểm tra phiên...',20);
   const{session,error}=await readSessionWithTimeout(URL_TOKEN);
+  
   if(error||!session){
-    console.error('Auth Error:', error);
-    showAuthError('Lỗi phiên','Không tìm thấy phiên hoặc hết hạn.', error?.message || '');
+    document.getElementById('demo-btn-container').style.display='block';
+    showAuthError('Lỗi phiên','Không tìm thấy phiên hoặc hết hạn.', 'Vui lòng dùng lệnh tcauonline để lấy link mới.');
     return;
   }
   if(Date.now()>session.expiresAt||session.secret!==GAME_SECRET){
-    showAuthError('Phiên hết hạn/Sai secret','Dùng tcauonline để lấy link mới.','');
+    document.getElementById('demo-btn-container').style.display='block';
+    showAuthError('Phiên hết hạn/Sai secret','','');
     return;
   }
-  setLoad('Tải dữ liệu...',40);
-  player.userId=session.userId;player.username=session.username;player.avatar=session.avatar||'';
-  try{
-    const p=await DB.ref(`players/${session.userId}`).once('value');const d=p.val();
-    if(d&&typeof d==='object'){
-      player.coins=d.coins??session.coins??0;player.rodUses=d.rodUses??session.rodUses??0;
-      player.totalCaught=d.totalCaught??0;player.totalEarned=d.totalEarned??0;
-      player.inventory={};if(d.inventory&&typeof d.inventory==='object'){for(const[k,v]of Object.entries(d.inventory))if(Array.isArray(v)&&v.length>0)player.inventory[k]=v.filter(e=>e?.value!==undefined).map(e=>({weight:e.weight||0,value:e.value||0,map:e.map??0,caughtAt:e.caughtAt||Date.now()}));}
-    }else{player.coins=session.coins??0;player.rodUses=session.rodUses??0;player.inventory={};await writePlayerImmediate();}
-  }catch(e){console.error(e);player.inventory={};}
-  startGame(true);
+  
+  // Lưu session data
+  sessionData = session;
+  
+  // 🛡️ HIỂN THỊ FORM XÁC THỰC DISCORD ID
+  showDiscordIdPrompt(session.userId);
 }
+
 function showAuthError(r,m,d){document.getElementById('loading').style.display='none';const a=document.getElementById('autherr');a.style.display='flex';document.getElementById('ae-reason').textContent=r;document.getElementById('ae-msg').innerHTML=m+'<br><br>Hoặc dùng <strong>tcauonline</strong>.';const x=document.getElementById('ae-detail');if(d){x.style.display='block';x.textContent=d;}else x.style.display='none';}
-function setLoad(t,p){document.getElementById('loadtxt').textContent=t;document.getElementById('loadfill').style.width=p+'%';}
+function setLoad(t,p){const el=document.getElementById('loading'); if(!el) return; const txt=el.querySelector('#loadtxt'); if(txt) txt.textContent=t; const fill=el.querySelector('#loadfill'); if(fill) fill.style.width=p+'%';}
 
 function setSyncStatus(s){const e=document.getElementById('sync-status');if(!e)return;e.textContent=s==='ok'?'✓ Đồng bộ':s==='saving'?'⟳ Đang lưu...':'✗ Lỗi';e.style.color=s==='ok'?'#2ecc71':s==='saving'?'#f39c12':'#e74c3c';}
 async function writePlayerImmediate(){
@@ -354,16 +422,50 @@ function watchPlayerData(){if(DEMO||!DB)return;DB.ref(`players/${player.userId}`
 function startDemo(){
   DEMO=true;
   document.getElementById('autherr').style.display='none';
-  document.getElementById('loading').style.display='flex'; // Hiện lại loading để mượt mà
-  document.getElementById('demo-btn-container').style.display='none'; // Ẩn nút demo
-  document.getElementById('demo-badge').style.display='block';
+  const loadingDiv = document.getElementById('loading');
+  loadingDiv.style.display='flex';
+  loadingDiv.innerHTML = `
+    <div style="font-size:48px">🎣</div>
+    <h2>CÂU CÁ 3D</h2>
+    <div id="loadbar"><div id="loadfill" style="width:100%"></div></div>
+    <div id="loadtxt">Đang vào chế độ Demo...</div>
+    <div id="demo-badge" style="position:relative;margin-top:10px">🎮 DEMO</div>
+  `;
   player={userId:'demo-'+Math.random().toString(36).slice(2,8),username:'Người Chơi Thử',avatar:'',coins:500_000,rodUses:20,inventory:{},totalCaught:0,totalEarned:0};
-  setLoad('Chế độ Demo...',80);
-  setTimeout(()=>startGame(false), 500);
+  setTimeout(()=>startGame(false), 800);
   document.getElementById('online-count').textContent='1';
   showToast('🎮 Demo: Dữ liệu không được lưu lại');
 }
-function startGame(online){setLoad('Đang vào game...',90);initThree();if(online){initMultiplayer();watchPlayerData();}setLoad('Hoàn tất!',100);setTimeout(()=>{document.getElementById('loading').style.display='none';},400);updateUI();renderContent();const cb=document.getElementById('cb');cb.disabled=false;cb.textContent=player.rodUses>0?'🎣 THẢ CÂU':'🏪 MUA CẦN';updateMapUI();setStatus(player.rodUses>0?'Nhấn THẢ CÂU để bắt đầu':'Mua cần câu ở Shop!');}
+function startGame(online){
+  // Load data từ session
+  if(!DEMO && sessionData) {
+    player.userId=sessionData.userId;player.username=sessionData.username;player.avatar=sessionData.avatar||'';
+    player.coins=sessionData.coins||0;player.rodUses=sessionData.rodUses||0;
+  }
+  
+  const loadingDiv = document.getElementById('loading');
+  loadingDiv.style.display='flex';
+  loadingDiv.innerHTML = `
+    <div style="font-size:48px">🎣</div>
+    <h2>CÂU CÁ 3D</h2>
+    <div id="loadbar"><div id="loadfill"></div></div>
+    <div id="loadtxt">Đang tải đồ họa...</div>
+  `;
+  setLoad('Đang vào game...',90);
+  
+  initThree();
+  if(online){initMultiplayer();watchPlayerData();}
+  
+  setLoad('Hoàn tất!',100);
+  setTimeout(()=>{loadingDiv.style.display='none';},400);
+  
+  updateUI();renderContent();
+  const cb=document.getElementById('cb');
+  cb.disabled=false;
+  cb.textContent=player.rodUses>0?'🎣 THẢ CÂU':'🏪 MUA CẦN';
+  updateMapUI();
+  setStatus(player.rodUses>0?'Nhấn THẢ CÂU để bắt đầu':'Mua cần câu ở Shop!');
+}
 
 // ═══════════════════════════════════════════════════════════
 // MULTIPLAYER
@@ -611,7 +713,7 @@ if(activeTab==='rates'){const m=MAP_DEFS[curMap];let h=`<div class="stl">📊 T�
 
 let audioCtx=null,soundOn=false,masterGain=null;
 function initAudio(){if(audioCtx)return;audioCtx=new(window.AudioContext||window.webkitAudioContext)();masterGain=audioCtx.createGain();masterGain.gain.value=.15;masterGain.connect(audioCtx.destination);soundOn=true;document.getElementById('snd').textContent='🔊';}
-function toggleSound(){if(!audioCtx){initAudio();return;}soundOn=!soundOn;masterGain.gain.value=soundOn?.15:0;document.getElementById('snd').textContent=soundOn?'🔊':'🔇';}
+function toggleSound(){if(!audioCtx){initAudio();return;}soundOn=!soundOn;masterGain.gain.value=soundOn?.15:0;document.getElementById('snd').textContent=soundOn?'🔊':'';}
 document.addEventListener('click',()=>{if(!audioCtx)initAudio();},{once:true});
 
 // Khởi động
