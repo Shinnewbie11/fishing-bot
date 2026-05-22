@@ -142,7 +142,7 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 @keyframes fishJump{0%{transform:translateY(80px) scale(.2);opacity:0}30%{transform:translateY(-30px) scale(1.3);opacity:1}60%{transform:translateY(10px) scale(1)}80%{transform:translateY(-10px) scale(1.05)}100%{transform:translateY(0) scale(1)}}
 #fish-splash{font-size:36px;animation:splashAnim 1.5s ease-out;opacity:0}
 @keyframes splashAnim{0%{opacity:1;transform:scale(.5)}50%{opacity:.8;transform:scale(1.5)}100%{opacity:0;transform:scale(2)}}
-#fish-size-badge{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-weight:900;font-size:12px;padding:3px 10px;border-radius:12px;white-space:nowrap;box-shadow:0 0 20px rgba(255,200,0,.6)}
+#fish-size-badge{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-weight:900;font-size:12px;padding:3px 10px;border-radius:12px;white-space:nowrap;box-shadow:0 0 20px rgba(255,200,0,.6);display:none}
 
 /* ── WATER SPLASH EFFECT ── */
 #splash-overlay{position:absolute;inset:0;pointer-events:none;z-index:14;overflow:hidden}
@@ -194,7 +194,7 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
     <div id="bf"></div>
     <div id="rb">
       <div class="rem" id="rem"></div>
-      <div id="fish-size-badge" style="display:none"></div>
+      <div id="fish-size-badge"></div>
       <div class="rn" id="rn"></div>
       <div class="rv" id="rv"></div>
       <div class="rr" id="rr"></div>
@@ -247,7 +247,7 @@ const firebaseConfig = {
 const GAME_SECRET = 'datBatKyChuan123';
 
 // ═══════════════════════════════════════════════════════════
-// MAP DEFINITIONS — mỗi map có cảnh và cá riêng
+// MAP DEFINITIONS — mỗi map có cảnh và cá riêng (ĐÃ FIX TỈ LỆ)
 // ═══════════════════════════════════════════════════════════
 const MAP_DEFS = [
   {
@@ -256,7 +256,7 @@ const MAP_DEFS = [
     desc: 'Hồ nước ngọt yên bình. Cá nước ngọt phổ biến.',
     hint: 'Cá Mồi · Cá Trắm · Cá Chép · Cá Vàng',
     fishPool: ['moi','tram','chep','vang'],
-    fishRates: { miss:30, moi:40, tram:18, chep:9, vang:3 },
+    fishRates: { miss:45, moi:35, tram:12, chep:6, vang:2 }, // 🎯 Khó hơn
   },
   {
     id: 'bien_nhiet',
@@ -264,7 +264,7 @@ const MAP_DEFS = [
     desc: 'Vùng biển xanh rực rỡ. Cá biển nhiều màu sắc.',
     hint: 'Cá Biển · Cá Ngựa · Cá Mặt Trời · Cá Rồng',
     fishPool: ['bien','ngua','mattroi','rong'],
-    fishRates: { miss:28, bien:38, ngua:20, mattroi:10, rong:4 },
+    fishRates: { miss:42, bien:36, ngua:14, mattroi:6, rong:2 },
   },
   {
     id: 'song_nui',
@@ -272,7 +272,7 @@ const MAP_DEFS = [
     desc: 'Dòng sông lạnh giá trên cao. Cá quý hiếm sinh sống.',
     hint: 'Cá Hồi · Cá Tầm · Cá Băng · Cá Thần Băng',
     fishPool: ['hoi','tam','bang','thanbang'],
-    fishRates: { miss:25, hoi:35, tam:22, bang:13, thanbang:5 },
+    fishRates: { miss:40, hoi:34, tam:16, bang:7, thanbang:3 },
   },
   {
     id: 'vuc_dai_duong',
@@ -280,7 +280,7 @@ const MAP_DEFS = [
     desc: 'Vực thẳm sâu tối tăm. Sinh vật huyền bí cực hiếm!',
     hint: 'Bạch Tuộc · Cá Ma · Cá Cổ · Thần Hải',
     fishPool: ['bachtuoc','cama','caco','thanhailong'],
-    fishRates: { miss:20, bachtuoc:32, cama:25, caco:17, thanhailong:6 },
+    fishRates: { miss:38, bachtuoc:32, cama:20, caco:8, thanhailong:2 },
   },
 ];
 
@@ -350,7 +350,7 @@ const ROD_USES  = 10;
 
 let player = {
   userId:'', username:'', avatar:'', coins:0, rodUses:0,
-  inventory:{},   // { fishId: [{weight, value, map}] }
+  inventory:{},   // { fishId: [{weight, value, map, caughtAt}] }
   totalCaught:0, totalEarned:0
 };
 let gstate = 'idle', curMap = 0, activeTab = 'bag';
@@ -390,7 +390,7 @@ async function bootFirebase() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// AUTH
+// AUTH — FIX deserialize inventory an toàn
 // ═══════════════════════════════════════════════════════════
 const URL_TOKEN = new URLSearchParams(window.location.search).get('t');
 async function readSessionWithRetry(token, max=5) {
@@ -409,28 +409,58 @@ async function initAuth() {
   if (!session) { showAuthError('Không tìm thấy session','sessions/'+URL_TOKEN+' = null','Bot phải ghi sessions trước khi gửi link.'); return; }
   if (!session.expiresAt || Date.now() > session.expiresAt) { showAuthError('Session đã hết hạn','Dùng tcauonline để lấy link mới.',''); return; }
   if (session.secret !== GAME_SECRET) { showAuthError('Secret không khớp','','Bot: "'+session.secret+'" | Web cần: "'+GAME_SECRET+'"'); return; }
+  
   setLoad('Tải dữ liệu người chơi...', 40);
   player.userId = session.userId; player.username = session.username; player.avatar = session.avatar || '';
+  
   try {
     const pSnap = await DB.ref(`players/${session.userId}`).once('value');
     const pData = pSnap.val();
+    
     if (pData) {
       player.coins = pData.coins ?? session.coins ?? 0;
       player.rodUses = pData.rodUses ?? session.rodUses ?? 0;
-      player.inventory = pData.inventory ?? session.inventory ?? {};
+      
+      // 🎯 FIX: Deserialize inventory an toàn
+      if (pData.inventory && typeof pData.inventory === 'object') {
+        player.inventory = {};
+        for (const [fid, arr] of Object.entries(pData.inventory)) {
+          if (Array.isArray(arr)) {
+            player.inventory[fid] = arr
+              .filter(e => e && typeof e === 'object' && e.value !== undefined)
+              .map(e => ({
+                weight: e.weight || 0,
+                value: e.value || 0,
+                map: e.map !== undefined ? e.map : curMap,
+                caughtAt: e.caughtAt || Date.now()
+              }));
+          }
+        }
+      } else {
+        player.inventory = session.inventory ?? {};
+      }
+      
       player.totalCaught = pData.totalCaught ?? 0;
       player.totalEarned = pData.totalEarned ?? 0;
     } else {
-      player.coins = session.coins ?? 0; player.rodUses = session.rodUses ?? 0;
+      // User mới
+      player.coins = session.coins ?? 0; 
+      player.rodUses = session.rodUses ?? 0;
       player.inventory = session.inventory ?? {};
       await writePlayerImmediate();
     }
-  } catch(e) { player.coins = session.coins ?? 0; player.rodUses = session.rodUses ?? 0; player.inventory = session.inventory ?? {}; }
+  } catch(e) { 
+    console.error('[initAuth] Lỗi load player data:', e);
+    player.coins = session.coins ?? 0; 
+    player.rodUses = session.rodUses ?? 0; 
+    player.inventory = session.inventory ?? {}; 
+  }
+  
   startGame(true);
 }
 
 // ═══════════════════════════════════════════════════════════
-// SAVE / SYNC
+// SAVE / SYNC — FIX lưu ngay lập tức
 // ═══════════════════════════════════════════════════════════
 function setSyncStatus(state) {
   const el = document.getElementById('sync-status');
@@ -439,33 +469,76 @@ function setSyncStatus(state) {
   if (state==='saving') { el.textContent='⟳ Đang lưu...'; el.style.color='#f39c12'; }
   if (state==='err')    { el.textContent='✗ Lỗi lưu';     el.style.color='#e74c3c'; }
 }
+
+// 🎯 FIX: writePlayerImmediate — serialize inventory đúng format
 async function writePlayerImmediate() {
   if (DEMO || !DB || !player.userId) return;
   setSyncStatus('saving');
+  
   try {
+    // Serialize inventory an toàn
+    const safeInventory = {};
+    for (const [fishId, entries] of Object.entries(player.inventory)) {
+      if (Array.isArray(entries) && entries.length > 0) {
+        safeInventory[fishId] = entries
+          .filter(e => e && typeof e === 'object' && e.value !== undefined)
+          .map(e => ({
+            weight: e.weight || 0,
+            value: e.value || 0,
+            map: e.map !== undefined ? e.map : curMap,
+            caughtAt: e.caughtAt || Date.now()
+          }));
+      }
+    }
+    
     await DB.ref(`players/${player.userId}`).update({
-      coins: player.coins, rodUses: player.rodUses,
-      inventory: player.inventory,
-      totalCaught: player.totalCaught, totalEarned: player.totalEarned,
-      webUpdatedAt: Date.now(), updatedAt: Date.now(),
+      coins: player.coins, 
+      rodUses: player.rodUses,
+      inventory: safeInventory,
+      totalCaught: player.totalCaught, 
+      totalEarned: player.totalEarned,
+      webUpdatedAt: Date.now(), 
+      updatedAt: Date.now(),
     });
     setSyncStatus('ok');
-  } catch(e) { console.error('[Save]', e); setSyncStatus('err'); }
+  } catch(e) { 
+    console.error('[Save] Lỗi:', e); 
+    setSyncStatus('err');
+    // Retry 1 lần
+    setTimeout(() => writePlayerImmediate().catch(()=>{}), 1000);
+  }
 }
-function scheduleSave(delayMs=800) {
-  pendingSave = true; setSyncStatus('saving');
+
+// 🎯 FIX: scheduleSave — delay=0 thì lưu ngay
+function scheduleSave(delayMs = 0) {
+  pendingSave = true; 
+  setSyncStatus('saving');
   clearTimeout(saveDebounceTimer);
-  saveDebounceTimer = setTimeout(async () => { await writePlayerImmediate(); pendingSave = false; }, delayMs);
+  
+  if (delayMs === 0) {
+    writePlayerImmediate().finally(() => { pendingSave = false; });
+  } else {
+    saveDebounceTimer = setTimeout(async () => { 
+      await writePlayerImmediate(); 
+      pendingSave = false; 
+    }, delayMs);
+  }
 }
+
 function flushSaveOnExit() {
   if (DEMO || !player.userId || (!pendingSave && saveDebounceTimer === null)) return;
   try {
     const url = firebaseConfig.databaseURL.replace(/\/+$/,'')+`/players/${player.userId}.json`;
-    fetch(url,{method:'PATCH',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({coins:player.coins,rodUses:player.rodUses,inventory:player.inventory,totalCaught:player.totalCaught,totalEarned:player.totalEarned,webUpdatedAt:Date.now(),updatedAt:Date.now()})}).catch(()=>{});
+    fetch(url,{method:'PATCH',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      coins:player.coins,rodUses:player.rodUses,inventory:player.inventory,
+      totalCaught:player.totalCaught,totalEarned:player.totalEarned,
+      webUpdatedAt:Date.now(),updatedAt:Date.now()
+    })}).catch(()=>{});
   } catch(e) {}
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flushSaveOnExit(); });
 window.addEventListener('pagehide', flushSaveOnExit);
+
 function watchPlayerData() {
   if (DEMO || !DB) return;
   DB.ref(`players/${player.userId}`).on('value', snap => {
@@ -474,7 +547,11 @@ function watchPlayerData() {
     if (botTs <= webTs) return;
     if (!pendingSave && gstate === 'idle') {
       const rc = d.coins ?? player.coins;
-      if (rc !== player.coins) { player.coins = rc; updateUI(); showToast('💰 Xu đã được cập nhật từ Discord!'); }
+      if (rc !== player.coins) { 
+        player.coins = rc; 
+        updateUI(); 
+        showToast('💰 Xu đã được cập nhật từ Discord!'); 
+      }
     }
   });
 }
@@ -602,102 +679,153 @@ const fillLight=new THREE.DirectionalLight(0xaad4ff,.32); fillLight.position.set
 const hemi=new THREE.HemisphereLight(0x88bbee,0x4a6820,.55); scene.add(hemi);
 const bobLight=new THREE.PointLight(0xffee00,0,8); scene.add(bobLight);
 
-// ── SKY PAINTER ──────────────────────────────────────────
+// ── SKY PAINTER — NÂNG CẤP ĐỒ HỌA ─────────────────────────
 function paintSky(config){
   const c=document.createElement('canvas');const cx=c.getContext('2d');c.width=2048;c.height=1024;
+  
+  // Gradient bầu trời mượt hơn
   const g=cx.createLinearGradient(0,0,0,600);config.sky.forEach(([s,col])=>g.addColorStop(s,col));cx.fillStyle=g;cx.fillRect(0,0,2048,1024);
-  if(config.sun){const sg=cx.createRadialGradient(config.sun.x,config.sun.y,5,config.sun.x,config.sun.y,config.sun.r);sg.addColorStop(0,config.sun.color+'ee');sg.addColorStop(.4,config.sun.color+'55');sg.addColorStop(1,config.sun.color+'00');cx.fillStyle=sg;cx.beginPath();cx.arc(config.sun.x,config.sun.y,config.sun.r,0,Math.PI*2);cx.fill();}
-  if(config.clouds){config.clouds.forEach(([cx2,cy,w,h])=>{cx.fillStyle='rgba(255,255,255,.55)';cx.beginPath();cx.ellipse(cx2,cy,w*.5,h*.5,0,0,Math.PI*2);cx.fill();cx.beginPath();cx.ellipse(cx2+w*.25,cy-h*.12,w*.36,h*.44,0,0,Math.PI*2);cx.fill();});}
-  if(config.mountains){config.mountains.forEach((m,i)=>{cx.fillStyle=m.color;cx.beginPath();cx.moveTo(0,1024);for(let x=0;x<=2048;x+=24)cx.lineTo(x,m.base+Math.sin(x*m.freq+i)*m.amp+Math.sin(x*m.freq*2+i)*m.amp*.4);cx.lineTo(2048,1024);cx.closePath();cx.fill();});}
-  const pr=rng(config.seed||1);
-  if(config.snowCaps){config.mountains&&config.mountains.forEach((m)=>{cx.fillStyle='rgba(255,255,255,.9)';cx.beginPath();cx.moveTo(0,1024);for(let x=0;x<=2048;x+=24)cx.lineTo(x,m.base-m.amp*.4+Math.sin(x*m.freq)*m.amp*.2);cx.lineTo(2048,m.base-m.amp*.35);cx.closePath();cx.fill();});}
-  if(config.trees){cx.fillStyle=config.trees.color;cx.beginPath();cx.moveTo(0,1024);for(let x=0;x<=2048;x+=18)cx.lineTo(x,config.trees.base+Math.sin(x*config.trees.freq)*config.trees.amp);cx.lineTo(2048,1024);cx.closePath();cx.fill();}
-  if(config.stars){for(let i=0;i<config.stars;i++){cx.fillStyle=`rgba(255,255,228,${.3+pr()*.7})`;cx.beginPath();cx.arc(pr()*2048,pr()*520,pr()*1.9+.3,0,Math.PI*2);cx.fill();}}
-  if(config.moon){const mg=cx.createRadialGradient(1620,72,5,1620,72,60);mg.addColorStop(0,'#fffef4');mg.addColorStop(.6,'#f5ecbe');mg.addColorStop(1,'rgba(245,235,180,0)');cx.fillStyle=mg;cx.beginPath();cx.arc(1620,72,58,0,Math.PI*2);cx.fill();}
-  if(config.glows){config.glows.forEach(g2=>{const gg=cx.createRadialGradient(g2.x,g2.y,0,g2.x,g2.y,g2.r);gg.addColorStop(0,g2.color+'88');gg.addColorStop(1,g2.color+'00');cx.fillStyle=gg;cx.beginPath();cx.arc(g2.x,g2.y,g2.r,0,Math.PI*2);cx.fill();});}
+  
+  // ☀️ Mặt trời với glow effect
+  if(config.sun){
+    const og=cx.createRadialGradient(config.sun.x,config.sun.y,0,config.sun.x,config.sun.y,config.sun.r*2.5);
+    og.addColorStop(0,config.sun.color+'44');og.addColorStop(0.5,config.sun.color+'11');og.addColorStop(1,'transparent');
+    cx.fillStyle=og;cx.beginPath();cx.arc(config.sun.x,config.sun.y,config.sun.r*2.5,0,Math.PI*2);cx.fill();
+    
+    const sg=cx.createRadialGradient(config.sun.x,config.sun.y,0,config.sun.x,config.sun.y,config.sun.r);
+    sg.addColorStop(0,'#ffffff');sg.addColorStop(0.3,config.sun.color+'ee');sg.addColorStop(1,config.sun.color+'00');
+    cx.fillStyle=sg;cx.beginPath();cx.arc(config.sun.x,config.sun.y,config.sun.r,0,Math.PI*2);cx.fill();
+  }
+  
+  // ☁️ Mây với blur
+  if(config.clouds){
+    config.clouds.forEach(([cx2,cy,w,h,opacity=0.6])=>{
+      cx.fillStyle=`rgba(255,255,255,${opacity})`;
+      cx.filter='blur(2px)';
+      cx.beginPath();cx.ellipse(cx2,cy,w*.5,h*.5,0,0,Math.PI*2);cx.fill();
+      cx.beginPath();cx.ellipse(cx2+w*.25,cy-h*.12,w*.36,h*.44,0,0,Math.PI*2);cx.fill();
+      cx.filter='none';
+    });
+  }
+  
+  // 🏔️ Núi chi tiết hơn
+  if(config.mountains){
+    config.mountains.forEach((m,i)=>{
+      cx.fillStyle=m.color.replace(')',', 0.95)').replace('rgb','rgba');
+      cx.beginPath();cx.moveTo(0,1024);
+      for(let x=0;x<=2048;x+=12){
+        const noise=Math.sin(x*m.freq*3+i)*m.amp*0.3;
+        cx.lineTo(x,m.base+Math.sin(x*m.freq+i)*m.amp+noise);
+      }
+      cx.lineTo(2048,1024);cx.closePath();cx.fill();
+    });
+  }
+  
+  // 🌲 Cây cối
+  if(config.trees){
+    cx.fillStyle=config.trees.color;
+    for(let x=0;x<2048;x+=32){
+      const h=config.trees.base+Math.sin(x*config.trees.freq)*config.trees.amp;
+      cx.fillRect(x-3,h,6,30);
+      cx.beginPath();cx.arc(x,h-15,20+Math.sin(x*0.1)*5,0,Math.PI*2);cx.fill();
+    }
+  }
+  
+  // 🌊 Nước với foam
   const wg=cx.createLinearGradient(0,config.waterY||660,0,1024);config.water.forEach(([s,col])=>wg.addColorStop(s,col));cx.fillStyle=wg;cx.fillRect(0,config.waterY||660,2048,1024-(config.waterY||660));
+  
+  // Foam effect
+  cx.fillStyle='rgba(255,255,255,0.15)';
+  for(let i=0;i<50;i++){
+    const fx=Math.random()*2048;
+    const fy=(config.waterY||660)+Math.random()*50;
+    cx.beginPath();cx.ellipse(fx,fy,15+Math.random()*20,3+Math.random()*4,Math.random()*Math.PI,0,Math.PI*2);cx.fill();
+  }
+  
   return new THREE.CanvasTexture(c);
 }
 
-// ── 4 SKY TEXTURES (1 per map) ────────────────────────────
+// ── 4 SKY TEXTURES ────────────────────────────
 const SKY_TEX=[
-  // Map 0: Hồ Làng — buổi chiều ấm áp
   paintSky({sky:[[0,'#87ceeb'],[.3,'#b0d9f5'],[.6,'#d4eef9'],[1,'#e8f5fd']],sun:{x:1200,y:110,r:180,color:'#fffbe0'},clouds:[[200,80,150,40],[600,60,180,45],[1100,90,110,32],[1600,70,160,38]],mountains:[{color:'rgba(34,88,44,.9)',base:540,freq:.008,amp:65},{color:'rgba(22,66,28,.95)',base:520,freq:.012,amp:48}],trees:{color:'rgba(12,50,14,.92)',base:475,freq:.014,amp:40},water:[[0,'#3d8fcc'],[.5,'#2a78b8'],[1,'#1a5a88']],waterY:665,seed:1}),
-  // Map 1: Biển Nhiệt Đới — trời trong xanh
   paintSky({sky:[[0,'#0077b6'],[.2,'#0096c7'],[.5,'#48cae4'],[.8,'#90e0ef'],[1,'#caf0f8']],sun:{x:1024,y:80,r:240,color:'#fff9c4'},clouds:[[300,100,200,50],[800,85,260,60],[1400,95,180,45]],water:[[0,'#0077b6'],[.4,'#0096c7'],[1,'#48cae4']],waterY:520,glows:[{x:1024,y:800,r:400,color:'#00b4d8'},{x:512,y:700,r:280,color:'#48cae4'}],seed:2}),
-  // Map 2: Sông Núi Băng — lạnh lẽo
   paintSky({sky:[[0,'#1a2040'],[.3,'#2c3e6a'],[.6,'#4a6090'],[1,'#7a9ab0']],mountains:[{color:'rgba(200,220,255,.8)',base:520,freq:.006,amp:260},{color:'rgba(160,190,230,.88)',base:540,freq:.009,amp:300},{color:'rgba(100,140,200,.92)',base:560,freq:.012,amp:350}],snowCaps:true,glows:[{x:400,y:200,r:300,color:'#aaddff'},{x:1600,y:150,r:250,color:'#88ccff'}],water:[[0,'#a8d8ea'],[.4,'#7ec8e3'],[1,'#5bb0d0']],waterY:640,seed:3}),
-  // Map 3: Vực Đại Dương — tối tăm huyền bí
   paintSky({sky:[[0,'#000008'],[.4,'#000515'],[1,'#010820']],stars:2000,moon:true,glows:[{x:600,y:500,r:350,color:'#001a44'},{x:1400,y:600,r:300,color:'#0a0040'},{x:1024,y:800,r:500,color:'#001830'}],water:[[0,'#001020'],[.5,'#000815'],[1,'#00050c']],waterY:470,seed:4}),
 ];
 
 const skyMat=new THREE.MeshBasicMaterial({map:SKY_TEX[0],side:THREE.BackSide});
 const skySph=new THREE.Mesh(new THREE.SphereGeometry(95,64,32),skyMat); scene.add(skySph);
 
-// ── MAP CONFIG ────────────────────────────────────────────
+// ── MAP CONFIG — NÂNG CẤP EXTRA OBJECTS ─────
 const MAPS=[
-  // Hồ Làng
   {fog:0xa8d5e8,fn:25,ff:80,wD:[.15,.48,.72],wS:[.25,.65,.88],aI:.40,sL:0xfff4d8,sI:1.2,sP:[8,14,5],gc:0x4a7a2a,
    extraObjects: (s) => {
-     // Hàng rào gỗ
+     // 🪵 Hàng rào gỗ chi tiết
      const fMat=stdMat(0x8B6914,.9); const pMat=stdMat(0x5c3d0e,.85);
-     for(let i=-3;i<=3;i++){const p=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.8,6),fMat);p.position.set(i*1.2+8,-.1,-4);p.castShadow=true;s.add(p);}
-     for(let i=-2;i<=2;i++){const rail=new THREE.Mesh(new THREE.BoxGeometry(7,.06,.08),pMat);rail.position.set(8+0.6,.25+i*.25,-4);s.add(rail);}
-     // Bụi cây xung quanh hồ
+     for(let i=-4;i<=4;i++){
+       const p=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.2,8),fMat);
+       p.position.set(i*1.5+8,0.3,-4);p.castShadow=true;s.add(p);
+       if(i<4){const rail=new THREE.Mesh(new THREE.BoxGeometry(1.4,0.08,0.1),pMat);rail.position.set(i*1.5+1.5+8,0.8,-4);s.add(rail);}
+     }
+     // 🌿 Bụi cây nhiều layer
      const bushMat=stdMat(0x2d6a2d,.85);
-     [[5,.15,5],[6,.15,3],[-5,.15,4],[-6,.15,2],[4,.15,-5]].forEach(([x,y,z])=>{
-       const b=new THREE.Mesh(new THREE.SphereGeometry(.5+Math.random()*.3,7,5),bushMat);b.position.set(x,y,z);b.scale.y=.75;b.castShadow=true;s.add(b);});
-     // Đá lớn hơn
+     [[5,.15,5],[6,.15,3],[-5,.15,4]].forEach(([x,y,z])=>{
+       const bush=new THREE.Group();
+       for(let i=0;i<4;i++){
+         const leaf=new THREE.Mesh(new THREE.SphereGeometry(0.3+Math.random()*0.2,6,5),bushMat);
+         leaf.position.set(Math.random()*0.4-0.2,0.2+Math.random()*0.3,Math.random()*0.4-0.2);
+         leaf.scale.y=0.8;bush.add(leaf);
+       }
+       bush.position.set(x,y,z);bush.castShadow=true;s.add(bush);
+     });
+     // 🪨 Đá biến dạng tự nhiên
      const rkMat=stdMat(0x686666,.94);
-     [[3,.2,2.5],[4.5,.2,1],[-3,.2,3],[-4,.2,1.5]].forEach(([x,y,z])=>{
-       const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.35+Math.random()*.2,0),rkMat);r.position.set(x,y,z);r.rotation.set(Math.random()*3,Math.random()*3,Math.random()*2);r.castShadow=true;s.add(r);});
+     [[3,.2,2.5],[4.5,.2,1]].forEach(([x,y,z])=>{
+       const r=new THREE.Mesh(new THREE.DodecahedronGeometry(0.4+Math.random()*0.2,1),rkMat);
+       r.position.set(x,y,z);r.rotation.set(Math.random()*3,Math.random()*3,Math.random()*2);
+       r.castShadow=true;r.scale.y=0.7+Math.random()*0.3;s.add(r);
+     });
+     // 🌸 Hoa nhỏ ven hồ
+     const flowerColors=[0xff69b4,0xffb6c1,0xffffff];
+     for(let i=0;i<15;i++){
+       const fMat=new THREE.MeshBasicMaterial({color:flowerColors[Math.floor(Math.random()*flowerColors.length)]});
+       const flower=new THREE.Mesh(new THREE.ConeGeometry(0.05,0.15,5),fMat);
+       flower.position.set(7+Math.random()*3,0.02,-3+Math.random()*2);
+       flower.rotation.y=Math.random()*Math.PI;s.add(flower);
+     }
    }},
-  // Biển Nhiệt Đới
   {fog:0x48cae4,fn:30,ff:100,wD:[.00,.30,.60],wS:[.10,.55,.80],aI:.45,sL:0xfff8d0,sI:1.5,sP:[10,12,2],gc:0xf0d080,
    extraObjects: (s) => {
-     // Cát bãi biển
      const sandMat=stdMat(0xf0d080,.95);
      const sandMesh=new THREE.Mesh(new THREE.BoxGeometry(30,.2,8),sandMat);sandMesh.position.set(0,-.12,5);sandMesh.receiveShadow=true;s.add(sandMesh);
-     // Dừa
      const palmTrunkMat=stdMat(0x8B7355,.8);const palmLeafMat=stdMat(0x228B22,.6);
      [[5,0,3],[-6,0,4],[8,0,5]].forEach(([x,y,z])=>{
        const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,3.5,7),palmTrunkMat);trunk.position.set(x,1.5,z);trunk.rotation.z=.1+Math.random()*.15;trunk.castShadow=true;s.add(trunk);
        for(let l=0;l<6;l++){const leaf=new THREE.Mesh(new THREE.ConeGeometry(.06,1.5,5),palmLeafMat);leaf.position.set(x+Math.cos(l/6*Math.PI*2)*.5,3.2,z+Math.sin(l/6*Math.PI*2)*.5);leaf.rotation.z=Math.cos(l/6*Math.PI*2)*.8;leaf.rotation.x=Math.sin(l/6*Math.PI*2)*.6;s.add(leaf);}});
-     // San hô dưới nước (màu sắc)
-     [[2,.05,.5],[3,.05,1],[-2,.05,.8],[-1,.05,1.5]].forEach(([x,y,z])=>{
+     [[2,.05,.5],[3,.05,1]].forEach(([x,y,z])=>{
        const cm=new THREE.MeshStandardMaterial({color:[0xff7f50,0xff4500,0xffa500][Math.floor(Math.random()*3)],roughness:.8});
        const coral=new THREE.Mesh(new THREE.CylinderGeometry(.08,.12,.4,5),cm);coral.position.set(x,y,z);s.add(coral);});
    }},
-  // Sông Núi Băng
   {fog:0x8ab4cc,fn:18,ff:65,wD:[.08,.35,.55],wS:[.20,.55,.75],aI:.25,sL:0xddeeff,sI:.70,sP:[3,10,-5],gc:0xdde8f0,
    extraObjects: (s) => {
-     // Tảng đá băng
      const iceMat=new THREE.MeshStandardMaterial({color:0xc8eeff,roughness:.05,metalness:.1,transparent:true,opacity:.85});
-     [[5,.5,2],[6,.8,-1],[-5,.6,3],[-4,.4,1],[3,.7,-2]].forEach(([x,y,z])=>{
+     [[5,.5,2],[6,.8,-1]].forEach(([x,y,z])=>{
        const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.6+Math.random()*.4,1),iceMat);b.position.set(x,y,z);b.rotation.set(Math.random()*3,Math.random()*3,Math.random()*2);b.castShadow=true;s.add(b);});
-     // Cây thông tuyết
      const piMat=stdMat(0x1a5c1a,.9);const snowMat=stdMat(0xffffff,.95);
-     [[8,0,2],[9.5,0,-1],[-8,0,3],[-7,0,0]].forEach(([x,y,z])=>{
+     [[8,0,2],[9.5,0,-1]].forEach(([x,y,z])=>{
        const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.05,.08,1.2,6),stdMat(0x5c3d0e,.85));trunk.position.set(x,.5,z);s.add(trunk);
-       [[0,1.2,.65],[0,1.6,.45],[0,2.0,.3]].forEach(([dx,dy,size])=>{
+       [[0,1.2,.65],[0,1.6,.45]].forEach(([dx,dy,size])=>{
          const tier=new THREE.Mesh(new THREE.ConeGeometry(size,.55,7),piMat);tier.position.set(x,y+dy,z);s.add(tier);
          const snow=new THREE.Mesh(new THREE.ConeGeometry(size*.6,.2,7),snowMat);snow.position.set(x,y+dy+.3,z);s.add(snow);});});
-     // Băng trên mặt đất
-     const groundIce=new THREE.Mesh(new THREE.BoxGeometry(20,.05,20),new THREE.MeshStandardMaterial({color:0xe8f4ff,roughness:.05,metalness:.05,transparent:true,opacity:.5}));groundIce.position.set(0,.01,0);s.add(groundIce);
    }},
-  // Vực Đại Dương
   {fog:0x001525,fn:10,ff:45,wD:[.02,.06,.18],wS:[.05,.12,.30],aI:.18,sL:0x4466aa,sI:.60,sP:[15,12,-8],gc:0x0a1520,
    extraObjects: (s) => {
-     // Tảo biển phát sáng
      const glowMat=new THREE.MeshStandardMaterial({color:0x00ff88,roughness:.4,emissive:0x003311,emissiveIntensity:.5});
      for(let i=0;i<15;i++){const h=.5+Math.random()*1.5;const kelp=new THREE.Mesh(new THREE.CylinderGeometry(.02,.04,h,4),glowMat);kelp.position.set((Math.random()-.5)*14,(h/2)-.3,(Math.random()-.5)*14);kelp.rotation.z=(Math.random()-.5)*.3;s.add(kelp);}
-     // Rạn san hô tối
      const coralMat=new THREE.MeshStandardMaterial({color:0x1a0a2a,roughness:.9,emissive:0x110022,emissiveIntensity:.3});
-     [[4,.3,2],[5,.5,-1],[-4,.4,3],[-5,.3,.5],[2,.6,-3]].forEach(([x,y,z])=>{
+     [[4,.3,2],[5,.5,-1]].forEach(([x,y,z])=>{
        const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.5+Math.random()*.3,0),coralMat);r.position.set(x,y,z);r.castShadow=true;s.add(r);});
-     // Ánh sáng huyền bí từ dưới nước
      const glow1=new THREE.PointLight(0x0044ff,.4,12);glow1.position.set(0,-1,0);s.add(glow1);
-     const glow2=new THREE.PointLight(0x00ff44,.3,8);glow2.position.set(-5,-.5,2);s.add(glow2);
    }},
 ];
 
@@ -749,22 +877,15 @@ scene.add(lineMesh);lineMesh.visible=false;
 
 // ── GIANT FISH 3D ─────────────────────────────────────────
 const fishGrp=new THREE.Group();scene.add(fishGrp);fishGrp.visible=false;
-// Body lớn hơn
 const fbM=new THREE.Mesh(new THREE.SphereGeometry(.38,12,8),new THREE.MeshStandardMaterial({color:0x74b9ff,roughness:.5,metalness:.1,flatShading:true}));fbM.scale.set(1.7,.85,.65);fishGrp.add(fbM);
-// Đuôi
 const ftM=new THREE.Mesh(new THREE.ConeGeometry(.35,.5,5),new THREE.MeshStandardMaterial({color:0x74b9ff,roughness:.5,flatShading:true}));ftM.position.set(-.72,0,0);ftM.rotation.z=-Math.PI/2;fishGrp.add(ftM);
-// Vây lưng
 const fFinM=new THREE.Mesh(new THREE.ConeGeometry(.22,.35,4),new THREE.MeshStandardMaterial({color:0x5aa8ff,roughness:.6}));fFinM.position.set(.1,.35,0);fFinM.rotation.z=.2;fishGrp.add(fFinM);
-// Vảy phát sáng effect (PointLight gắn vào cá)
 const fishGlow=new THREE.PointLight(0x74b9ff,0,5);fishGrp.add(fishGlow);
-// Bong bóng
 const bubbleGrp=new THREE.Group();fishGrp.add(bubbleGrp);
 for(let i=0;i<6;i++){const bb=new THREE.Mesh(new THREE.SphereGeometry(.04+Math.random()*.05,6,5),new THREE.MeshStandardMaterial({color:0xaaeeff,transparent:true,opacity:.6,roughness:.05}));bb.userData.offset=Math.random()*Math.PI*2;bubbleGrp.add(bb);}
-// Sóng vung khi cá nổi lên
 const wakeRings=[];
 for(let i=0;i<4;i++){const wr=new THREE.Mesh(new THREE.RingGeometry(.3+i*.3,.35+i*.3,32),new THREE.MeshBasicMaterial({color:0xaaddff,transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));wr.rotation.x=-Math.PI/2;scene.add(wr);wr.visible=false;wakeRings.push(wr);}
 
-// Map extra objects groups
 const extraGroups = [];
 
 // ── MAP APPLY ──────────────────────────────────────────────
@@ -775,12 +896,11 @@ function applyMap(i){
   ambLight.intensity=m.aI;sunLight.color.set(m.sL);sunLight.intensity=m.sI;sunLight.position.set(...m.sP);
   waterMat.uniforms.uDeep.value.set(...m.wD);waterMat.uniforms.uShallow.value.set(...m.wS);
   groundMesh.material.color.set(m.gc);
-  // Xóa extra cũ, thêm extra mới
   extraGroups.forEach(g=>scene.remove(g));extraGroups.length=0;
   if(m.extraObjects){const g=new THREE.Group();m.extraObjects(g);scene.add(g);extraGroups.push(g);}
 }
 
-// ── OTHER PLAYER 3D ───────────────────────────────────────
+// ── OTHER PLAYER 3D — FIX vị trí trong view ───────────────
 const PLAYER_COLORS=[0x3388ff,0xff6633,0x33cc66,0xff33aa,0xffcc33,0xaa33ff];
 let colorIdx=0;
 function buildOtherPlayerMesh(userId,username){
@@ -812,6 +932,8 @@ function buildOtherPlayerMesh(userId,username){
   scene.add(oLine);oLine.visible=false;
   return{grp,armR,forearm,mpRod,mTip,oBob,oLine,castProgress:0,castDir:new THREE.Vector3(0,0,-1)};
 }
+
+// 🎯 FIX: syncOtherPlayer3D — đảm bảo player trong tầm nhìn
 function syncOtherPlayer3D(others){
   const seen=new Set();
   for(const[id,pData]of others){
@@ -820,26 +942,25 @@ function syncOtherPlayer3D(others){
     if(!otherPlayers.has(id)){const mesh=buildOtherPlayerMesh(id,pData.username);otherPlayers.set(id,{mesh,data:pData});}
     const entry=otherPlayers.get(id);entry.data=pData;const{mesh}=entry;
     mesh.grp.visible=true;
-    const hash=parseInt(id.slice(-6),16);const angle=(hash/0xffffff)*Math.PI*2;const dist=1.5+(parseInt(id.slice(-2),16)/255)*1.8;
-    mesh.grp.position.set(Math.cos(angle)*dist,0,Math.sin(angle)*dist-1.5);
+    const hash=parseInt(id.slice(-6),16);const angle=(hash/0xffffff)*Math.PI*2;
+    const dist=3+(parseInt(id.slice(-2),16)/255)*5;
+    const camX=camera.position.x,camZ=camera.position.z;
+    mesh.grp.position.set(camX+Math.cos(angle)*dist,0,camZ+Math.sin(angle)*dist-2);
     if(pData.yaw!==undefined)mesh.grp.rotation.y=pData.yaw+Math.PI;
-    const state=pData.state||'idle';
-    if(state==='idle'||state==='result'){mesh.castProgress=Math.max(0,mesh.castProgress-.04);mesh.armR.rotation.x=THREE.MathUtils.lerp(mesh.armR.rotation.x,-.2,.1);mesh.forearm.rotation.x=THREE.MathUtils.lerp(mesh.forearm.rotation.x,.3,.1);mesh.oBob.visible=false;mesh.oLine.visible=false;}
+    else mesh.grp.lookAt(camX,0.5,camZ);
+    const state=pData.state||'idle',t=performance.now()*0.001;
+    if(state==='idle'||state==='result'){mesh.castProgress=Math.max(0,mesh.castProgress-.04);mesh.grp.position.y=Math.sin(t*2+hash)*0.02;mesh.armR.rotation.x=THREE.MathUtils.lerp(mesh.armR.rotation.x,-.2,.1);mesh.forearm.rotation.x=THREE.MathUtils.lerp(mesh.forearm.rotation.x,.3,.1);mesh.oBob.visible=false;mesh.oLine.visible=false;}
     else if(state==='casting'){mesh.castProgress=Math.min(1,mesh.castProgress+.06);mesh.armR.rotation.x=THREE.MathUtils.lerp(mesh.armR.rotation.x,-1.4,.12);mesh.forearm.rotation.x=THREE.MathUtils.lerp(mesh.forearm.rotation.x,-.5,.1);mesh.oBob.visible=false;mesh.oLine.visible=false;}
     else if(state==='waiting'||state==='biting'){mesh.castProgress=1;mesh.armR.rotation.x=THREE.MathUtils.lerp(mesh.armR.rotation.x,-.6,.1);mesh.forearm.rotation.x=THREE.MathUtils.lerp(mesh.forearm.rotation.x,.4,.1);mesh.oBob.visible=true;mesh.oLine.visible=true;}
     else if(state==='reeling'){mesh.castProgress=Math.max(0,mesh.castProgress-.06);mesh.armR.rotation.x=THREE.MathUtils.lerp(mesh.armR.rotation.x,-1.0,.15);mesh.forearm.rotation.x=THREE.MathUtils.lerp(mesh.forearm.rotation.x,-.6,.12);}
   }
-  for(const[id,entry]of otherPlayers){if(!seen.has(id)){scene.remove(entry.mesh.grp);scene.remove(entry.mesh.oBob);scene.remove(entry.mesh.oLine);otherPlayers.delete(id);}}
+  for(const[id,entry]of otherPlayers){if(!seen.has(id)){scene.remove(entry.mesh.grp);scene.remove(entry.mesh.oBob);scene.remove(entry.mesh.oLine);if(entry.mesh.nameLabel)scene.remove(entry.mesh.nameLabel);otherPlayers.delete(id);}}
 }
 
 // ═══════════════════════════════════════════════════════════
 // THREE INIT — ANIMATION LOOP
 // ═══════════════════════════════════════════════════════════
-// Fish animation state
-let fishRiseAnim = false;   // cá đang nổi lên
-let fishRiseT = 0;           // 0→1
-let fishTargetPos = new THREE.Vector3();
-let fishJumpPhase = 'none'; // none | rising | peak | pulling
+let fishRiseAnim=false,fishRiseT=0,fishTargetPos=new THREE.Vector3(),fishJumpPhase='none';
 
 function initThree(){
   applyMap(0);
@@ -872,7 +993,6 @@ function initThree(){
     if(gstate==='casting') lineProgress=Math.min(lineProgress+.055,1);
     else if(gstate==='idle'||gstate==='result') lineProgress=Math.max(lineProgress-.09,0);
 
-    // BOBBER
     if(gstate==='waiting'||gstate==='biting'){
       const wy=waveY(bobGrp.position.x,bobGrp.position.z,t);
       const dip=gstate==='biting'?Math.abs(Math.sin(t*5.5))*.32+.22:0;
@@ -898,32 +1018,24 @@ function initThree(){
       const px2=camera.position.x, pz=camera.position.z;
 
       if(fishJumpPhase==='rising'){
-        // Cá trồi lên từ dưới nước, rất lớn
-        const yOff=Math.sin(fishRiseT*Math.PI)*4.5; // vọt lên 4.5 đơn vị
-        fishGrp.position.set(
-          bx*(1-fishRiseT*0.3), waveY(bx,bz,t)+yOff, bz*(1-fishRiseT*0.3)
-        );
-        // Scale to = size của cá (tùy loại)
+        const yOff=Math.sin(fishRiseT*Math.PI)*4.5;
+        fishGrp.position.set(bx*(1-fishRiseT*0.3), waveY(bx,bz,t)+yOff, bz*(1-fishRiseT*0.3));
         const tScale = 0.3 + fishRiseT * 2.5;
         fishGrp.scale.set(tScale, tScale, tScale);
         fishGrp.rotation.y += .05;
-        fishGrp.rotation.z = Math.sin(t * 8) * .15; // vẫy
-        // Bong bóng
+        fishGrp.rotation.z = Math.sin(t * 8) * .15;
         bubbleGrp.children.forEach((bb,i)=>{
           const bo=bb.userData.offset;
           bb.position.set(Math.sin(t*3+bo)*.4,(fishRiseT*3+Math.sin(t*2+bo)*.3),Math.cos(t*2+bo)*.3);
         });
-        // Sóng vòng
         wakeRings.forEach((wr,i)=>{
           wr.visible=fishRiseT>.2;
           const rp=((fishRiseT*2+i*.25)%1);wr.position.set(bx,waveY(bx,bz,t)+.02,bz);wr.scale.set(1+rp*8,1+rp*8,1);wr.material.opacity=(1-rp)*.5;
         });
-        // Ánh sáng phát từ cá
         fishGlow.intensity=fishRiseT*2; fishGlow.color.set(resultFish.color);
         if(fishRiseT>=0.8) fishJumpPhase='pulling';
       } else if(fishJumpPhase==='pulling'){
-        // Kéo về phía người chơi
-        const pullT=(fishRiseT-0.8)*5; // 0→1 trong 20% cuối
+        const pullT=(fishRiseT-0.8)*5;
         fishGrp.position.lerp(new THREE.Vector3(px2*.3, 0.5, pz*.3+0.8), pullT*.1);
         fishGrp.rotation.y += .08;
         fishGrp.rotation.z=Math.sin(t*12)*.3;
@@ -933,7 +1045,6 @@ function initThree(){
           fishGlow.intensity=0;
         }
       }
-
       fbM.material.color.set(resultFish.color);
       ftM.material.color.set(resultFish.color);
       fFinM.material.color.set(resultFish.color);
@@ -952,7 +1063,7 @@ function initThree(){
 }
 
 // ═══════════════════════════════════════════════════════════
-// GAME LOGIC
+// GAME LOGIC — FIX hiệu ứng cá khổng lồ
 // ═══════════════════════════════════════════════════════════
 function handleCast(){
   if(gstate==='biting'){clearTimeout(bt);doReelIn();return;}
@@ -979,55 +1090,47 @@ function startBite(){
   updatePresence('biting');bt=setTimeout(fishEscape,3000);
 }
 
+// 🎯 FIX: doReelIn — hiệu ứng cá khổng lồ + save ngay
 async function doReelIn(){
   gstate='reeling';setStatus('');
   const b=document.getElementById('cb');b.textContent='🎣 THẢ CÂU';b.classList.remove('bite');b.disabled=true;
   document.getElementById('bf').classList.remove('on');
   player.rodUses--;updateUI();
 
-  // Roll cá theo map hiện tại
   resultFish=rollFishForMap(curMap);
   resultWeight=resultFish?rollWeight(resultFish):0;
   updatePresence('reeling');
 
   if(resultFish){
-    // Trigger GIANT FISH ANIMATION
-    fishGrp.visible=true;fishGrp.scale.set(.1,.1,.1);
-    fishGrp.position.copy(bobGrp.position);
-    fishRiseT=0;fishRiseAnim=true;fishJumpPhase='rising';
+    showGiantFishRise(resultFish, resultWeight);
     broadcastCatch(resultFish);
-    // Tạo splash effect
-    createSplashEffect();
-    // Rung màn hình nhẹ nếu cá lớn
-    if(resultWeight>50){
-      document.getElementById('cw').style.animation='none';
-      setTimeout(()=>{document.getElementById('cw').style.transform='translateX(3px)';setTimeout(()=>{document.getElementById('cw').style.transform='translateX(-3px)';setTimeout(()=>{document.getElementById('cw').style.transform='';},80);},80);},0);
-    }
+    createSplashEffect(resultWeight);
+    if(resultWeight>50) shakeScreen(0.03, 150);
+    if(soundOn && audioCtx) playFishCatchSound(resultFish.rar);
   }
 
   setTimeout(async()=>{
     gstate='result';showBanner(resultFish,resultWeight);
     if(resultFish){
-      // Cộng cá vào inventory — lưu ngay để không bị mất
       if(!player.inventory[resultFish.id]) player.inventory[resultFish.id]=[];
-      player.inventory[resultFish.id].push({weight:resultWeight,value:resultFish.value,map:curMap});
+      player.inventory[resultFish.id].push({weight:resultWeight,value:resultFish.value,map:curMap,caughtAt:Date.now()});
       player.totalCaught++;
       showToast(`🎉 ${resultFish.emoji} ${resultFish.name} — ${fmtWeight(resultWeight)}!`);
     } else {
       showToast('😅 Không câu được gì...');
     }
-    // ── SAVE NGAY sau khi câu ──────────────────────────
+    // 🎯 FIX: Lưu NGAY sau khi câu
     await writePlayerImmediate();
     updateUI();renderContent();
 
     setTimeout(()=>{
-      gstate='idle';hideBanner();updatePresence('idle');
+      gstate='idle';hideBanner();hideGiantFish();updatePresence('idle');
       const noRod=player.rodUses<=0;
       setStatus(noRod?'🏪 Hết cần! Mua thêm.':'🎣 Nhấn THẢ CÂU để tiếp tục!');
       const btn=document.getElementById('cb');btn.disabled=false;
       btn.textContent=noRod?'🏪 MUA CẦN':'🎣 THẢ CÂU';
     },2800);
-  },1600);
+  }, resultFish && resultWeight > 100 ? 3500 : 1600);
 }
 
 function fishEscape(){
@@ -1037,29 +1140,144 @@ function fishEscape(){
   updatePresence('idle');showToast('😔 Cá trốn mất!');
 }
 
-// ── Tạo giọt nước splash ──────────────────────────────────
-function createSplashEffect(){
-  const overlay=document.getElementById('splash-overlay');
-  for(let i=0;i<14;i++){
+// 🎯 HÀM MỚI: showGiantFishRise
+function showGiantFishRise(fish, weight) {
+  const fishRise = document.getElementById('fish-rise');
+  const emojiBig = document.getElementById('fish-emoji-big');
+  const splash = document.getElementById('fish-splash');
+  const sizeBadge = document.getElementById('fish-size-badge');
+  
+  emojiBig.textContent = fish.emoji;
+  emojiBig.style.fontSize = `${Math.min(120, 60 + weight * 0.3)}px`;
+  emojiBig.style.filter = `drop-shadow(0 0 ${20 + weight * 0.2}px gold)`;
+  
+  if (weight >= 100) {
+    sizeBadge.style.display = 'block';
+    sizeBadge.textContent = `⚖️ ${fmtWeight(weight)} — KHỔNG LỒ!`;
+    sizeBadge.style.animation = 'pulse 1s infinite';
+  } else {
+    sizeBadge.style.display = 'none';
+  }
+  
+  splash.style.opacity = '0';
+  splash.style.animation = 'none';
+  void splash.offsetWidth;
+  splash.style.animation = 'splashAnim 1.5s ease-out';
+  
+  fishRise.style.display = 'flex';
+  emojiBig.style.animation = 'none';
+  void emojiBig.offsetWidth;
+  emojiBig.style.animation = `fishJump ${2 + weight * 0.01}s ease-in-out`;
+  
+  if (fishGlow) {
+    fishGlow.intensity = 2;
+    fishGlow.color.set(fish.color);
+    setTimeout(() => { fishGlow.intensity = 0; }, 3000);
+  }
+  createWaterRipples(weight);
+}
+
+function hideGiantFish() {
+  const fishRise = document.getElementById('fish-rise');
+  const emojiBig = document.getElementById('fish-emoji-big');
+  const sizeBadge = document.getElementById('fish-size-badge');
+  
+  fishRise.style.display = 'none';
+  emojiBig.style.animation = 'none';
+  sizeBadge.style.display = 'none';
+  sizeBadge.style.animation = 'none';
+  
+  if (fishGrp) {
+    fishGrp.visible = false;
+    fishGrp.scale.set(0.1, 0.1, 0.1);
+  }
+}
+
+function createWaterRipples(weight) {
+  const overlay = document.getElementById('splash-overlay');
+  const rippleCount = Math.min(20, 5 + Math.floor(weight / 20));
+  
+  for (let i = 0; i < rippleCount; i++) {
+    const ripple = document.createElement('div');
+    ripple.className = 'splash-drop';
+    const cx = 35 + Math.random() * 30;
+    const cy = 35 + Math.random() * 30;
+    const size = 8 + Math.random() * 15 + weight * 0.05;
+    const delay = i * 0.05;
+    
+    ripple.style.cssText = `
+      left: ${cx}%;
+      top: ${cy}%;
+      width: ${size}px;
+      height: ${size}px;
+      background: rgba(100, 200, 255, ${0.5 - i * 0.02});
+      animation: dropFall ${0.8 + i * 0.1}s ease-in ${delay}s forwards;
+      border-radius: 50%;
+    `;
+    overlay.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 2000);
+  }
+}
+
+function shakeScreen(intensity = 0.02, duration = 200) {
+  const cw = document.getElementById('cw');
+  const originalTransform = cw.style.transform;
+  const shakes = duration / 16;
+  let count = 0;
+  const shakeInterval = setInterval(() => {
+    if (count >= shakes) {
+      clearInterval(shakeInterval);
+      cw.style.transform = originalTransform;
+      return;
+    }
+    const x = (Math.random() - 0.5) * intensity * 100 + '%';
+    const y = (Math.random() - 0.5) * intensity * 100 + '%';
+    cw.style.transform = `translate(${x}, ${y})`;
+    count++;
+  }, 16);
+}
+
+function createSplashEffect(weight) {
+  const overlay = document.getElementById('splash-overlay');
+  const count = Math.min(20, 14 + Math.floor(weight / 30));
+  for(let i=0;i<count;i++){
     const drop=document.createElement('div');drop.className='splash-drop';
-    const cx2=35+Math.random()*30,cy=35+Math.random()*30;
-    const size=4+Math.random()*8;
-    drop.style.cssText=`left:${cx2}%;top:${cy}%;width:${size}px;height:${size}px;animation-delay:${Math.random()*.3}s;animation-duration:${.6+Math.random()*.4}s`;
+    const cx=35+Math.random()*30,cy=35+Math.random()*30;
+    const size=4+Math.random()*8+weight*0.03;
+    drop.style.cssText=`left:${cx}%;top:${cy}%;width:${size}px;height:${size}px;animation-delay:${Math.random()*.3}s;animation-duration:${.6+Math.random()*.4}s`;
     overlay.appendChild(drop);setTimeout(()=>drop.remove(),1500);
   }
 }
 
-// ── MUA CẦN ──────────────────────────────────────────────
+function playFishCatchSound(rarity) {
+  if(!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(masterGain);
+  
+  const freqMap = { 'Thường': 440, 'Không Thường': 523, 'Quý Hiếm': 659, 'Huyền Thoại': 784, 'Thần Thoại': 1047, 'Vô Tiền Khoáng Hậu': 1319 };
+  osc.frequency.value = freqMap[rarity] || 440;
+  osc.type = rarity === 'Thần Thoại' || rarity === 'Vô Tiền Khoáng Hậu' ? 'sine' : 'triangle';
+  
+  gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+  
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.3);
+}
+
+// ── MUA CẦN — FIX lưu ngay ──────────────────────────────
 async function buyRod(qty){
   qty=Math.min(parseInt(qty)||1,100);const cost=ROD_PRICE*qty;
   if(player.coins<cost){showToast('❌ Không đủ xu!');return;}
   player.coins-=cost;player.rodUses+=ROD_USES*qty;
   updateUI();renderContent();showToast(`✅ Mua ${qty} cần! +${ROD_USES*qty} lần câu`);
+  // 🎯 FIX: Lưu NGAY
   await writePlayerImmediate();
   if(gstate==='idle'){document.getElementById('cb').textContent='🎣 THẢ CÂU';setStatus('🎣 Nhấn THẢ CÂU!');}
 }
 
-// ── BÁN CÁ — FIX: xóa cá khỏi inventory NGAY và lưu ──────
+// ── BÁN CÁ — FIX lưu ngay + xóa đúng ──────────────────────
 async function sellFish(id,idx){
   const arr=player.inventory[id];
   if(!arr||!arr.length) return;
@@ -1068,17 +1286,17 @@ async function sellFish(id,idx){
   if(idx==='all'){
     got=arr.reduce((s,e)=>s+e.value,0);
     player.coins+=got;player.totalEarned+=got;
-    delete player.inventory[id];  // xóa hẳn
+    delete player.inventory[id];
   } else {
     const entry=arr[idx];if(!entry)return;
     got=entry.value;player.coins+=got;player.totalEarned+=got;
     arr.splice(idx,1);
-    if(arr.length===0) delete player.inventory[id];  // xóa hẳn nếu hết
+    if(arr.length===0) delete player.inventory[id];
   }
   updateUI();
   renderContent();
   showToast(`💰 +${fmt(got)} 🪙 — ${fish.emoji} đã bán!`);
-  // ── SAVE NGAY, không debounce ──
+  // 🎯 FIX: Lưu NGAY
   await writePlayerImmediate();
 }
 
@@ -1090,9 +1308,9 @@ async function sellAll(){
     total+=arr.reduce((s,e)=>s+e.value,0);
   }
   player.coins+=total;player.totalEarned+=total;
-  player.inventory={};  // xóa hết
+  player.inventory={};
   updateUI();renderContent();showToast(`💰 Bán tất cả → +${fmt(total)} 🪙!`);
-  // ── SAVE NGAY ──
+  // 🎯 FIX: Lưu NGAY
   await writePlayerImmediate();
 }
 
@@ -1136,7 +1354,6 @@ function showBanner(fish,weight){
     document.getElementById('rr').innerHTML=`<span class="${fish.rc}">${fish.rar}</span>`;
     document.getElementById('rsz').textContent='⚖️ '+fmtWeight(weight);
     b.style.borderColor='#'+fish.color.toString(16).padStart(6,'0');
-    // Badge kích thước
     const badge=document.getElementById('fish-size-badge');
     if(weight>=100){badge.style.display='block';badge.textContent='⚖️ '+fmtWeight(weight)+' — KHỔNG LỒ!';}
     else{badge.style.display='none';}
@@ -1165,7 +1382,6 @@ function renderOtherPlayersList(others){
 function addNotif(html){const el=document.getElementById('notifs');const d=document.createElement('div');d.className='notif';d.innerHTML=html;el.appendChild(d);setTimeout(()=>d.remove(),4000);if(el.children.length>5)el.removeChild(el.children[0]);}
 function addChatMsg(username,text,isSelf=false){const el=document.getElementById('chatlog');const d=document.createElement('div');d.className='chatmsg';d.innerHTML=`<strong style="color:${isSelf?'var(--gold)':'var(--accent)'}">${username}:</strong> ${text}`;el.appendChild(d);el.scrollTop=el.scrollHeight;setTimeout(()=>d.remove(),9000);if(el.children.length>8)el.removeChild(el.children[0]);}
 
-// ── Tính tổng giá trị inventory ──────────────────────────
 function invValue(inv){let t=0;for(const arr of Object.values(inv)){t+=arr.reduce((s,e)=>s+(e.value||0),0);}return t;}
 function invCount(inv){let t=0;for(const arr of Object.values(inv))t+=arr.length;return t;}
 
@@ -1175,7 +1391,6 @@ function invCount(inv){let t=0;for(const arr of Object.values(inv))t+=arr.length
 function renderContent(){
   const p=document.getElementById('cp');
 
-  // ── TÚI CÁ ────────────────────────────────────────────
   if(activeTab==='bag'){
     const inv=player.inventory;
     const keys=Object.keys(inv).filter(k=>inv[k]&&inv[k].length>0);
@@ -1185,14 +1400,12 @@ function renderContent(){
       const fish=ALL_FISH[id];if(!fish)continue;
       const arr=inv[id];const cnt=arr.length;
       const hc='#'+fish.color.toString(16).padStart(6,'0');
-      const maxW=Math.max(...arr.map(e=>e.value));
       const totalVal=arr.reduce((s,e)=>s+e.value,0);
       h+=`<div class="ii" style="border-color:${hc}40"><div class="fe">${fish.emoji}</div><div class="fn">${fish.name}</div><div class="fc">×${cnt} con | Map ${fish.map+1}</div><div class="fv"><span class="${fish.rc}">${fish.rar}</span></div><div class="fv" style="color:var(--gold)">${fmt(totalVal)}🪙</div></div>`;
     }
     p.innerHTML=h+'</div>';return;
   }
 
-  // ── SHOP ──────────────────────────────────────────────
   if(activeTab==='shop'){
     const ok=player.coins>=ROD_PRICE;
     p.innerHTML=`<div class="stl">🏪 CỬA HÀNG</div>
@@ -1208,7 +1421,6 @@ function renderContent(){
       </div>`;return;
   }
 
-  // ── BÁN CÁ ────────────────────────────────────────────
   if(activeTab==='sell'){
     const inv=player.inventory;
     const keys=Object.keys(inv).filter(k=>inv[k]&&inv[k].length>0);
@@ -1220,7 +1432,6 @@ function renderContent(){
       const arr=inv[id];const cnt=arr.length;
       const hc='#'+fish.color.toString(16).padStart(6,'0');
       const tv=arr.reduce((s,e)=>s+e.value,0);
-      const maxW=Math.max(...arr.map(()=>0))||0;
       h+=`<div class="si2" style="border-color:${hc}40">
         <div style="font-size:34px">${fish.emoji}</div>
         <div style="font-weight:800;font-size:12px;margin:3px 0">${fish.name}</div>
@@ -1234,7 +1445,6 @@ function renderContent(){
     p.innerHTML=h;return;
   }
 
-  // ── TỈ LỆ THEO MAP ────────────────────────────────────
   if(activeTab==='rates'){
     const m=MAP_DEFS[curMap];
     let h=`<div class="stl">📊 TỈ LỆ — ${m.name}</div>
