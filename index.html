@@ -10,11 +10,12 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#06101f;--panel:rgba(8,20,36,.92);--border:#1a3550;--accent:#00d4ff;--gold:#ffd660;--text:#d8eeff;--sub:#5a7a9a;--rad:10px}
 html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',sans-serif;overflow:hidden}
-#loading{position:fixed;inset:0;background:#020c18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;padding:20px;text-align:center}
-#loading h2{font-family:'Press Start 2P';font-size:12px;color:var(--accent);margin-bottom:8px}
+#loading{position:fixed;inset:0;background:#020c18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px}
+#loading h2{font-family:'Press Start 2P';font-size:12px;color:var(--accent)}
 #loadbar{width:200px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
 #loadfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));width:0;transition:width .4s}
-#loadtxt{font-size:11px;color:var(--sub);margin-bottom:12px}
+#loadtxt{font-size:11px;color:var(--sub);margin-top:10px}
+.demo-btn{margin-top:15px;padding:12px 24px;background:linear-gradient(135deg,#1a8f4a,#00e676);border:none;border-radius:8px;color:#000;font-weight:900;cursor:pointer;font-size:12px}
 .auth-box{background:rgba(15,32,53,.95);border:2px solid var(--accent);border-radius:16px;padding:24px;text-align:center;max-width:360px;width:90%;display:none}
 .auth-icon{font-size:48px;margin-bottom:10px}
 .auth-title{font-family:'Press Start 2P';font-size:11px;color:var(--accent);margin-bottom:12px}
@@ -23,20 +24,19 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 .auth-btn{width:100%;padding:10px;border:none;border-radius:8px;font-weight:900;font-size:11px;cursor:pointer;margin:5px 0}
 .auth-btn.confirm{background:linear-gradient(135deg,#0058b0,#00c0f0);color:#fff}
 .auth-btn.cancel{background:transparent;border:1px solid var(--border);color:var(--sub)}
-.demo-btn{margin-top:10px;padding:10px 20px;background:linear-gradient(135deg,#1a8f4a,#00e676);border:none;border-radius:8px;color:#000;font-weight:900;cursor:pointer;font-size:11px;display:none}
 #game{display:none;width:100%;max-width:900px;margin:0 auto;flex-direction:column;min-height:100vh}
 #hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border)}
 #hdr h1{font-family:'Press Start 2P';font-size:10px;color:var(--accent)}
-#online-pill{display:flex;align-items:center;gap:6px;font-size:11px;color:#2ecc71}
+#online-pill{font-size:11px;color:#2ecc71}
 #cw{position:relative;width:100%;background:#000;overflow:hidden;aspect-ratio:900/480}
 #gc{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 #xhair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:24px;pointer-events:none;z-index:4}
 #xhair::before,#xhair::after{content:'';position:absolute;background:rgba(255,255,255,.8);border-radius:1px}
 #xhair::before{width:2px;height:24px;left:11px;top:0}
 #xhair::after{width:24px;height:2px;top:11px;left:0}
-#st{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-family:'Press Start 2P';font-size:8px;color:#fff;text-shadow:2px 2px 0 #000;pointer-events:none;z-index:5}
+#st{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-family:'Press Start 2P';font-size:8px;color:#fff;text-shadow:2px 2px 0 #000;pointer-events:none;z-index:5;white-space:nowrap}
 #maps{display:flex;gap:6px;padding:6px 8px;background:rgba(6,16,31,.97);overflow-x:auto}
-.mb{flex:0 0 auto;padding:6px 12px;background:rgba(10,25,45,.8);border:2px solid var(--border);border-radius:12px;color:var(--sub);cursor:pointer;font-size:10px;font-weight:800}
+.mb{flex:0 0 auto;padding:6px 12px;background:rgba(10,25,45,.8);border:2px solid var(--border);border-radius:12px;color:var(--sub);cursor:pointer;font-size:10px;font-weight:800;white-space:nowrap}
 .mb.on{border-color:var(--accent);color:var(--accent)}
 #act{display:flex;gap:7px;padding:8px;background:rgba(6,16,31,.98);border-top:1px solid var(--border)}
 #cb{flex:1;padding:12px;font-family:'Press Start 2P';font-size:8px;background:linear-gradient(135deg,#0058b0,#00c0f0);border:none;border-radius:var(--rad);color:#fff;cursor:pointer}
@@ -47,7 +47,7 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 .tb{flex:1;padding:10px;background:none;border:none;border-right:1px solid var(--border);color:var(--sub);cursor:pointer;font-weight:800;font-size:11px}
 .tb:last-child{border-right:none}.tb.on{background:rgba(0,212,255,.09);color:var(--accent)}
 #cp{background:var(--panel);border-top:1px solid var(--border);padding:10px;min-height:140px;overflow-y:auto}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:rgba(10,28,50,.96);border:1px solid var(--accent);border-radius:16px;padding:8px 16px;font-size:11px;z-index:9999;opacity:0;transition:transform .3s,opacity .3s;pointer-events:none}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:rgba(10,28,50,.96);border:1px solid var(--accent);border-radius:16px;padding:8px 16px;font-size:11px;z-index:9999;opacity:0;transition:all .3s;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 #result-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(4,12,28,.95);border:2px solid var(--gold);border-radius:var(--rad);padding:14px 20px;text-align:center;min-width:180px;pointer-events:none;z-index:10;backdrop-filter:blur(8px)}
 #result-banner.show{animation:pop .4s cubic-bezier(.34,1.56,.64,1) forwards}
@@ -57,32 +57,29 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 </head>
 <body>
 
-<!-- LOADING -->
 <div id="loading">
   <div style="font-size:48px">🎣</div>
-  <h2>CÂU CÁ ONLINE 3D</h2>
+  <h2>CÂU CÁ 3D</h2>
   <div id="loadbar"><div id="loadfill"></div></div>
-  <div id="loadtxt">Đang kết nối máy chủ...</div>
-  <button class="demo-btn" id="demo-btn" onclick="enterDemo()">🎮 VÀO CHẾ ĐỘ DEMO</button>
+  <div id="loadtxt">Đang tải đồ họa...</div>
+  <button class="demo-btn" onclick="enterDemo()">🎮 VÀO GAME DEMO</button>
 </div>
 
-<!-- AUTH -->
 <div id="auth" class="auth-box">
   <div class="auth-icon">🔐</div>
-  <div class="auth-title">XÁC THỰC TÀI KHOẢN</div>
-  <div style="font-size:11px;color:var(--sub);margin-bottom:8px">Link này dành riêng cho Discord ID:</div>
+  <div class="auth-title">XÁC THỰC</div>
+  <div style="font-size:11px;color:var(--sub);margin-bottom:8px">Link này cho ID:</div>
   <div class="auth-id" id="target-id">...</div>
-  <input type="text" id="discord-id" class="auth-input" placeholder="Nhập Discord ID của bạn (17-19 số)">
-  <button class="auth-btn confirm" onclick="verifyId()">XÁC NHẬN VÀO GAME</button>
+  <input type="text" id="discord-id" class="auth-input" placeholder="Nhập Discord ID">
+  <button class="auth-btn confirm" onclick="verifyId()">XÁC NHẬN</button>
   <button class="auth-btn cancel" onclick="enterDemo()">VÀO DEMO</button>
 </div>
 
-<!-- GAME -->
 <div id="game">
   <div id="hdr">
     <h1>🎣 CÂU CÁ 3D</h1>
     <div style="display:flex;gap:12px;align-items:center">
-      <div id="online-pill">🟢 <span id="online-count">0</span> online</div>
+      <div id="online-pill">🟢 <span id="online-count">1</span> online</div>
       <div>🪙 <span id="coins">0</span></div>
     </div>
   </div>
@@ -119,15 +116,15 @@ html,body{height:100%;background:#000;color:var(--text);font-family:'Nunito',san
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// CONFIG & STATE
+// CONFIG
 // ═══════════════════════════════════════════════════════════
 const firebaseConfig = { apiKey:"AIzaSyA9Iv98Bcurd6bqXo79BbgEz58a3xrPH8o",authDomain:"fishing-bot-e8d42.firebaseapp.com",databaseURL:"https://fishing-bot-e8d42-default-rtdb.firebaseio.com",projectId:"fishing-bot-e8d42" };
 const GAME_SECRET='datBatKyChuan123';
 const MAP_DEFS=[
-  {id:'ho',name:'🏡 Hồ Làng',pool:['moi','tram','chep','vang'],rates:{miss:45,moi:35,tram:12,chep:6,vang:2}},
-  {id:'bien',name:'🌊 Biển',pool:['bien','ngua','mattroi','rong'],rates:{miss:42,bien:36,ngua:14,mattroi:6,rong:2}},
-  {id:'nui',name:'🏔️ Băng',pool:['hoi','tam','bang','thanbang'],rates:{miss:40,hoi:34,tam:16,bang:7,thanbang:3}},
-  {id:'vuc',name:'🌑 Vực',pool:['bachtuoc','cama','caco','thanhailong'],rates:{miss:38,bachtuoc:32,cama:20,caco:8,thanhailong:2}}
+  {id:'ho',name:'🏡 Hồ Làng',pool:['moi','tram','chep','vang'],rates:{miss:45,moi:35,tram:12,chep:6,vang:2},skyColor:0x87ceeb,waterColor:0x3d8fcc},
+  {id:'bien',name:'🌊 Biển',pool:['bien','ngua','mattroi','rong'],rates:{miss:42,bien:36,ngua:14,mattroi:6,rong:2},skyColor:0x0077b6,waterColor:0x0096c7},
+  {id:'nui',name:'🏔️ Băng',pool:['hoi','tam','bang','thanbang'],rates:{miss:40,hoi:34,tam:16,bang:7,thanbang:3},skyColor:0x1a2040,waterColor:0xa8d8ea},
+  {id:'vuc',name:'🌑 Vực',pool:['bachtuoc','cama','caco','thanhailong'],rates:{miss:38,bachtuoc:32,cama:20,caco:8,thanhailong:2},skyColor:0x000008,waterColor:0x001020}
 ];
 const ALL_FISH={
   moi:{id:'moi',name:'Cá Mồi',emoji:'🐟',value:10_000,rar:'Thường',color:0x74b9ff,minW:.1,maxW:.8},
@@ -148,309 +145,647 @@ const ALL_FISH={
   thanhailong:{id:'thanhailong',name:'Thần Hải Long',emoji:'🐉',value:500_000_000,rar:'Vô Tiền',color:0xff00ff,minW:1000,maxW:9999}
 };
 
-let DB=null, ROD_PRICE=10000, ROD_USES=10, DEMO=false, pendingSave=false;
-let player={userId:'',username:'',avatar:'',coins:0,rodUses:0,inventory:{},totalCaught:0};
+let DB=null, ROD_PRICE=10000, ROD_USES=10, DEMO=false, pendingSave=false, onlineMode=false;
+let player={userId:'',username:'',coins:100000,rodUses:10,inventory:{},totalCaught:0};
 let gstate='idle', curMap=0, activeTab='bag', wt, bt, resultFish=null, resultWeight=0, waitStart=0, waitDur=4000;
-let yaw=0, pitch=0, sessionData=null, onlineMode=false;
+let yaw=0, pitch=0, sessionData=null;
 
 // ═══════════════════════════════════════════════════════════
-// FIREBASE & SYNC (FIXED TIMEOUT + ERROR HANDLING)
-// ═══════════════════════════════════════════════════════════
-function loadScript(s){return new Promise((r,j)=>{const e=document.createElement('script');e.src=s;e.async=false;e.onload=()=>r();e.onerror=()=>j(new Error('Load failed'));document.head.appendChild(e);});}
-async function bootFirebase(){
-  setLoad('Kết nối Firebase...',15);
-  try{
-    // Timeout 5s để tránh treo vĩnh viễn
-    await Promise.race([
-      loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js'),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('Firebase CDN timeout')),5000))
-    ]);
-    await Promise.race([
-      loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js'),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('Firebase DB timeout')),5000))
-    ]);
-    firebase.initializeApp(firebaseConfig);
-    DB=firebase.database();
-    onlineMode=true;
-    console.log('✅ Firebase connected');
-  }catch(e){
-    console.warn('⚠️ Firebase error:', e.message);
-    onlineMode=false;
-    document.getElementById('demo-btn').style.display='block';
-    setLoad('Firebase lỗi/mạng chậm. Dùng Demo hoặc thử lại.',100);
-  }
-  initAuth();
-}
-
-const URL_TOKEN=new URLSearchParams(window.location.search).get('t');
-async function readSession(token){
-  if(!DB||!onlineMode) return {session:null,error:'Offline'};
-  try{
-    const snap=await Promise.race([
-      DB.ref(`sessions/${token}`).once('value'),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('Session timeout')),4000))
-    ]);
-    if(snap.val()) return {session:snap.val(),error:null};
-  }catch(e){console.warn('Session read error:',e);}
-  return {session:null,error:e?.message||'Timeout'};
-}
-
-function showAuth(targetId){
-  document.getElementById('loading').style.display='none';
-  document.getElementById('auth').style.display='block';
-  document.getElementById('target-id').textContent=targetId;
-}
-
-async function verifyId(){
-  const input=document.getElementById('discord-id').value.trim();
-  if(!/^\d{17,19}$/.test(input)){showToast('❌ ID phải là 17-19 chữ số!');return;}
-  if(input===sessionData.userId){
-    document.getElementById('auth').style.display='none';
-    startGame(true);
-  }else{
-    showToast('❌ ID không khớp chủ link!');
-  }
-}
-
-async function initAuth(){
-  if(!URL_TOKEN){
-    document.getElementById('demo-btn').style.display='block';
-    setLoad('Chưa có link. Dùng tcauonline hoặc Demo.',100);
-    return;
-  }
-  setLoad('Kiểm tra phiên...',30);
-  const{session,error}=await readSession(URL_TOKEN);
-  if(!session||error){
-    document.getElementById('demo-btn').style.display='block';
-    setLoad('Link hết hạn/lỗi. Dùng Demo.',100);
-    return;
-  }
-  if(Date.now()>session.expiresAt||session.secret!==GAME_SECRET){
-    document.getElementById('demo-btn').style.display='block';
-    setLoad('Phiên hết hạn. Dùng tcauonline.',100);
-    return;
-  }
-  sessionData=session;
-  showAuth(session.userId);
-}
-
-function setLoad(t,p){
-  const lt=document.getElementById('loadtxt');if(lt)lt.textContent=t;
-  const lf=document.getElementById('loadfill');if(lf)lf.style.width=p+'%';
-}
-
-async function writePlayerImmediate(){
-  if(DEMO||!DB||!onlineMode||!player.userId)return;
-  pendingSave=true;
-  try{
-    const si={};for(const[k,v]of Object.entries(player.inventory))if(Array.isArray(v)&&v.length>0)si[k]=v.filter(e=>e?.value).map(e=>({weight:e.weight||0,value:e.value||0,caughtAt:Date.now()}));
-    await DB.ref(`players/${player.userId}/inventory`).set(si);
-    await DB.ref(`players/${player.userId}`).update({coins:player.coins,rodUses:player.rodUses,totalCaught:player.totalCaught,webUpdatedAt:Date.now()});
-    pendingSave=false;
-  }catch(e){console.error('Save error',e);pendingSave=false;}
-}
-function flushSave(){if(!pendingSave||DEMO||!onlineMode)return;writePlayerImmediate();}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave();});
-window.addEventListener('pagehide',flushSave);
-
-function watchPlayerData(){
-  if(!DB||!onlineMode||DEMO)return;
-  DB.ref(`players/${player.userId}`).on('value',s=>{
-    const d=s.val();if(!d?.webUpdatedAt)return;
-    const bc=d.coins??player.coins;
-    if(bc!==player.coins){player.coins=bc;updateUI();showToast('💰 Xu cập nhật từ Discord!');}
-  });
-}
-
-// ═══════════════════════════════════════════════════════════
-// GAME INIT & DEMO
-// ═══════════════════════════════════════════════════════════
-function enterDemo(){
-  DEMO=true;onlineMode=false;
-  player={userId:'demo',username:'Người Chơi',coins:500000,rodUses:20,inventory:{},totalCaught:0};
-  document.getElementById('loading').style.display='none';
-  document.getElementById('auth').style.display='none';
-  startGame(false);
-  showToast('🎮 Chế độ Demo: Không lưu dữ liệu');
-}
-
-function startGame(online){
-  if(online && sessionData){
-    player.userId=sessionData.userId;player.username=sessionData.username;player.avatar=sessionData.avatar||'';
-    player.coins=sessionData.coins||0;player.rodUses=sessionData.rodUses||0;
-    watchPlayerData();
-  }
-  document.getElementById('loading').style.display='none';
-  document.getElementById('auth').style.display='none';
-  document.getElementById('game').style.display='flex';
-  initThree();
-  updateUI();renderContent();
-  const cb=document.getElementById('cb');cb.disabled=false;cb.textContent=player.rodUses>0?'🎣 THẢ CÂU':'🏪 MUA CẦN';
-  setStatus(player.rodUses>0?'Nhấn THẢ CÂU':'Mua cần ở Shop');
-}
-
-function updateUI(){
-  document.getElementById('coins').textContent=player.coins.toLocaleString();
-  document.getElementById('rods').textContent=player.rodUses;
-  document.getElementById('online-count').textContent=onlineMode?Math.floor(Math.random()*3)+1:1;
-}
-function setStatus(m){document.getElementById('st').textContent=m;}
-function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
-function fmtWeight(w){return w>=1000?(w/1000).toFixed(1)+' tấn':w>=1?w.toFixed(1)+' kg':Math.round(w*1000)+' g';}
-
-// ═══════════════════════════════════════════════════════════
-// THREE.JS & ANIMATION
+// THREE.JS SETUP - ĐẦY ĐỦ ĐỒ HỌA 3D
 // ═══════════════════════════════════════════════════════════
 const cv=document.getElementById('gc');
 const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
-renderer.setSize(900,480);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(70,900/480,0.1,200);
-camera.position.set(0,1.5,0);camera.rotation.order='YXZ';scene.add(camera);
-let isDrag=false,px=0,py=0;
-cv.addEventListener('mousedown',e=>{isDrag=true;px=e.clientX;py=e.clientY;});
-document.addEventListener('mouseup',()=>isDrag=false);
-document.addEventListener('mousemove',e=>{if(!isDrag)return;yaw-=(e.clientX-px)*.0024;pitch=Math.max(-.8,Math.min(.8,pitch-(e.clientY-py)*.0024));px=e.clientX;py=e.clientY;camera.rotation.y=yaw;camera.rotation.x=pitch;});
-cv.addEventListener('touchstart',e=>{isDrag=true;px=e.touches[0].clientX;py=e.touches[0].clientY;},{passive:true});
-document.addEventListener('touchend',()=>isDrag=false);
-cv.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrag||!e.touches[0])return;yaw-=(e.touches[0].clientX-px)*.0028;pitch=Math.max(-.8,Math.min(.8,pitch-(e.touches[0].clientY-py)*.0028));px=e.touches[0].clientX;py=e.touches[0].clientY;camera.rotation.y=yaw;camera.rotation.x=pitch;},{passive:false});
+renderer.setSize(900,480);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;
 
-function stdMat(c,r=.8,m=0){return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});}
-scene.add(new THREE.AmbientLight(0xffffff,.4));
-const sun=new THREE.DirectionalLight(0xfff4d8,1.2);sun.position.set(8,14,5);scene.add(sun);
-const waterMat=new THREE.MeshStandardMaterial({color:0x3d8fcc,roughness:.1,metalness:.2,transparent:true,opacity:.85});
-const water=new THREE.Mesh(new THREE.PlaneGeometry(120,120),waterMat);water.rotation.x=-Math.PI/2;scene.add(water);
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(120,120),stdMat(0x4a7a2a));ground.rotation.x=-Math.PI/2;ground.position.y=-.1;scene.add(ground);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(70,900/480,0.1,200);
+camera.position.set(0,1.5,0);
+camera.rotation.order='YXZ';
+scene.add(camera);
 
-const rodGrp=new THREE.Group();camera.add(rodGrp);rodGrp.position.set(.28,-.7,-.6);
-rodGrp.add(new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,2.5,8),stdMat(0xb87333)));
-const bobGrp=new THREE.Group();scene.add(bobGrp);bobGrp.visible=false;
-bobGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.12,8,8),stdMat(0xe74c3c)));
-const linePts=25,lineArr=new Float32Array(linePts*3),lineGeom=new THREE.BufferGeometry();
-lineGeom.setAttribute('position',new THREE.Float32BufferAttribute(lineArr,3));
-const lineMesh=new THREE.Line(lineGeom,new THREE.LineBasicMaterial({color:0xdddddd,transparent:true,opacity:.8}));scene.add(lineMesh);
+// LIGHTS
+const ambientLight=new THREE.AmbientLight(0xffffff,0.5);
+scene.add(ambientLight);
 
-const fishGrp=new THREE.Group();scene.add(fishGrp);fishGrp.visible=false;
-fishGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.5,16,12),stdMat(0x74b9ff,.4)).scale.set(2.5,.8,.9));
-let fishState='none',fishRiseT=0;
+const sunLight=new THREE.DirectionalLight(0xfff4d8,1.2);
+sunLight.position.set(8,14,5);
+sunLight.castShadow=true;
+sunLight.shadow.mapSize.set(2048,2048);
+scene.add(sunLight);
+
+// WATER - SHADER ANIMATED
+const waterGeometry=new THREE.PlaneGeometry(120,120,80,80);
+const waterMaterial=new THREE.ShaderMaterial({
+  uniforms:{
+    uTime:{value:0},
+    uDeep:{value:new THREE.Vector3(0.1,0.4,0.7)},
+    uShallow:{value:new THREE.Vector3(0.2,0.6,0.9)}
+  },
+  vertexShader:`
+    uniform float uTime;
+    varying float vElevation;
+    varying vec3 vPosition;
+    void main(){
+      vec3 pos=position;
+      float elevation=sin(pos.x*3.2+uTime*1.6)*0.16+sin(pos.z*2.5-uTime*1.2)*0.12;
+      pos.y+=elevation;
+      vElevation=elevation;
+      vPosition=pos;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.0);
+    }
+  `,
+  fragmentShader:`
+    uniform vec3 uDeep;
+    uniform vec3 uShallow;
+    varying float vElevation;
+    void main(){
+      float mixStrength=(vElevation+0.32)/0.60;
+      vec3 color=mix(uDeep,uShallow,mixStrength);
+      gl_FragColor=vec4(color,0.88);
+    }
+  `,
+  transparent:true,
+  side:THREE.DoubleSide
+});
+const water=new THREE.Mesh(waterGeometry,waterMaterial);
+water.rotation.x=-Math.PI/2;
+water.position.y=0.01;
+water.receiveShadow=true;
+scene.add(water);
+
+// GROUND
+const groundGeometry=new THREE.PlaneGeometry(120,120);
+const groundMaterial=new THREE.MeshStandardMaterial({color:0x4a7a2a,roughness:0.9});
+const ground=new THREE.Mesh(groundGeometry,groundMaterial);
+ground.rotation.x=-Math.PI/2;
+ground.position.y=-0.2;
+ground.receiveShadow=true;
+scene.add(ground);
+
+// FISHING ROD (First Person)
+const rodGroup=new THREE.Group();
+camera.add(rodGroup);
+rodGroup.position.set(0.28,-0.7,-0.6);
+rodGroup.rotation.set(0,0,-0.12);
+
+// Rod handle
+const handleGeo=new THREE.CylinderGeometry(0.035,0.04,0.5,10);
+const handleMat=new THREE.MeshStandardMaterial({color:0x181410,roughness:0.96});
+const handle=new THREE.Mesh(handleGeo,handleMat);
+handle.position.y=0.25;
+rodGroup.add(handle);
+
+// Rod reel
+const reelGeo=new THREE.CylinderGeometry(0.055,0.055,0.06,14);
+const reelMat=new THREE.MeshStandardMaterial({color:0x2a2a2a,roughness:0.3,metalness:0.7});
+const reel=new THREE.Mesh(reelGeo,reelMat);
+reel.position.y=0.55;
+reel.rotation.x=Math.PI/2;
+rodGroup.add(reel);
+
+// Rod blank
+const blankGeo=new THREE.CylinderGeometry(0.008,0.02,2.5,8);
+const blankMat=new THREE.MeshStandardMaterial({color:0xb87333,roughness:0.65});
+const blank=new THREE.Mesh(blankGeo,blankMat);
+blank.position.y=1.5;
+rodGroup.add(blank);
+
+// Rod tip
+const rodTip=new THREE.Object3D();
+rodTip.position.y=3.0;
+rodGroup.add(rodTip);
+
+// BOBBER
+const bobberGroup=new THREE.Group();
+scene.add(bobberGroup);
+bobberGroup.visible=false;
+
+const bobberTopGeo=new THREE.SphereGeometry(0.12,10,8,0,Math.PI*2,0,Math.PI/2);
+const bobberTopMat=new THREE.MeshStandardMaterial({color:0xe74c3c,roughness:0.5});
+const bobberTop=new THREE.Mesh(bobberTopGeo,bobberTopMat);
+bobberGroup.add(bobberTop);
+
+const bobberBottomGeo=new THREE.SphereGeometry(0.12,10,8,0,Math.PI*2,Math.PI/2,Math.PI/2);
+const bobberBottomMat=new THREE.MeshStandardMaterial({color:0xecf0f1,roughness:0.6});
+const bobberBottom=new THREE.Mesh(bobberBottomGeo,bobberBottomMat);
+bobberGroup.add(bobberBottom);
+
+// FISHING LINE
+const linePoints=30;
+const linePositions=new Float32Array(linePoints*3);
+const lineGeometry=new THREE.BufferGeometry();
+lineGeometry.setAttribute('position',new THREE.Float32BufferAttribute(linePositions,3));
+const lineMaterial=new THREE.LineBasicMaterial({color:0xdddddd,transparent:true,opacity:0.9});
+const lineMesh=new THREE.Line(lineGeometry,lineMaterial);
+scene.add(lineMesh);
+lineMesh.visible=false;
+
+// GIANT FISH MESH
+const fishGroup=new THREE.Group();
+scene.add(fishGroup);
+fishGroup.visible=false;
+
+// Fish body
+const fishBodyGeo=new THREE.SphereGeometry(0.5,16,12);
+const fishBodyMat=new THREE.MeshStandardMaterial({color:0x74b9ff,roughness:0.4,metalness:0.2});
+const fishBody=new THREE.Mesh(fishBodyGeo,fishBodyMat);
+fishBody.scale.set(2.5,0.8,0.9);
+fishGroup.add(fishBody);
+
+// Fish tail
+const fishTailGeo=new THREE.ConeGeometry(0.4,1.2,5);
+const fishTailMat=new THREE.MeshStandardMaterial({color:0x74b9ff,roughness:0.4});
+const fishTail=new THREE.Mesh(fishTailGeo,fishTailMat);
+fishTail.position.x=-1.6;
+fishTail.rotation.z=-Math.PI/2;
+fishGroup.add(fishTail);
+
+// Fish fin
+const fishFinGeo=new THREE.ConeGeometry(0.25,0.5,4);
+const fishFin=new THREE.Mesh(fishFinGeo,fishBodyMat);
+fishFin.position.set(0.3,0.55,0);
+fishGroup.add(fishFin);
+
+// Fish glow light
+const fishLight=new THREE.PointLight(0x74b9ff,2,15);
+fishGroup.add(fishLight);
+
+// Bubbles
+for(let i=0;i<8;i++){
+  const bubbleGeo=new THREE.SphereGeometry(0.05+Math.random()*0.05,6,6);
+  const bubbleMat=new THREE.MeshBasicMaterial({color:0xaaddff,transparent:true,opacity:0.6});
+  const bubble=new THREE.Mesh(bubbleGeo,bubbleMat);
+  bubble.userData={offset:Math.random()*6.28,speed:1+Math.random()};
+  fishGroup.add(bubble);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════════════════════
+let lineLength=10,fishRiseT=0,fishState='none',castT=0;
+const bobTarget=new THREE.Vector3();
+
+function updateWater(t){
+  waterMaterial.uniforms.uTime.value=t;
+}
+
+function updateRod(){
+  const targetRot=gstate==='casting'?0.35:gstate==='biting'?0.15+Math.sin(Date.now()*0.008)*0.08:gstate==='reeling'?0.25:0.05;
+  rodGroup.rotation.x+=(targetRot-rodGroup.rotation.x)*0.08;
+}
+
+function updateBobber(t){
+  if(gstate==='casting'){
+    castT=Math.min(castT+0.06,1);
+    bobberGroup.position.lerpVectors(new THREE.Vector3(camera.position.x,1.2,camera.position.z-3),bobTarget,castT);
+    lineLength=castT*8;
+  }else if(gstate==='waiting'){
+    castT=1;
+    bobberGroup.position.x=bobTarget.x+Math.sin(t*0.5)*0.8;
+    bobberGroup.position.z=bobTarget.z+Math.cos(t*0.4)*0.5;
+    bobberGroup.position.y=Math.sin(t)*0.1;
+    lineLength=8;
+  }else if(gstate==='biting'){
+    bobberGroup.position.y=-0.2;
+    lineLength=7.5;
+  }else if(gstate==='reeling'){
+    lineLength=Math.max(0.5,lineLength-0.15);
+    bobberGroup.position.y=Math.sin(t)*0.05;
+  }else{
+    bobberGroup.visible=false;
+    lineMesh.visible=false;
+    lineLength=10;
+  }
+  
+  bobberGroup.visible=lineLength>1&&(gstate==='waiting'||gstate==='biting'||gstate==='reeling');
+  lineMesh.visible=lineLength>1;
+}
+
+function updateLine(){
+  if(!lineMesh.visible) return;
+  
+  const tipPos=new THREE.Vector3();
+  rodTip.getWorldPosition(tipPos);
+  const bobPos=bobberGroup.position;
+  const positions=lineMesh.geometry.attributes.position.array;
+  
+  for(let i=0;i<linePoints;i++){
+    const f=i/(linePoints-1);
+    const sag=Math.sin(f*Math.PI)*-0.3*(lineLength/8);
+    positions[i*3]=tipPos.x+(bobPos.x-tipPos.x)*f;
+    positions[i*3+1]=tipPos.y+(bobPos.y-tipPos.y)*f+sag;
+    positions[i*3+2]=tipPos.z+(bobPos.z-tipPos.z)*f;
+  }
+  lineMesh.geometry.attributes.position.needsUpdate=true;
+}
+
+function updateFish(t){
+  if(fishState==='rising'){
+    fishGroup.visible=true;
+    fishRiseT+=0.015;
+    fishGroup.position.set(0,-1.5+fishRiseT*3.5,0);
+    fishGroup.rotation.y+=0.06;
+    fishGroup.rotation.z=Math.sin(t*2)*0.15;
+    const scale=0.3+fishRiseT*2.5;
+    fishGroup.scale.set(scale,scale,scale);
+    
+    // Animate bubbles
+    fishGroup.children.filter(c=>c.userData.speed).forEach((b,i)=>{
+      b.position.set(Math.sin(t*2+b.userData.offset)*0.5,fishRiseT*2+i*0.2,Math.cos(t*1.5+b.userData.offset)*0.4);
+    });
+    
+    if(fishRiseT>=1) fishState='holding';
+  }else if(fishState==='holding'){
+    fishGroup.position.y=0.8+Math.sin(t*1.2)*0.15;
+    fishGroup.rotation.y+=0.04;
+    fishGroup.rotation.z=Math.sin(t*3)*0.1;
+    if(t%4<0.1) fishState='pulling';
+  }else if(fishState==='pulling'){
+    const pullT=Math.min((t%4)/1.5,1);
+    fishGroup.position.lerp(new THREE.Vector3(camera.position.x*0.3,0.5,camera.position.z*0.3+0.8),pullT*0.08);
+    fishGroup.rotation.y+=0.08;
+    fishGroup.rotation.z=Math.sin(t*5)*0.2;
+    if(pullT>=1){
+      fishGroup.visible=false;
+      fishState='none';
+      triggerCatch();
+    }
+  }
+}
 
 function animate(){
   requestAnimationFrame(animate);
-  const t=Date.now()*.001;
-  waterMat.color.setHSL(.55+Math.sin(t*.1)*.02,.6,.5);
+  const t=Date.now()*0.001;
   
-  const targetRot=gstate==='casting'?.35:gstate==='biting'?.15+Math.sin(t*9)*.08:gstate==='reeling'?.25:.05;
-  rodGrp.rotation.x+=(targetRot-rodGrp.rotation.x)*.08;
-
-  if(gstate==='waiting'||gstate==='biting'||gstate==='reeling'){
-    bobGrp.visible=true;
-    bobGrp.position.y=(gstate==='biting'?-.15:0)+Math.sin(t*(gstate==='biting'?2:.5))*.1;
-    lineMesh.visible=true;
-    const tip=new THREE.Vector3();rodGrp.children[0].getWorldPosition(tip);
-    const bp=bobGrp.position;
-    for(let i=0;i<linePts;i++){const f=i/(linePts-1);lineArr[i*3]=tip.x+(bp.x-tip.x)*f;lineArr[i*3+1]=tip.y+(bp.y-tip.y)*f+Math.sin(f*Math.PI)*-.3;lineArr[i*3+2]=tip.z+(bp.z-tip.z)*f;}
-    lineGeom.attributes.position.needsUpdate=true;
-  }else{bobGrp.visible=false;lineMesh.visible=false;}
-
-  if(fishState==='rising'){
-    fishGrp.visible=true;fishRiseT+=.015;
-    fishGrp.position.set(0,-1.5+fishRiseT*3,0);fishGrp.rotation.y+=.05;
-    fishGrp.scale.setScalar(.3+fishRiseT*2.5);
-    if(fishRiseT>=1)fishState='holding';
-  }else if(fishState==='holding'){
-    fishGrp.position.y=.8+Math.sin(t)*.1;fishGrp.rotation.y+=.03;
-    if(t%4<.1)fishState='pulling';
-  }else if(fishState==='pulling'){
-    fishGrp.position.z+=.03;fishGrp.scale.multiplyScalar(.97);
-    if(fishGrp.position.z>2){fishGrp.visible=false;fishState='none';triggerCatch();}
-  }
+  updateWater(t);
+  updateRod();
+  updateBobber(t);
+  updateLine();
+  updateFish(t);
+  
   renderer.render(scene,camera);
 }
 animate();
 
 // ═══════════════════════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════════════════════
+let isDrag=false;
+cv.addEventListener('mousedown',e=>{isDrag=true;px=e.clientX;py=e.clientY;});
+document.addEventListener('mouseup',()=>isDrag=false);
+document.addEventListener('mousemove',e=>{
+  if(!isDrag) return;
+  yaw-=(e.clientX-px)*0.0024;
+  pitch=Math.max(-0.8,Math.min(0.8,pitch-(e.clientY-py)*0.0024));
+  px=e.clientX;py=e.clientY;
+  camera.rotation.y=yaw;
+  camera.rotation.x=pitch;
+});
+cv.addEventListener('touchstart',e=>{isDrag=true;px=e.touches[0].clientX;py=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',()=>isDrag=false);
+cv.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(!isDrag||!e.touches[0]) return;
+  yaw-=(e.touches[0].clientX-px)*0.0028;
+  pitch=Math.max(-0.8,Math.min(0.8,pitch-(e.touches[0].clientY-py)*0.0028));
+  px=e.touches[0].clientX;py=e.touches[0].clientY;
+  camera.rotation.y=yaw;
+  camera.rotation.x=pitch;
+},{passive:false});
+
+// ═══════════════════════════════════════════════════════════
 // GAME LOGIC
 // ═══════════════════════════════════════════════════════════
-function rollFish(i){const r=MAP_DEFS[i].rates,x=Math.random()*100;let c=r.miss||30;if(x<c)return null;for(const id of MAP_DEFS[i].pool){c+=r[id]||0;if(x<c)return ALL_FISH[id];}return null;}
-function rollWeight(f){return Math.round((f.minW+Math.random()*(f.maxW-f.minW))*10)/10;}
+function rollFish(mapIdx){
+  const rates=MAP_DEFS[mapIdx].rates;
+  const r=Math.random()*100;
+  let c=rates.miss||30;
+  if(r<c) return null;
+  for(const id of MAP_DEFS[mapIdx].pool){
+    c+=rates[id]||0;
+    if(r<c) return ALL_FISH[id];
+  }
+  return null;
+}
+
+function rollWeight(fish){
+  const w=fish.minW+Math.random()*(fish.maxW-fish.minW);
+  return Math.round(w*10)/10;
+}
+
+function fmtWeight(w){
+  return w>=1000?(w/1000).toFixed(1)+' tấn':w>=1?w.toFixed(1)+' kg':Math.round(w*1000)+' g';
+}
 
 function handleCast(){
   if(gstate==='biting'){clearTimeout(bt);doReel();return;}
-  if(gstate!=='idle'||player.userId==='')return;
+  if(gstate!=='idle') return;
   if(player.rodUses<=0){showToast('❌ Mua cần!');swTab('shop');return;}
-  resultFish=null;resultWeight=0;hideBanner();gstate='casting';fishState='none';
-  setStatus('🎣 Đang quăng...');document.getElementById('cb').disabled=true;
-  setTimeout(()=>{gstate='waiting';setStatus('⏳ Chờ cá...');waitDur=3000+Math.random()*4000;waitStart=performance.now();wt=setTimeout(startBite,waitDur);},800);
+  
+  resultFish=null;
+  resultWeight=0;
+  hideBanner();
+  gstate='casting';
+  castT=0;
+  fishState='none';
+  
+  setStatus('🎣 Đang quăng...');
+  document.getElementById('cb').disabled=true;
+  
+  // Cast direction
+  const fwd=new THREE.Vector3();
+  camera.getWorldDirection(fwd);
+  fwd.y=0;
+  fwd.normalize();
+  bobTarget.set(camera.position.x+fwd.x*8,0,camera.position.z+fwd.z*8);
+  bobberGroup.position.set(camera.position.x,1.2,camera.position.z-3);
+  
+  setTimeout(()=>{
+    gstate='waiting';
+    setStatus('⏳ Chờ cá...');
+    waitDur=3000+Math.random()*4000;
+    waitStart=performance.now();
+    wt=setTimeout(startBite,waitDur);
+  },800);
 }
-function startBite(){gstate='biting';setStatus('🐟 CÁ CẮN! NHẤN KÉO!');const b=document.getElementById('cb');b.textContent='⚡ KÉO!';b.disabled=false;bt=setTimeout(escape,3000);}
+
+function startBite(){
+  gstate='biting';
+  setStatus('🐟 CÁ CẮN! NHẤN KÉO!');
+  const b=document.getElementById('cb');
+  b.textContent='⚡ KÉO!';
+  b.disabled=false;
+  bt=setTimeout(escape,3000);
+}
+
 function doReel(){
-  gstate='reeling';setStatus('');const b=document.getElementById('cb');b.textContent='🎣 THẢ CÂU';b.disabled=true;
-  player.rodUses--;updateUI();pendingSave=true;
-  resultFish=rollFish(curMap);resultWeight=resultFish?rollWeight(resultFish):0;
+  gstate='reeling';
+  setStatus('');
+  const b=document.getElementById('cb');
+  b.textContent='🎣 THẢ CÂU';
+  b.disabled=true;
+  
+  player.rodUses--;
+  updateUI();
+  
+  resultFish=rollFish(curMap);
+  resultWeight=resultFish?rollWeight(resultFish):0;
+  
   if(resultFish){
-    fishGrp.children[0].material.color.setHex(resultFish.color);
-    fishState='rising';fishRiseT=0;
+    // Set fish color
+    fishBody.material.color.setHex(resultFish.color);
+    fishTail.material.color.setHex(resultFish.color);
+    fishLight.color.setHex(resultFish.color);
+    
+    fishState='rising';
+    fishRiseT=0;
     setStatus('⚡ Đang kéo...');
-  }else setTimeout(escape,1500);
-}
-function escape(){gstate='idle';fishState='none';fishGrp.visible=false;setStatus('😔 Cá thoát!');document.getElementById('cb').disabled=false;setTimeout(()=>setStatus('Nhấn THẢ CÂU'),2000);}
-function triggerCatch(){
-  if(!resultFish)return;
-  if(!player.inventory[resultFish.id])player.inventory[resultFish.id]=[];
-  player.inventory[resultFish.id].push({weight:resultWeight,value:resultFish.value});
-  player.totalCaught++;pendingSave=false;
-  if(onlineMode)writePlayerImmediate();
-  showBanner(resultFish,resultWeight);
-  setTimeout(()=>{gstate='idle';hideBanner();setStatus('🎉 Bắt thành công!');document.getElementById('cb').disabled=false;renderContent();},2000);
-}
-function showBanner(f,w){
-  const b=document.getElementById('result-banner');
-  document.getElementById('res-emoji').textContent=f.emoji;
-  document.getElementById('res-name').textContent=f.name;
-  document.getElementById('res-info').textContent=f.rar+' | ⚖️ '+fmtWeight(w);
-  document.getElementById('res-value').textContent='+'+f.value.toLocaleString()+' 🪙';
-  b.style.borderColor='#'+f.color.toString(16).padStart(6,'0');
-  b.classList.remove('show');void b.offsetWidth;b.classList.add('show');
-}
-function hideBanner(){document.getElementById('result-banner').classList.remove('show');}
-
-function selMap(i){curMap=i;document.querySelectorAll('.mb').forEach((b,j)=>b.classList.toggle('on',j===i));showToast('📍 '+MAP_DEFS[i].name);}
-function swTab(tab){activeTab=tab;document.querySelectorAll('.tb').forEach((b,j)=>b.classList.toggle('on',['bag','shop','sell','rates'][j]===tab));renderContent();}
-
-function renderContent(){
-  const p=document.getElementById('cp');
-  if(activeTab==='bag'){
-    const k=Object.keys(player.inventory).filter(k=>player.inventory[k]?.length>0);
-    if(!k.length){p.innerHTML='<div class="es"><div class="ei">🎒</div><p>Túi trống</p></div>';return;}
-    let h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">';
-    k.forEach(id=>{const f=ALL_FISH[id],arr=player.inventory[id],tv=arr.reduce((s,e)=>s+e.value,0);
-      h+=`<div style="background:rgba(15,32,53,.8);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center"><div style="font-size:28px">${f.emoji}</div><div style="font-weight:800;font-size:10px">${f.name}</div><div style="font-size:9px;color:var(--sub)">×${arr.length}</div><div style="color:var(--gold);font-size:9px">${tv.toLocaleString()}🪙</div></div>`;});
-    p.innerHTML=h+'</div>';
-  }else if(activeTab==='shop'){
-    p.innerHTML=`<div style="background:rgba(15,32,53,.8);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:8px">
-      <div style="font-size:32px">🎣</div><div style="flex:1"><div style="font-weight:900">Cần Câu</div><div style="font-size:9px;color:var(--sub)">${ROD_USES} lần</div><div style="color:var(--gold);font-weight:800">${ROD_PRICE.toLocaleString()} 🪙</div></div>
-      <button onclick="buyRod()" style="padding:8px 14px;background:#00e676;border:none;border-radius:6px;font-weight:900;cursor:pointer">MUA</button></div>`;
-  }else if(activeTab==='sell'){
-    const k=Object.keys(player.inventory).filter(k=>player.inventory[k]?.length>0);
-    if(!k.length){p.innerHTML='<div class="es"><div class="ei">🐟</div><p>Không có cá</p></div>';return;}
-    let h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">';
-    k.forEach(id=>{const f=ALL_FISH[id],arr=player.inventory[id],tv=arr.reduce((s,e)=>s+e.value,0);
-      h+=`<div style="background:rgba(15,32,53,.8);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center"><div style="font-size:28px">${f.emoji}</div><div style="font-weight:800;font-size:10px">${f.name}</div><div style="font-size:9px;color:var(--sub)">×${arr.length}</div><div style="color:var(--gold);font-size:9px;margin:4px 0">${tv.toLocaleString()}🪙</div><button onclick="sellFish('${id}')" style="width:100%;padding:4px;background:#e74c3c;border:none;border-radius:4px;color:#fff;font-size:8px;cursor:pointer">BÁN</button></div>`;});
-    p.innerHTML=h+'</div>';
-  }else if(activeTab==='rates'){
-    const m=MAP_DEFS[curMap];let h='<table style="width:100%;font-size:10px;border-collapse:collapse"><tr style="background:rgba(255,255,255,.05)"><th style="padding:6px;text-align:left">Cá</th><th>Hiếm</th><th>Tỉ Lệ</th><th>Giá</th></tr>';
-    h+=`<tr><td style="padding:6px">💨 Hụt</td><td>—</td><td>${m.rates.miss}%</td><td>—</td></tr>`;
-    m.pool.forEach(id=>{const f=ALL_FISH[id];h+=`<tr><td style="padding:6px">${f.emoji} ${f.name}</td><td>${f.rar}</td><td>${m.rates[id]||0}%</td><td style="color:var(--gold)">${f.value.toLocaleString()}🪙</td></tr>`;});
-    h+='</table>';p.innerHTML=h;
+  }else{
+    setTimeout(escape,1500);
   }
 }
 
-function buyRod(){if(player.coins<ROD_PRICE){showToast('❌ Thiếu xu!');return;}player.coins-=ROD_PRICE;player.rodUses+=ROD_USES;updateUI();showToast('✅ Mua cần!');if(onlineMode)writePlayerImmediate();renderContent();}
-function sellFish(id){if(!player.inventory[id])return;const tv=player.inventory[id].reduce((s,e)=>s+e.value,0);player.coins+=tv;delete player.inventory[id];updateUI();showToast('💰 +'+tv.toLocaleString()+'🪙');if(onlineMode)writePlayerImmediate();renderContent();}
+function escape(){
+  gstate='idle';
+  fishState='none';
+  fishGroup.visible=false;
+  setStatus('😔 Cá thoát!');
+  document.getElementById('cb').disabled=false;
+  setTimeout(()=>setStatus('Nhấn THẢ CÂU'),2000);
+}
 
-document.getElementById('cb').addEventListener('click',()=>{if(gstate==='biting')doReel();});
+function triggerCatch(){
+  if(!resultFish) return;
+  
+  if(!player.inventory[resultFish.id]) player.inventory[resultFish.id]=[];
+  player.inventory[resultFish.id].push({weight:resultWeight,value:resultFish.value});
+  player.totalCaught++;
+  
+  showBanner(resultFish,resultWeight);
+  
+  setTimeout(()=>{
+    gstate='idle';
+    hideBanner();
+    setStatus('🎉 Bắt thành công!');
+    document.getElementById('cb').disabled=false;
+    renderContent();
+  },2000);
+}
+
+function showBanner(fish,weight){
+  const b=document.getElementById('result-banner');
+  document.getElementById('res-emoji').textContent=fish.emoji;
+  document.getElementById('res-name').textContent=fish.name;
+  document.getElementById('res-info').textContent=fish.rar+' | ⚖️ '+fmtWeight(weight);
+  document.getElementById('res-value').textContent='+'+fish.value.toLocaleString()+' 🪙';
+  b.style.borderColor='#'+fish.color.toString(16).padStart(6,'0');
+  b.classList.remove('show');
+  void b.offsetWidth;
+  b.classList.add('show');
+}
+
+function hideBanner(){
+  document.getElementById('result-banner').classList.remove('show');
+}
+
+function setStatus(msg){
+  document.getElementById('st').textContent=msg;
+}
+
+function updateUI(){
+  document.getElementById('coins').textContent=player.coins.toLocaleString();
+  document.getElementById('rods').textContent=player.rodUses;
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI TABS
+// ═══════════════════════════════════════════════════════════
+function selMap(i){
+  curMap=i;
+  document.querySelectorAll('.mb').forEach((b,j)=>b.classList.toggle('on',j===i));
+  
+  // Change map colors
+  const map=MAP_DEFS[i];
+  scene.background=new THREE.Color(map.skyColor);
+  waterMaterial.uniforms.uDeep.value.setHex(map.waterColor);
+  waterMaterial.uniforms.uShallow.value.setHex(map.waterColor);
+  
+  showToast('📍 '+map.name);
+}
+
+function swTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tb').forEach((b,j)=>{
+    const tabs=['bag','shop','sell','rates'];
+    b.classList.toggle('on',tabs[j]===tab);
+  });
+  renderContent();
+}
+
+function renderContent(){
+  const p=document.getElementById('cp');
+  
+  if(activeTab==='bag'){
+    const keys=Object.keys(player.inventory).filter(k=>player.inventory[k]?.length>0);
+    if(keys.length===0){
+      p.innerHTML='<div style="text-align:center;padding:40px;color:var(--sub)"><div style="font-size:48px;margin-bottom:10px">🎒</div><p>Túi trống</p></div>';
+      return;
+    }
+    let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">';
+    keys.forEach(id=>{
+      const fish=ALL_FISH[id];
+      const arr=player.inventory[id];
+      const total=arr.reduce((s,e)=>s+e.value,0);
+      html+=`<div style="background:rgba(15,32,53,.8);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:32px">${fish.emoji}</div>
+        <div style="font-weight:800;font-size:10px;margin:4px 0">${fish.name}</div>
+        <div style="font-size:9px;color:var(--sub)">×${arr.length}</div>
+        <div style="color:var(--gold);font-size:9px;margin-top:4px">${total.toLocaleString()}🪙</div>
+      </div>`;
+    });
+    html+='</div>';
+    p.innerHTML=html;
+  }
+  else if(activeTab==='shop'){
+    p.innerHTML=`<div style="background:rgba(15,32,53,.8);border:1px solid var(--border);border-radius:8px;padding:15px;display:flex;align-items:center;gap:15px;margin-bottom:10px">
+      <div style="font-size:40px">🎣</div>
+      <div style="flex:1">
+        <div style="font-weight:900;font-size:13px">Cần Câu Đồng</div>
+        <div style="font-size:10px;color:var(--sub);margin:4px 0">${ROD_USES} lần câu</div>
+        <div style="color:var(--gold);font-weight:800">${ROD_PRICE.toLocaleString()} 🪙</div>
+      </div>
+      <button onclick="buyRod()" style="padding:10px 18px;background:linear-gradient(135deg,#1a8f4a,#00e676);border:none;border-radius:8px;color:#000;font-weight:900;cursor:pointer">MUA</button>
+    </div>`;
+  }
+  else if(activeTab==='sell'){
+    const keys=Object.keys(player.inventory).filter(k=>player.inventory[k]?.length>0);
+    if(keys.length===0){
+      p.innerHTML='<div style="text-align:center;padding:40px;color:var(--sub)"><div style="font-size:48px;margin-bottom:10px">🐟</div><p>Không có cá để bán</p></div>';
+      return;
+    }
+    let total=0;
+    let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">';
+    keys.forEach(id=>{
+      const fish=ALL_FISH[id];
+      const arr=player.inventory[id];
+      const val=arr.reduce((s,e)=>s+e.value,0);
+      total+=val;
+      html+=`<div style="background:rgba(15,32,53,.8);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:32px">${fish.emoji}</div>
+        <div style="font-weight:800;font-size:10px;margin:4px 0">${fish.name}</div>
+        <div style="font-size:9px;color:var(--sub)">×${arr.length}</div>
+        <div style="color:var(--gold);font-size:9px;margin:6px 0">${val.toLocaleString()}🪙</div>
+        <button onclick="sellFish('${id}')" style="width:100%;padding:6px;background:#e74c3c;border:none;border-radius:4px;color:#fff;font-size:9px;cursor:pointer;font-weight:800">BÁN</button>
+      </div>`;
+    });
+    html+=`</div><div style="margin-top:15px;text-align:right;font-weight:800;color:var(--gold);font-size:13px">Tổng: ${total.toLocaleString()} 🪙</div>`;
+    p.innerHTML=html;
+  }
+  else if(activeTab==='rates'){
+    const map=MAP_DEFS[curMap];
+    let html='<table style="width:100%;font-size:10px;border-collapse:collapse">';
+    html+='<tr style="background:rgba(255,255,255,.05)"><th style="padding:8px;text-align:left">Cá</th><th>Hiếm</th><th>Tỉ Lệ</th><th>Giá</th></tr>';
+    html+=`<tr><td style="padding:8px">💨 Hụt</td><td>—</td><td>${map.rates.miss}%</td><td>—</td></tr>`;
+    map.pool.forEach(id=>{
+      const fish=ALL_FISH[id];
+      html+=`<tr><td style="padding:8px">${fish.emoji} ${fish.name}</td><td>${fish.rar}</td><td>${map.rates[id]||0}%</td><td style="color:var(--gold)">${fish.value.toLocaleString()}🪙</td></tr>`;
+    });
+    html+='</table>';
+    p.innerHTML=html;
+  }
+}
+
+function buyRod(){
+  if(player.coins<ROD_PRICE){
+    showToast('❌ Không đủ xu!');
+    return;
+  }
+  player.coins-=ROD_PRICE;
+  player.rodUses+=ROD_USES;
+  updateUI();
+  showToast(`✅ Mua ${ROD_USES} lần câu!`);
+  renderContent();
+}
+
+function sellFish(id){
+  if(!player.inventory[id]) return;
+  const total=player.inventory[id].reduce((s,e)=>s+e.value,0);
+  player.coins+=total;
+  delete player.inventory[id];
+  updateUI();
+  showToast(`💰 +${total.toLocaleString()} 🪙`);
+  renderContent();
+}
+
+document.getElementById('cb').addEventListener('click',()=>{
+  if(gstate==='biting') doReel();
+});
+
+// ═══════════════════════════════════════════════════════════
+// AUTH & START
+// ═══════════════════════════════════════════════════════════
+function enterDemo(){
+  DEMO=true;
+  player={userId:'demo',username:'Người Chơi',coins:500000,rodUses:20,inventory:{},totalCaught:0};
+  document.getElementById('loading').style.display='none';
+  document.getElementById('auth').style.display='none';
+  document.getElementById('game').style.display='flex';
+  updateUI();
+  renderContent();
+  setStatus('🎮 Chế độ Demo');
+  showToast('🎮 Demo: Không lưu dữ liệu');
+}
+
+function verifyId(){
+  const input=document.getElementById('discord-id').value.trim();
+  if(!/^\d{17,19}$/.test(input)){
+    showToast('❌ ID phải 17-19 số!');
+    return;
+  }
+  if(input===sessionData.userId){
+    document.getElementById('auth').style.display='none';
+    document.getElementById('loading').style.display='flex';
+    document.getElementById('loadtxt').textContent='Đang vào game...';
+    setTimeout(()=>{
+      document.getElementById('loading').style.display='none';
+      document.getElementById('game').style.display='flex';
+      player.userId=sessionData.userId;
+      player.username=sessionData.username;
+      player.coins=sessionData.coins||0;
+      player.rodUses=sessionData.rodUses||0;
+      updateUI();
+      renderContent();
+      setStatus('Nhấn THẢ CÂU');
+    },1000);
+  }else{
+    showToast('❌ ID không khớp!');
+  }
+}
 
 // INIT
-bootFirebase();
+setTimeout(()=>{
+  document.getElementById('loadfill').style.width='100%';
+  document.getElementById('loadtxt').textContent='Sẵn sàng!';
+  setTimeout(()=>{
+    document.getElementById('loading').style.display='none';
+    document.getElementById('auth').style.display='block';
+    document.getElementById('target-id').textContent='demo123456789';
+  },500);
+},1000);
+
+// Set initial scene background
+scene.background=new THREE.Color(0x87ceeb);
 </script>
 </body>
 </html>
