@@ -161,12 +161,12 @@ const FISH=[
   {id:'hoi', name:'Cá Hồi',       emoji:'🦑', base:5_000_000,   rar:'Huyền Thoại', col:'#e17055', minW:20,  maxW:120,  power:7,  rate:4.99, boss:true},
   {id:'rong',name:'Cá Rồng',      emoji:'🐲', base:100_000_000, rar:'Thần Thoại',  col:'#ffd700', minW:500, maxW:3000, power:12, rate:0.01, boss:true},
 ];
-const MISS_RATE=30;
+const MISS_RATE=70;  // tỉ lệ câu hụt cá thường (~70%)
 
 // Lực quăng (power 0..1) ảnh hưởng tỉ lệ: quăng xa = ít hụt hơn + dễ ra cá hiếm/boss
 function rollFish(power){
   power=Math.max(0,Math.min(1,power||0));
-  const miss=Math.max(8,MISS_RATE-power*18);
+  const miss=Math.max(58,MISS_RATE-power*12);  // quăng xa giảm hụt một chút (70% → ~58%)
   if(Math.random()*100<miss)return null;
   const weights=FISH.map(f=>{
     let w=f.rate;
@@ -228,6 +228,8 @@ let myBossContribution=0;                                // dmg tôi đóng góp
 let curFish=null, curFishWeight=0, fishHP=0, fishMaxHP=0;
 
 let db=null, _online=false, _token=null;
+let otherPlayers=[];          // những người đang online (hiện trên bờ): {id,name,lv}
+let presenceRef=null;
 
 /* ════════════════════════════════════════════════════════════
    THÔNG BÁO / UI CHUNG
@@ -319,7 +321,7 @@ function updateButton(){
 function startCharge(){
   if(checkExhaustion())return;
   if(me.rodUses<=0){showCenterNotify("🎣 HẾT CẦN!","Mua thêm cần để câu tiếp.",false);return;}
-  if(me.stamina<50){showCenterNotify("😩 Thiếu Thể Lực!","Không đủ sức để quăng câu!",false);return;}
+  if(me.stamina<=0){showCenterNotify("😩 Hết Thể Lực!","Phải chờ hồi phục mới câu được!",false);return;}
   me.state='charging'; chargePower=0;
   powerEl.firstElementChild.style.width='0%';
   powerEl.classList.add('show'); powerLbl.classList.add('show');
@@ -345,7 +347,7 @@ setInterval(()=>{
 // ───── quăng cần ─────
 function doCast(power){
   me.rodUses--;
-  me.stamina-=50;
+  me.stamina=Math.max(0,me.stamina-50);
   me.state='waiting';
   emitSplash(W*(0.18+power*0.55),H*(0.40+power*0.18),12,3+power*2);
   updateButton(); updateHUD();
@@ -431,6 +433,29 @@ function spawnBoss(forceId){
     bossState={active:true,hp:hp,maxHp:hp,type:type,x:0.5,y:0.35,spawnTime:Date.now(),duration:180,resolved:false};
     onBossAppear();
   }
+}
+
+// Đồng bộ "ai đang online" qua Firebase node presence/{id}
+function setupPresence(){
+  if(!db||!_online)return;
+  presenceRef=db.ref('presence/'+me.id);
+  presenceRef.onDisconnect().remove();   // tự xoá khi đóng game/mất mạng
+  const push=()=>presenceRef.set({id:me.id,name:me.name,lv:me.lv,t:Date.now()}).catch(()=>{});
+  push();
+  setInterval(push,20000);               // nhịp tim mỗi 20s để giữ "còn online"
+  db.ref('presence').on('value',snap=>{
+    const v=snap.val()||{};
+    const now=Date.now();
+    const arr=[];
+    for(const [id,p] of Object.entries(v)){
+      if(!p)continue;
+      if(now-(p.t||0)>70000)continue;     // quá 70s không nhịp tim → coi như offline
+      arr.push({id:String(id),name:p.name||'?',lv:p.lv||1});
+    }
+    // đưa mình lên đầu danh sách cho dễ thấy
+    arr.sort((a,b)=>(a.id===me.id?-1:b.id===me.id?1:0));
+    otherPlayers=arr;
+  });
 }
 
 function listenGlobalBoss(){
@@ -606,7 +631,7 @@ function loop(now){
   let dt=(now-lastT)/1000;lastT=now;dt=Math.min(dt,0.05);
   const t=now*0.001;
   checkExhaustion();
-  if(!me.exhaustedAt&&me.state==='idle'&&!myLine.engaged)me.stamina=Math.min(me.staminaMax,me.stamina+40*dt);
+  // Thể lực KHÔNG tự hồi. Chỉ hồi đầy 100% sau khi cạn (0) và chờ đủ 5 phút (xử lý ở checkExhaustion).
 
   if(bossState.active){
     const rem=Math.max(0,bossState.duration-(Date.now()-bossState.spawnTime)/1000);
@@ -631,11 +656,88 @@ function loop(now){
     $('fishbartxt').textContent=Math.round(tn)+'%';
   }
 
-  drawScene(t); drawBossAndRopes(t); drawSplash(dt);
+  drawScene(t); drawBank(t); drawBossAndRopes(t); drawSplash(dt);
   updateHUD(); updateButton();
 }
 
 function drawScene(t){applyShake();let g=ctx.createLinearGradient(0,0,0,H*WATER_TOP);g.addColorStop(0,scene.sky1);g.addColorStop(1,scene.sky2);ctx.fillStyle=g;ctx.fillRect(0,0,W,H*WATER_TOP);g=ctx.createLinearGradient(0,H*WATER_TOP,0,H);g.addColorStop(0,scene.w1);g.addColorStop(0.5,scene.w2);g.addColorStop(1,scene.w3);ctx.fillStyle=g;ctx.fillRect(0,H*WATER_TOP,W,H*(1-WATER_TOP));ctx.save();ctx.globalCompositeOperation='lighter';for(let i=0;i<6;i++){const bx=(i/6)*W+Math.sin(t*0.3+i)*20;const grd=ctx.createLinearGradient(bx,H*WATER_TOP,bx-60,H);grd.addColorStop(0,'rgba(180,230,255,0.10)');grd.addColorStop(1,'rgba(180,230,255,0)');ctx.fillStyle=grd;ctx.beginPath();ctx.moveTo(bx-18,H*WATER_TOP);ctx.lineTo(bx+18,H*WATER_TOP);ctx.lineTo(bx-50,H);ctx.lineTo(bx-120,H);ctx.closePath();ctx.fill();}ctx.restore();ctx.strokeStyle='rgba(220,245,255,0.55)';ctx.lineWidth=2;ctx.beginPath();for(let x=0;x<=W;x+=8){const y=H*WATER_TOP+Math.sin(x*0.04+t*2)*2.5+Math.sin(x*0.013-t*1.3)*2;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();ctx.fillStyle=scene.rock;ctx.beginPath();ctx.moveTo(0,H*0.45);ctx.bezierCurveTo(W*0.05,H*0.5,W*0.02,H*0.7,W*0.14,H*0.78);ctx.bezierCurveTo(W*0.18,H*0.82,W*0.1,H*0.95,W*0.16,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=2;for(let i=0;i<5;i++){ctx.beginPath();const yy=H*(0.55+i*0.08);ctx.moveTo(0,yy);ctx.bezierCurveTo(W*0.04,yy+8,W*0.06,yy-6,W*0.12,yy+10);ctx.stroke();}g=ctx.createLinearGradient(0,H*0.9,0,H);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,scene.floor);ctx.fillStyle=g;ctx.fillRect(0,H*0.85,W,H*0.15);for(const f of ambientFish){f.x+=f.sp*0.003;if(f.x>1.1)f.x=-0.1;if(f.x<-0.1)f.x=1.1;drawFishShape(f.x*W,f.y*H+Math.sin(t+f.ph)*6,f.sz,f.sp<0?-1:1,f.col,0.5,t+f.ph);}}
+
+// ── Bờ góc trên-trái + nhân vật người chơi online (ID Discord trên đầu) ──
+function drawBank(t){
+  const top=H*WATER_TOP;
+  const bankRight=Math.min(W*0.48,380);
+  const bankTop=top+H*0.005;
+  const bankBot=top+H*0.135;
+  // thân bờ (đất)
+  let g=ctx.createLinearGradient(0,bankTop,0,bankBot);
+  g.addColorStop(0,'#7a5a36'); g.addColorStop(1,'#3f2e1c');
+  ctx.fillStyle=g;
+  ctx.beginPath();
+  ctx.moveTo(0,bankTop-H*0.035);
+  ctx.lineTo(bankRight,bankTop);
+  ctx.quadraticCurveTo(bankRight+16,(bankTop+bankBot)/2,bankRight-12,bankBot);
+  ctx.lineTo(0,bankBot+H*0.02);
+  ctx.closePath(); ctx.fill();
+  // mặt cỏ
+  ctx.fillStyle='#4caf50';
+  ctx.beginPath();
+  ctx.moveTo(0,bankTop-H*0.035);
+  ctx.lineTo(bankRight,bankTop);
+  ctx.quadraticCurveTo(bankRight*0.5,bankTop-5,0,bankTop-H*0.035+5);
+  ctx.closePath(); ctx.fill();
+  // mép sóng vỗ bờ
+  ctx.strokeStyle='rgba(220,245,255,0.45)'; ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let x=0;x<=bankRight;x+=8){const y=bankBot+Math.sin(x*0.05+t*3)*2; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+  ctx.stroke();
+
+  // nhân vật: nếu chưa có presence thì hiện chính mình
+  const list=otherPlayers.length?otherPlayers:[{id:me.id,name:me.name,lv:me.lv}];
+  const maxShow=Math.min(list.length,8);
+  const cols=Math.min(maxShow,4)||1;
+  const usable=bankRight-30;
+  const stepX=usable/cols;
+  const baseY=bankTop+H*0.075;
+  for(let i=0;i<maxShow;i++){
+    const row=Math.floor(i/4), col=i%4;
+    const px=20+col*stepX+stepX*0.5;
+    const py=baseY+row*H*0.05;
+    const zig=(i%2)?6:0;  // so le nhãn để bớt chồng
+    drawBankCharacter(px,py,row?0.55:0.65,list[i],list[i].id===me.id,t+i,zig);
+  }
+  if(list.length>maxShow){
+    ctx.fillStyle='#fff'; ctx.font='700 10px Be Vietnam Pro'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.fillText('+'+(list.length-maxShow)+' người đang câu...',20,baseY+H*0.115);
+  }
+}
+
+function drawBankCharacter(px,py,s,p,isMe,t,zig){
+  py+=Math.sin(t*2)*1.4*s;       // nhún nhẹ
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(px,py+2,9*s,3*s,0,0,7); ctx.fill();
+  const body=isMe?'#2cc6ff':'#c98b52';
+  ctx.fillStyle=body; ctx.fillRect(px-4*s,py-18*s,8*s,18*s);          // thân
+  ctx.fillStyle=isMe?'#ffe1a6':'#ffe0b2';
+  ctx.beginPath(); ctx.arc(px,py-24*s,6*s,0,7); ctx.fill();           // đầu
+  ctx.fillStyle=isMe?'#1f6dad':'#6b4a2a';
+  ctx.beginPath(); ctx.arc(px,py-26*s,7*s,Math.PI,0); ctx.fill();      // nón
+  ctx.strokeStyle='#caa46a'; ctx.lineWidth=2*s; ctx.lineCap='round';   // cần
+  ctx.beginPath(); ctx.moveTo(px+3*s,py-12*s); ctx.lineTo(px+22*s,py-30*s); ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1;            // dây
+  ctx.beginPath(); ctx.moveTo(px+22*s,py-30*s); ctx.lineTo(px+27*s,py+8*s); ctx.stroke();
+  // ID Discord trên đầu
+  const label=String(p.id);
+  ctx.font='700 8px Be Vietnam Pro';
+  const w=ctx.measureText(label).width+8;
+  const ly=py-40*s-zig;
+  ctx.fillStyle=isMe?'rgba(20,90,150,0.92)':'rgba(8,24,40,0.85)';
+  ctx.strokeStyle=isMe?'#5fd0ff':'#2f5a7d'; ctx.lineWidth=1;
+  roundRect(px-w/2,ly,w,12,6); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(label,px,ly+6);
+  ctx.restore();
+}
 
 function drawBossAndRopes(t){if(!bossState.active||!bossState.type)return;const bx=bossState.x*W,by=bossState.y*H;const bossLen=Math.min(W,H)*(0.30+bossState.type.power*0.045);const shakeX=(Math.random()-0.5)*(bossState.hp<bossState.maxHp*0.3?8:1.5);drawFishShape(bx+shakeX,by,bossLen,-1,bossState.type.col,1,t*0.6,true);const bw=Math.min(W*0.55,180);ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw,15);ctx.fillStyle='#ff3333';ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw*(bossState.hp/bossState.maxHp),15);ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.textAlign='center';ctx.fillText(`❤️ ${fmtN(bossState.hp)}/${fmtN(bossState.maxHp)}`,bx,by-bossLen/2-39);const mp=anglerPos(me.x);const tip=drawAngler(mp.px,mp.py,0.9,{lv:me.lv,name:me.name,state:myLine.engaged?'reeling':'idle'},true,t);myTip=tip;if(myLine.engaged){ctx.strokeStyle='#00ffaa';ctx.lineWidth=2.5;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(tip.rx,tip.ry);const midX=(tip.rx+bx)/2,midY=(tip.ry+by)/2+20;ctx.quadraticCurveTo(midX,midY,bx,by);ctx.stroke();}}
 
@@ -700,6 +802,7 @@ async function initGame(){
 
     _online=true;
     listenGlobalBoss();   // lắng nghe boss CHUNG
+    setupPresence();      // hiện người chơi online lên bờ
 
     setLoading(false); updateHUD(); setHintCenter();
     addChatLine('','✅ Đã kết nối! Quăng cần để câu, gặp Boss thì cả server cùng đánh! 🎣',true);
