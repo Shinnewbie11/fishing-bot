@@ -272,48 +272,57 @@ resize();
 const _token = new URLSearchParams(location.search).get('t');
 
 if(_token){
-  // ✅ CHẾ ĐỘ CÓ TOKEN: LUÔN HIỆN FORM ĐĂNG NHẬP NGAY LẬP TỨC
   $('login').classList.add('show');
-  
-  // Hiện form ngay lập tức để người dùng thấy
-  $('logininfo').innerHTML = "⏳ Đang xác thực...<br>Nhập mật khẩu từ Discord DM.";
-  $('loginpw').style.display = 'block'; // 👉 ĐẢM BẢO Ô NHẬP LUÔN HIỆN
-  $('mbtns').style.display = 'flex';     // 👉 ĐẢM BẢO NÚT BẤM LUÔN HIỆN
-  $('loginpw').value = '';               // Xóa trắng ô nhập
-  
+  $('logininfo').innerHTML = "⏳ Đang kết nối Server...<br>Vui lòng chờ giây lát.";
   _pendingToken = _token;
 
-  // Thử kết nối Firebase nếu có thư viện
-  if (typeof firebase !== 'undefined') {
+  // Kiểm tra xem Firebase đã load chưa
+  if (typeof firebase === 'undefined') {
+      $('logininfo').innerHTML = "❌ Lỗi: Không tìm thấy thư viện Firebase.<br>Hãy kiểm tra lại mạng internet hoặc code HTML.";
+      return;
+  }
+
+  try {
       if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
       const db = firebase.database();
 
+      $('logininfo').innerHTML = "🔍 Đang tìm phiên đăng nhập...";
+      
       db.ref(`sessions/${_token}`).once('value').then((snapshot) => {
           const data = snapshot.val();
-          if (data && data.secret === 'datBatKyChuan123' && Date.now() < data.expiresAt) {
-              // Thành công: Cập nhật thông tin người chơi thật từ Bot
-              _pendingSession = {
-                  userId: data.userId,
-                  username: data.username,
-                  password: data.password // Lấy password thật
-              };
-              $('logininfo').innerHTML = `Xin chào <b>${data.username}</b>!<br>Nhập mật khẩu từ Discord DM.`;
+          
+          if (data) {
+              if (data.secret === 'datBatKyChuan123') {
+                  if (Date.now() < data.expiresAt) {
+                      // Thành công
+                      _pendingSession = {
+                          userId: data.userId,
+                          username: data.username,
+                          password: data.password
+                      };
+                      $('logininfo').innerHTML = `Xin chào <b>${data.username}</b>!<br>Nhập mật khẩu từ Discord DM.`;
+                      $('loginpw').style.display = 'block';
+                      $('mbtns').style.display = 'flex';
+                      $('loginpw').focus();
+                  } else {
+                      $('logininfo').innerHTML = "⏰ Phiên đăng nhập đã hết hạn.<br>Hãy gõ lại <b>tcauonline</b> trên Discord.";
+                  }
+              } else {
+                  $('logininfo').innerHTML = "❌ Sai Secret Key. Liên hệ Admin.";
+              }
           } else {
-              $('logininfo').innerHTML = "⚠️ Phiên không hợp lệ.<br>Hãy thử mật khẩu mặc định: <b>123456</b>";
-              // Fallback: Cho phép dùng password mặc định nếu Firebase lỗi
-              _pendingSession = { userId: 'guest', username: 'Guest', password: '123456' };
+              $('logininfo').innerHTML = "❌ Không tìm thấy Token này.<br>Bạn có chắc đã copy đúng link từ Discord?";
           }
-      }).catch(() => {
-          $('logininfo').innerHTML = "⚠️ Lỗi kết nối Server.<br>Thử mật khẩu mặc định: <b>123456</b>";
-           _pendingSession = { userId: 'guest', username: 'Guest', password: '123456' };
+      }).catch((error) => {
+          console.error(error);
+          $('logininfo').innerHTML = "❌ Lỗi kết nối Database.<br>Hãy kiểm tra lại Firebase Config hoặc mạng internet.";
       });
-  } else {
-      $('logininfo').innerHTML = "⚠️ Thiếu thư viện Firebase.<br>Thử mật khẩu mặc định: <b>123456</b>";
-      _pendingSession = { userId: 'guest', username: 'Guest', password: '123456' };
+  } catch (e) {
+      $('logininfo').innerHTML = "❌ Lỗi khởi tạo Firebase: " + e.message;
   }
 
 } else {
-  // ✅ CHẾ ĐỘ KHÁCH
+  // Chế độ khách
   me.id = 'guest_' + Math.floor(Math.random()*10000);
   loadProgress();
   updateHUD();
