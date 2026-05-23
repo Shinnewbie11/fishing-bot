@@ -422,7 +422,7 @@ function checkExhaustion() {
   const castBtn = $('castbtn');
   if (me.exhaustedAt) {
     const elapsed = Date.now() - me.exhaustedAt;
-    const duration = 3 * 60 * 60 * 1000;
+    const duration = 5 * 60 * 1000; // 5 phút
     const remaining = duration - elapsed;
     if (remaining > 0) {
       timerEl.style.display = 'block'; castBtn.disabled = true; castBtn.classList.add('exhausted'); castBtn.textContent = "💤 ĐANG NGHỈ";
@@ -457,7 +457,7 @@ function handleReelTap(e) {
     if (me.state === 'biting') { clearTimeout(biteTimer); startReel(); return; }
 
     const pullAmount = me.pullStrength; 
-    const staminaCost = 12 + (curFish.power * 4) + (me.lv * 2);
+   const staminaCost = 6 + (curFish.power * 2) + me.lv; // Giảm 1 nửa
     
     // ── CƠ CHẾ KÉO HỤT (TRỪ THỂ LỰC NHƯNG KHÔNG LÊN CÁ) ──
     // Tỷ lệ trượt: Cá càng to (power cao) thì trượt càng nhiều. Level cao thì giảm trượt.
