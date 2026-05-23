@@ -570,8 +570,7 @@ $('btnSpawnBoss').addEventListener('click', ()=> spawnBoss());
 castBtn.addEventListener('mousedown',pressStart); castBtn.addEventListener('mouseup',pressEnd); castBtn.addEventListener('mouseleave',()=>{ if(me.state==='charging')pressEnd(); }); 
 castBtn.addEventListener('touchstart',e=>{e.preventDefault();pressStart();},{passive:false}); castBtn.addEventListener('touchend',e=>{e.preventDefault();pressEnd();},{passive:false});
 
-// ════════════════════════════════════════════════════════════
-// 🔐 LOGIN SYSTEM & INIT
+// 🔐 LOGIN SYSTEM & INIT  <-- 👉 BẮT ĐẦU TỪ ĐÂY
 // ════════════════════════════════════════════════════════════
 let _pendingToken=null, _pendingSession=null;
 
