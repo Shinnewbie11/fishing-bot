@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>🎣 Câu Cá Online - Boss Raid Local</title>
+<title>🎣 Câu Cá Online - Boss Raid & Login</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -31,6 +31,18 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 #coins{background:rgba(8,24,40,.85);border:1px solid #ffd23f;border-radius:18px;padding:5px 12px 5px 8px;font-weight:800;color:#ffd23f;font-size:13px;display:flex;align-items:center;gap:5px}
 .icobtn{width:34px;height:34px;border-radius:50%;background:rgba(8,24,40,.85);border:1px solid #2f5a7d;color:#bcd6ec;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
 .icobtn:hover{border-color:#5fd0ff;color:#5fd0ff;transform:scale(1.08)}
+
+/* ── MÀN ĐĂNG NHẬP ── */
+#login{position:absolute;inset:0;background:rgba(2,8,16,.96);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+#login.show{display:flex}
+#loginbox{background:#0a1c30;border:1px solid #2f5a7d;border-radius:16px;padding:28px;max-width:320px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#loginbox h3{color:#5fd0ff;margin-bottom:8px;font-size:20px}
+#loginbox p{font-size:12px;color:#bcd6ec;line-height:1.5;margin-bottom:14px}
+#loginbox input{width:100%;background:#04121f;border:1px solid #2f5a7d;border-radius:8px;color:#fff;padding:14px;font-size:18px;outline:none;font-family:inherit;text-align:center;letter-spacing:6px;font-weight:800;text-transform:uppercase}
+#loginbox input:focus{border-color:#5fd0ff}
+#loginerr{display:block;margin-top:10px;color:#ff7a7a;font-size:12px;min-height:16px}
+.mbtns{display:flex;gap:8px;margin-top:16px}
+.mbtns button{flex:1;padding:14px;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-size:14px;font-family:inherit;background:linear-gradient(135deg,#0f7ad4,#2cc6ff);color:#fff}
 
 #centerNotify {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -147,6 +159,18 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   </div>
   <div id="power"><i></i></div>
   <button id="castbtn">🎣 THẢ CÂU</button>
+  
+  <!-- MÀN ĐĂNG NHẬP -->
+  <div id="login"><div id="loginbox">
+    <h3>🔐 Xác Thực Vào Game</h3>
+    <p id="logininfo">Nhập mật khẩu đã nhận từ Discord DM.</p>
+    <input id="loginpw" maxlength="8" placeholder="MẬT KHẨU" autocomplete="off">
+    <div class="mbtns">
+      <button id="loginbtn">VÀO GAME</button>
+    </div>
+    <small id="loginerr"></small>
+  </div></div>
+
   <div id="toast"></div>
   <div id="rotate"><div class="ph">📱</div><p>Xoay ngang để chơi tốt hơn!</p><button id="playportrait">Vẫn chơi dọc</button></div>
 </div>
@@ -168,17 +192,18 @@ function fmtW(w){ return w>=1000?(w/1000).toFixed(1)+' tấn':w>=1?w.toFixed(1)+
 function fmtN(n){ return Math.round(n).toLocaleString('vi-VN'); }
 function lvFromXp(xp){ return Math.floor(Math.sqrt(xp/50))+1; }
 function xpForLv(lv){ return 50*(lv-1)*(lv-1); }
+const $=id=>document.getElementById(id);
 
 // ── Player State ──
 const me={
-  id:'me', name:'Bạn', lv:1, xp:0, coins:100000,
+  id:'guest', name:'Khách', lv:1, xp:0, coins:100000,
   x:0.18, state:'idle', lineDepth:0, stamina:1000, staminaMax:1000,
   best:0, rodUses:999, inventory:{}, totalCaught:0, totalEarned:0,
   exhaustedAt: null, pullStrength: 0.045
 };
 
 // ── Local Storage Save/Load ──
-const SAVE_KEY = 'fishing_save_v4';
+function getSaveKey(){ return `fishing_save_${me.id}`; }
 function saveProgress() {
   const data = { 
     coins: me.coins, lv: me.lv, xp: me.xp, 
@@ -187,22 +212,22 @@ function saveProgress() {
     totalCaught: me.totalCaught, totalEarned: me.totalEarned, best: me.best, 
     exhaustedAt: me.exhaustedAt, lastSave: Date.now() 
   };
-  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  localStorage.setItem(getSaveKey(), JSON.stringify(data));
 }
 function loadProgress() {
-  const raw = localStorage.getItem(SAVE_KEY);
+  const raw = localStorage.getItem(getSaveKey());
   if(!raw) return;
   try {
     const d = JSON.parse(raw);
     Object.assign(me, d);
-    console.log('✅ Đã tải dữ liệu từ LocalStorage');
+    console.log(`✅ Đã tải dữ liệu cho ${me.id}`);
   } catch(e){ console.error('Lỗi load save', e); }
 }
 setInterval(saveProgress, 10000);
 window.addEventListener('beforeunload', saveProgress);
 
 // ── Boss System ──
-let bossState = { active: false, hp: 0, maxHp: 0, type: null, x: 0.5, y: 0.35, spawnTime: 0, duration: 180 }; // 3 phút
+let bossState = { active: false, hp: 0, maxHp: 0, type: null, x: 0.5, y: 0.35, spawnTime: 0, duration: 180 };
 let myLine = { active: false, tension: 0, dist: 1, knockedOut: false };
 let playerContribution = 0;
 
@@ -210,7 +235,7 @@ function spawnBoss() {
   if(bossState.active) return;
   const types = FISH.filter(f => f.boss);
   const type = types[Math.floor(Math.random()*types.length)];
-  const hp = Math.max(500, Math.round(type.base / 8000)); // HP scaling cho dame 1+lv
+  const hp = Math.max(500, Math.round(type.base / 8000));
   
   bossState = { active: true, hp: hp, maxHp: hp, type: type, x: 0.5, y: 0.35, spawnTime: Date.now(), duration: 180 };
   myLine = { active: true, tension: 0, dist: 1, knockedOut: false };
@@ -244,7 +269,7 @@ function succeedBossCatch() {
   saveProgress();
 }
 
-// ── Core Logic ──
+// ── Core Logic & UI ──
 function showCenterNotify(title, sub, isBoss=false) {
   const el = $('centerNotify');
   el.querySelector('.title').textContent = title;
@@ -254,7 +279,6 @@ function showCenterNotify(title, sub, isBoss=false) {
 }
 function toast(m){ const e=$('toast'); e.textContent=m; e.classList.add('show'); e.style.display='block'; clearTimeout(e._t); e._t=setTimeout(()=>{ e.classList.remove('show'); e.style.display='none'; },2600); }
 function setHint(m){ $('hint').textContent=m; $('hint').style.opacity=m?1:0; }
-function $(id){ return document.getElementById(id); }
 
 function checkLevelUp() {
   const oldLv = me.lv;
@@ -313,6 +337,7 @@ function checkExhaustion() {
 // ── Reel / Spam Logic ──
 const castBtn=$('castbtn'), powerEl=$('power'), reelBtn=$('reelbtn');
 let lastReelTime = 0; const REEL_COOLDOWN = 90;
+let curFish=null, curWeight=0;
 
 function handleReelTap(e) {
   if (checkExhaustion()) return;
@@ -321,7 +346,6 @@ function handleReelTap(e) {
   if (now - lastReelTime < REEL_COOLDOWN) return;
   lastReelTime = now;
 
-  // Nếu chưa có Boss hoặc dây đã đứt -> Bấm để nối lại (nếu đủ stamina)
   if (!bossState.active || !myLine.active) {
     if (bossState.active && me.stamina >= 50 && !myLine.knockedOut) {
       myLine.active = true; myLine.tension = 0; myLine.dist = 1;
@@ -340,13 +364,11 @@ function handleReelTap(e) {
   const slipChance = 0.05 + (bossState.type.power * 0.03) - (me.lv * 0.002);
 
   if (Math.random() < slipChance) {
-    // 💨 HỤT
     me.stamina -= 1;
     myLine.dist = Math.min(1, myLine.dist + 0.02);
     myLine.tension = Math.max(0, myLine.tension - 0.1);
     showCenterNotify("💨 HỤT!", "Cá giật mạnh làm tuột tay!", false);
   } else {
-    // ✅ THÀNH CÔNG
     myLine.dist = Math.max(0, myLine.dist - me.pullStrength);
     me.stamina -= staminaCost;
     myLine.tension += 0.04;
@@ -389,7 +411,6 @@ function doCast(){
     if(me.state!=='waiting') return;
     const fish = rollFish();
     if(!fish){ failCatch('Hụt! Không dính con nào.'); return; }
-    // Nếu câu trúng boss type -> kích hoạt boss global
     if(fish.boss) { spawnBoss(); me.state='idle'; castBtn.disabled=false; castBtn.textContent='🎣 THẢ CÂU'; return; }
     
     me.state='reeling'; curFish=fish; curWeight=rollWeight(fish);
@@ -397,7 +418,6 @@ function doCast(){
     setHint('⚡ SPAM NÚT KÉO!'); castBtn.disabled=false; castBtn.textContent='🎣 THẢ CÂU';
     $('fishhud').classList.add('show'); $('ftit').textContent=`${fish.emoji} ${fish.name}`;
     
-    // Mini boss logic (không shared, chỉ mình bạn)
     let miniHp = fish.base / 5000;
     const miniLoop = setInterval(()=>{
       if(me.state!=='reeling' || !myLine.active) { clearInterval(miniLoop); return; }
@@ -414,7 +434,6 @@ function doCast(){
     window._miniLoop = miniLoop;
   }, 1500 + Math.random()*2000);
 }
-let curFish=null, curWeight=0;
 function failCatch(msg){ me.state='idle'; myLine.active=false; $('fishhud').classList.remove('show'); castBtn.textContent='🎣 THẢ CÂU'; castBtn.disabled=false; showCenterNotify("😔 THẤT BẠI", msg, false); }
 
 // ── Game Loop & Drawing ──
@@ -422,7 +441,7 @@ const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 let W=960, H=540, DPR=1;
 let allowPortrait=false;
 function resize(){ const r=cv.getBoundingClientRect(); DPR=Math.min(window.devicePixelRatio||1,2); W=r.width||window.innerWidth; H=r.height||window.innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); checkOrientation(); }
-function checkOrientation(){ const portrait=window.innerHeight>window.innerWidth; const small=Math.min(window.innerWidth,window.innerHeight)<600; const ro=document.getElementById('rotate'); if(ro) ro.classList.toggle('show', portrait&&small&&!allowPortrait); }
+function checkOrientation(){ const portrait=window.innerHeight>window.innerWidth; const small=Math.min(window.innerWidth,window.innerHeight)<600; const ro=$('rotate'); if(ro) ro.classList.toggle('show', portrait&&small&&!allowPortrait); }
 window.addEventListener('resize',resize); window.addEventListener('orientationchange',()=>setTimeout(resize,200));
 const WATER_TOP=0.10;
 const ambientFish=[]; for(let i=0;i<10;i++){ ambientFish.push({ x:Math.random(), y:WATER_TOP+0.15+Math.random()*0.7, sp:(0.02+Math.random()*0.05)*(Math.random()<0.5?-1:1), sz:8+Math.random()*22, col:FISH[Math.floor(Math.random()*3)].col, ph:Math.random()*7 }); }
@@ -456,15 +475,12 @@ function loop(now){
   checkExhaustion(); 
   if(!me.exhaustedAt && me.state==='idle') me.stamina=Math.min(me.staminaMax, me.stamina+40*dt); 
   
-  // Boss Timer
   if(bossState.active) {
     const elapsed = (Date.now() - bossState.spawnTime)/1000;
     const rem = Math.max(0, bossState.duration - elapsed);
     const m = Math.floor(rem/60), s = Math.floor(rem%60);
     $('bossTimer').textContent = `⏳ Boss: ${m}:${s.toString().padStart(2,'0')}`;
     if(rem <= 0) bossEscaped();
-    
-    // Passive line tension/distance
     if(myLine.active) {
       const passivePull = 0.03 * (bossState.type.power / 4) * dt;
       myLine.dist = Math.min(1, myLine.dist + passivePull);
@@ -491,32 +507,24 @@ function drawScene(t){
 
 function drawBossAndRopes(t){
   if(!bossState.active || !bossState.type) return;
-  const bx = bossState.x * W;
-  const by = bossState.y * H;
-  // Boss scale theo power & base value
+  const bx = bossState.x * W, by = bossState.y * H;
   const bossLen = Math.min(W, H) * (0.35 + bossState.type.power * 0.05);
   const shakeX = (Math.random()-0.5) * (bossState.hp < bossState.maxHp * 0.3 ? 8 : 1.5);
   
   drawFishShape(bx + shakeX, by, bossLen, -1, bossState.type.col, 1, t*0.6, true);
-  
-  // HP Bar
   ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(bx - 80, by - bossLen/2 - 35, 160, 16);
   ctx.fillStyle = '#ff3333'; ctx.fillRect(bx - 80, by - bossLen/2 - 35, 160 * (bossState.hp / bossState.maxHp), 16);
   ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center'; 
   ctx.fillText(`HP: ${Math.round(bossState.hp)}/${Math.round(bossState.maxHp)}`, bx, by - bossLen/2 - 40);
 
-  // Draw Player & Rope
   const mp = anglerPos(me.x);
   const tip = drawAngler(mp.px, mp.py, 0.9, {lv:me.lv,name:me.name,state:myLine.active?'reeling':'idle'}, true, t);
   myTip = tip;
-  
   if(myLine.active) {
     ctx.strokeStyle = '#00ffaa'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
     ctx.beginPath(); ctx.moveTo(tip.rx, tip.ry); 
-    // Dây cong nhẹ về phía boss
     const midX = (tip.rx + bx)/2, midY = (tip.ry + by)/2 + 20;
-    ctx.quadraticCurveTo(midX, midY, bx, by); 
-    ctx.stroke();
+    ctx.quadraticCurveTo(midX, midY, bx, by); ctx.stroke();
   }
 }
 
@@ -537,9 +545,7 @@ function drawAngler(px,py,scale,info,isMe,t){
   const rodLen=45*S; const baseAng=-0.9+rodBend*0.5; 
   const tipX=handX+Math.cos(baseAng)*rodLen; const tipY=handY+Math.sin(baseAng)*rodLen; 
   ctx.strokeStyle='#caa46a'; ctx.lineWidth=2*S; ctx.beginPath(); ctx.moveTo(handX,handY); ctx.lineTo(tipX,tipY); ctx.stroke(); 
-  ctx.restore(); 
-  ctx.restore(); 
-  // Label
+  ctx.restore(); ctx.restore(); 
   ctx.save(); ctx.translate(px,py-55*S); ctx.font=`700 10px 'Be Vietnam Pro'`; 
   const label=`Lv${info.lv} ${info.name}`; const w=ctx.measureText(label).width+12; 
   ctx.fillStyle=isMe?'rgba(20,90,150,0.85)':'rgba(8,24,40,0.8)'; ctx.strokeStyle=isMe?'#5fd0ff':'#2f5a7d'; ctx.lineWidth=1; 
@@ -554,9 +560,8 @@ let shakeAmt=0; function shake(a){ shakeAmt=Math.max(shakeAmt,a); }
 function lerp(a,b,k){return a+(b-a)*k;} function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function applyShake(){ if(shakeAmt>0.2){ const ox=(Math.random()-0.5)*shakeAmt, oy=(Math.random()-0.5)*shakeAmt; ctx.setTransform(DPR,0,0,DPR,ox*DPR,oy*DPR); shakeAmt*=0.85; } else { ctx.setTransform(DPR,0,0,DPR,0,0); shakeAmt=0; } }
 
-// ── UI & Init ──
+// ── UI & Chat ──
 const chatlog=$('chatlog'); function addChatLine(who,text,sys){ const d=document.createElement('div'); if(sys){ d.className='sys'; d.textContent='⚙️ '+text; } else d.innerHTML=`<span class="who">${esc(who)}:</span> ${esc(text)}`; chatlog.appendChild(d); while(chatlog.children.length>40) chatlog.removeChild(chatlog.firstChild); chatlog.scrollTop=chatlog.scrollHeight; }
-function redrawChat(arr){ chatlog.innerHTML=''; arr.forEach(m=>addChatLine(m.who,m.text)); }
 function esc(s){ return (s+'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
 $('chatsend').addEventListener('click',()=>{ const v=$('chatinput').value.trim(); if(!v)return; $('chatinput').value=''; addChatLine(me.name,v); }); 
 $('chatinput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('chatsend').click(); });
@@ -565,14 +570,64 @@ $('btnSpawnBoss').addEventListener('click', ()=> spawnBoss());
 castBtn.addEventListener('mousedown',pressStart); castBtn.addEventListener('mouseup',pressEnd); castBtn.addEventListener('mouseleave',()=>{ if(me.state==='charging')pressEnd(); }); 
 castBtn.addEventListener('touchstart',e=>{e.preventDefault();pressStart();},{passive:false}); castBtn.addEventListener('touchend',e=>{e.preventDefault();pressEnd();},{passive:false});
 
+// ════════════════════════════════════════════════════════════
+// 🔐 LOGIN SYSTEM & INIT
+// ════════════════════════════════════════════════════════════
+let _pendingToken=null, _pendingSession=null;
+
+async function tryLogin(){ 
+  const pw=($('loginpw').value||'').trim().toUpperCase(); 
+  $('loginerr').textContent=''; 
+  if(!_pendingSession){ $('loginerr').textContent='Phiên không hợp lệ.'; return; } 
+  // ✅ Kiểm tra mật khẩu (Khớp với bot gửi DM)
+  if(pw!==String(_pendingSession.password||'123456').toUpperCase()){ 
+    $('loginerr').textContent='❌ Sai mật khẩu!'; return; 
+  } 
+  $('loginbtn').disabled=true; $('loginbtn').textContent='Đang vào...'; 
+  try{ 
+    me.id = _pendingSession.userId || 'user_' + (_pendingToken||'').slice(0,8);
+    me.name = _pendingSession.username || 'Người chơi';
+    $('login').classList.remove('show'); 
+    addChatLine('','✅ Đăng nhập thành công! Dữ liệu sẽ được lưu tự động.',true); 
+    loadProgress(); 
+    updateHUD(); 
+    setHint('SPAM NÚT KÉO khi Boss xuất hiện!'); 
+    requestAnimationFrame(loop);
+  }catch(e){ 
+    $('loginerr').textContent='❌ '+(e.message||e); 
+    $('loginbtn').disabled=false; $('loginbtn').textContent='Vào Game'; 
+  } 
+}
+
+$('loginbtn').addEventListener('click',tryLogin); 
+$('loginpw').addEventListener('keydown',e=>{ if(e.key==='Enter')tryLogin(); });
+
 // INIT
-me.name = localStorage.getItem('player_name') || 'Bạn'+Math.floor(Math.random()*900+100);
+me.name = localStorage.getItem('player_name') || 'Khách_'+Math.floor(Math.random()*900+100);
 localStorage.setItem('player_name', me.name);
 resize();
-loadProgress(); // ✅ Tải dữ liệu đã lưu
-updateHUD();
-setHint('Nhấn giữ THẢ CÂU để lấy lực!');
-requestAnimationFrame(loop);
+
+const _token=new URLSearchParams(location.search).get('t');
+if(_token){
+  // Chế độ có Token (như từ Discord Bot)
+  $('login').classList.add('show');
+  // Giả lập session để test (Thực tế bot sẽ ghi session vào Firebase/Server)
+  _pendingToken = _token;
+  _pendingSession = { 
+    userId: 'player_' + _token.slice(0,6), 
+    username: 'Angler_' + Math.floor(Math.random()*100), 
+    password: '123456' // 🔑 Mật khẩu mặc định để test
+  };
+  $('logininfo').textContent = `Xin chào ${_pendingSession.username}! Nhập mật khẩu từ DM Discord.`;
+  $('loginpw').focus();
+} else {
+  // Chế độ Khách (Không có token)
+  me.id = 'guest_' + Math.floor(Math.random()*10000);
+  loadProgress();
+  updateHUD();
+  setHint('Nhấn giữ THẢ CÂU để lấy lực!');
+  requestAnimationFrame(loop);
+}
 </script>
 </body>
 </html>
