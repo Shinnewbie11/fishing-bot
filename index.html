@@ -570,63 +570,112 @@ $('btnSpawnBoss').addEventListener('click', ()=> spawnBoss());
 castBtn.addEventListener('mousedown',pressStart); castBtn.addEventListener('mouseup',pressEnd); castBtn.addEventListener('mouseleave',()=>{ if(me.state==='charging')pressEnd(); }); 
 castBtn.addEventListener('touchstart',e=>{e.preventDefault();pressStart();},{passive:false}); castBtn.addEventListener('touchend',e=>{e.preventDefault();pressEnd();},{passive:false});
 
-// 🔐 LOGIN SYSTEM & INIT  <-- 👉 BẮT ĐẦU TỪ ĐÂY
 // ════════════════════════════════════════════════════════════
-let _pendingToken=null, _pendingSession=null;
+// 🔐 LOGIN SYSTEM & INIT (ĐỒNG BỘ VỚI FIREBASE)
+// ════════════════════════════════════════════════════════════
+
+// Cấu hình Firebase (PHẢI GIỐNG HỆT TRONG FISHING.JS CỦA BOT)
+const FB_CONFIG = {
+  databaseURL: "https://fishing-bot-e8d42-default-rtdb.firebaseio.com",
+  // Các trường khác không cần thiết cho việc đọc session đơn giản
+};
+
+let _pendingToken = null;
+let _pendingSession = null;
 
 async function tryLogin(){ 
-  const pw=($('loginpw').value||'').trim().toUpperCase(); 
-  $('loginerr').textContent=''; 
-  if(!_pendingSession){ $('loginerr').textContent='Phiên không hợp lệ.'; return; } 
-  // ✅ Kiểm tra mật khẩu (Khớp với bot gửi DM)
-  if(pw!==String(_pendingSession.password||'123456').toUpperCase()){ 
-    $('loginerr').textContent='❌ Sai mật khẩu!'; return; 
+  const pwInput = $('loginpw').value;
+  const pwClean = pwInput.trim().toUpperCase(); 
+  
+  $('loginerr').textContent = ''; 
+  if(!_pendingSession){ 
+    $('loginerr').textContent = 'Lỗi: Không tìm thấy phiên đăng nhập.'; 
+    return; 
   } 
-  $('loginbtn').disabled=true; $('loginbtn').textContent='Đang vào...'; 
+  
+  const storedPw = String(_pendingSession.password || '').toUpperCase();
+
+  if(pwClean !== storedPw){ 
+    $('loginerr').textContent = '❌ Sai mật khẩu!'; 
+    console.log('Nhập:', pwClean, '| Đúng:', storedPw); // Debug
+    return; 
+  } 
+  
+  $('loginbtn').disabled=true; 
+  $('loginbtn').textContent='Đang vào...'; 
+  
   try{ 
-    me.id = _pendingSession.userId || 'user_' + (_pendingToken||'').slice(0,8);
-    me.name = _pendingSession.username || 'Người chơi';
+    me.id = _pendingSession.userId;
+    me.name = _pendingSession.username;
+    
     $('login').classList.remove('show'); 
-    addChatLine('','✅ Đăng nhập thành công! Dữ liệu sẽ được lưu tự động.',true); 
+    addChatLine('','✅ Đăng nhập thành công!',true); 
+    
     loadProgress(); 
     updateHUD(); 
     setHint('SPAM NÚT KÉO khi Boss xuất hiện!'); 
     requestAnimationFrame(loop);
-  }catch(e){ 
-    $('loginerr').textContent='❌ '+(e.message||e); 
-    $('loginbtn').disabled=false; $('loginbtn').textContent='Vào Game'; 
+  } catch(e){ 
+    $('loginerr').textContent='❌ Lỗi: ' + e.message; 
+    $('loginbtn').disabled=false; 
+    $('loginbtn').textContent='Vào Game'; 
   } 
 }
 
 $('loginbtn').addEventListener('click',tryLogin); 
 $('loginpw').addEventListener('keydown',e=>{ if(e.key==='Enter')tryLogin(); });
 
-// INIT
-me.name = localStorage.getItem('player_name') || 'Khách_'+Math.floor(Math.random()*900+100);
+// --- KHỞI TẠO GAME ---
+me.name = localStorage.getItem('player_name') || 'Khách';
 localStorage.setItem('player_name', me.name);
 resize();
 
-const _token=new URLSearchParams(location.search).get('t');
+const _token = new URLSearchParams(location.search).get('t');
+
 if(_token){
-  // Chế độ có Token (như từ Discord Bot)
+  // ✅ CHẾ ĐỘ CÓ TOKEN: KẾT NỐI FIREBASE ĐỂ LẤY PASSWORD THẬT
   $('login').classList.add('show');
-  // Giả lập session để test (Thực tế bot sẽ ghi session vào Firebase/Server)
+  $('logininfo').textContent = "Đang xác thực với Server...";
   _pendingToken = _token;
-  _pendingSession = { 
-    userId: 'player_' + _token.slice(0,6), 
-    username: 'Angler_' + Math.floor(Math.random()*100), 
-    password: '123456' // 🔑 Mật khẩu mặc định để test
-  };
-  $('logininfo').textContent = `Xin chào ${_pendingSession.username}! Nhập mật khẩu từ DM Discord.`;
-  $('loginpw').focus();
+
+  // Khởi tạo Firebase App
+  if (!firebase.apps.length) {
+      firebase.initializeApp(FB_CONFIG);
+  }
+  const db = firebase.database();
+
+  // Đọc session từ Firebase
+  db.ref(`sessions/${_token}`).once('value').then((snapshot) => {
+      const data = snapshot.val();
+      
+      if (data && data.secret === 'datBatKyChuan123') { // Kiểm tra secret khớp với bot
+          if (Date.now() < data.expiresAt) {
+              // Session hợp lệ
+              _pendingSession = {
+                  userId: data.userId,
+                  username: data.username,
+                  password: data.password // 👉 LẤY PASSWORD THẬT TỪ BOT
+              };
+              $('logininfo').innerHTML = `Xin chào <b>${data.username}</b>!<br>Nhập mật khẩu đã nhận qua DM Discord.`;
+              $('loginpw').focus();
+          } else {
+              $('logininfo').textContent = "Phiên đăng nhập đã hết hạn (10 phút). Hãy gõ lại tcauonline trên Discord.";
+              $('loginbtn').style.display = 'none';
+          }
+      } else {
+          $('logininfo').textContent = "Token không hợp lệ hoặc sai Secret Key.";
+          $('loginbtn').style.display = 'none';
+      }
+  }).catch((error) => {
+      console.error(error);
+      $('logininfo').textContent = "Lỗi kết nối Server. Vui lòng thử lại sau.";
+  });
+
 } else {
-  // Chế độ Khách (Không có token)
+  // ✅ CHẾ ĐỘ KHÁCH
   me.id = 'guest_' + Math.floor(Math.random()*10000);
   loadProgress();
   updateHUD();
   setHint('Nhấn giữ THẢ CÂU để lấy lực!');
   requestAnimationFrame(loop);
 }
-</script>
-</body>
-</html>
