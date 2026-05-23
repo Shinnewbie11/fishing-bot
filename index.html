@@ -448,31 +448,55 @@ function handleReelTap(e) {
     if (me.state !== 'reeling' && me.state !== 'biting') return;
     if (checkExhaustion()) return;
     e.preventDefault();
+
     const now = Date.now();
     if (now - lastReelTime < REEL_COOLDOWN) return;
     lastReelTime = now;
+
+    // Hiệu ứng nút lún
     reelBtn.style.transform = 'scale(0.92)';
     setTimeout(() => reelBtn.style.transform = 'scale(1)', 50);
 
     if (me.state === 'biting') { clearTimeout(biteTimer); startReel(); return; }
 
-    const pullAmount = me.pullStrength; 
-   const staminaCost = 6 + (curFish.power * 2) + me.lv; // Giảm 1 nửa
-    
-    // ── CƠ CHẾ KÉO HỤT (TRỪ THỂ LỰC NHƯNG KHÔNG LÊN CÁ) ──
-    // Tỷ lệ trượt: Cá càng to (power cao) thì trượt càng nhiều. Level cao thì giảm trượt.
-    const slipChance = 0.05 + (curFish.power * 0.03) - (me.lv * 0.002); 
-    
+    // ✅ CỐ ĐỊNH: Mỗi lần bấm thành công tốn đúng 2 thể lực
+    const staminaCost = 2;
+    const pullAmount = me.pullStrength; // Lực kéo cá về (giảm khoảng cách)
+
+    // ── CƠ CHẾ KÉO HỤT ──
+    const slipChance = 0.05 + (curFish.power * 0.03) - (me.lv * 0.002);
+
     if (Math.random() < slipChance) {
-        // 💨 KÉO HỤT: Tốn 80% thể lực, cá không lên mà còn lùi nhẹ 1 chút
-        me.stamina -= Math.round(staminaCost * 0.8); 
-        fishDist = Math.min(1, fishDist + 0.015); 
+        // 💨 KÉO HỤT: Tốn 1 thể lực (nhẹ hơn), cá lùi nhẹ
+        me.stamina -= 1;
+        fishDist = Math.min(1, fishDist + 0.015);
         showCenterNotify("💨 HỤT!", "Cá giật mạnh làm tuột tay!", false);
     } else {
         // ✅ KÉO THÀNH CÔNG
         fishDist = Math.max(0, fishDist - pullAmount);
-        me.stamina -= staminaCost;
-        tension += 0.06 + (curFish.power * 0.02);
+        me.stamina -= staminaCost; // Trừ đúng 2
+        tension += 0.04 + (curFish.power * 0.015); // Giảm nhẹ độ tăng dây căng cho cân bằng
+
+        // 🔥 DAMAGE GÂY RA CHO CÁ/BOSS MỖI LẦN BẤM
+        // Bạn có thể chỉnh 2 số này để tăng/giảm dame:
+        const baseDamage = 60;      // Dame cơ bản mỗi lần bấm
+        const lvBonus = 12;         // Dame cộng thêm mỗi level
+        const damagePerTap = baseDamage + (me.lv * lvBonus);
+
+        // Nếu đang câu Boss -> trừ máu boss chung
+        if (bossState.active && curFish.boss) {
+            bossState.hp = Math.max(0, bossState.hp - damagePerTap);
+            playerContribution += damagePerTap;
+
+            // Đồng bộ lên Firebase để mọi người thấy máu giảm realtime
+            if (net.mode === 'fb' && net._fb) {
+                net._fb.m.update(net._fb.m.ref(net._fb.db, `${net._fb.base}/worldBoss`), {
+                    hp: bossState.hp
+                }).catch(err => console.log("Sync boss HP lỗi:", err));
+            }
+
+            if (bossState.hp <= 0) succeedCatch();
+        }
     }
 
     checkExhaustion();
