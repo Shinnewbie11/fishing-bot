@@ -228,8 +228,10 @@ let myBossContribution=0;                                // dmg tôi đóng góp
 let curFish=null, curFishWeight=0, fishHP=0, fishMaxHP=0;
 
 let db=null, _online=false, _token=null;
-let otherPlayers=[];          // những người đang online (hiện trên bờ): {id,name,lv}
+let otherPlayers=[];          // những người đang online (hiện trên bờ): {id,name,lv,act}
 let presenceRef=null;
+let myBankTip=null;           // toạ độ đầu cần của nhân vật mình (để nối dây tới boss/cá)
+let _lastAct='idle';          // trạng thái hành động gần nhất (để đồng bộ presence)
 
 /* ════════════════════════════════════════════════════════════
    THÔNG BÁO / UI CHUNG
@@ -435,14 +437,27 @@ function spawnBoss(forceId){
   }
 }
 
+// Trạng thái hành động hiện tại của mình (để người khác thấy mình đang quăng/kéo/đấu boss)
+function currentAct(){
+  if(bossState.active&&myLine.engaged)return 'boss';
+  if(bossState.active)return 'bossIdle';
+  if(me.state==='charging')return 'cast';
+  if(me.state==='waiting')return 'wait';
+  if(me.state==='reeling')return 'reel';
+  return 'idle';
+}
+function pushPresence(){
+  if(!presenceRef)return;
+  presenceRef.set({id:me.id,name:me.name,lv:me.lv,act:_lastAct,t:Date.now()}).catch(()=>{});
+}
 // Đồng bộ "ai đang online" qua Firebase node presence/{id}
 function setupPresence(){
   if(!db||!_online)return;
   presenceRef=db.ref('presence/'+me.id);
   presenceRef.onDisconnect().remove();   // tự xoá khi đóng game/mất mạng
-  const push=()=>presenceRef.set({id:me.id,name:me.name,lv:me.lv,t:Date.now()}).catch(()=>{});
-  push();
-  setInterval(push,20000);               // nhịp tim mỗi 20s để giữ "còn online"
+  _lastAct=currentAct();
+  pushPresence();
+  setInterval(pushPresence,20000);        // nhịp tim mỗi 20s để giữ "còn online"
   db.ref('presence').on('value',snap=>{
     const v=snap.val()||{};
     const now=Date.now();
@@ -450,7 +465,7 @@ function setupPresence(){
     for(const [id,p] of Object.entries(v)){
       if(!p)continue;
       if(now-(p.t||0)>70000)continue;     // quá 70s không nhịp tim → coi như offline
-      arr.push({id:String(id),name:p.name||'?',lv:p.lv||1});
+      arr.push({id:String(id),name:p.name||'?',lv:p.lv||1,act:p.act||'idle'});
     }
     // đưa mình lên đầu danh sách cho dễ thấy
     arr.sort((a,b)=>(a.id===me.id?-1:b.id===me.id?1:0));
@@ -631,6 +646,8 @@ function loop(now){
   let dt=(now-lastT)/1000;lastT=now;dt=Math.min(dt,0.05);
   const t=now*0.001;
   checkExhaustion();
+  // Đồng bộ trạng thái hành động cho người khác thấy (chỉ ghi khi đổi trạng thái)
+  if(_online){const a=currentAct();if(a!==_lastAct){_lastAct=a;pushPresence();}}
   // Thể lực KHÔNG tự hồi. Chỉ hồi đầy 100% sau khi cạn (0) và chờ đủ 5 phút (xử lý ở checkExhaustion).
 
   if(bossState.active){
@@ -692,54 +709,134 @@ function drawBank(t){
   ctx.stroke();
 
   // nhân vật: nếu chưa có presence thì hiện chính mình
-  const list=otherPlayers.length?otherPlayers:[{id:me.id,name:me.name,lv:me.lv}];
+  const list=otherPlayers.length?otherPlayers:[{id:me.id,name:me.name,lv:me.lv,act:currentAct()}];
   const maxShow=Math.min(list.length,8);
   const cols=Math.min(maxShow,4)||1;
   const usable=bankRight-30;
   const stepX=usable/cols;
   const baseY=bankTop+H*0.075;
+  myBankTip=null;
   for(let i=0;i<maxShow;i++){
     const row=Math.floor(i/4), col=i%4;
     const px=20+col*stepX+stepX*0.5;
     const py=baseY+row*H*0.05;
     const zig=(i%2)?6:0;  // so le nhãn để bớt chồng
-    drawBankCharacter(px,py,row?0.55:0.65,list[i],list[i].id===me.id,t+i,zig);
+    const isMe=list[i].id===me.id;
+    const act=isMe?currentAct():(list[i].act||'idle');
+    const tip=drawBankCharacter(px,py,row?0.55:0.65,list[i],isMe,t+i,zig,act);
+    if(isMe)myBankTip=tip;
   }
   if(list.length>maxShow){
     ctx.fillStyle='#fff'; ctx.font='700 10px Be Vietnam Pro'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
     ctx.fillText('+'+(list.length-maxShow)+' người đang câu...',20,baseY+H*0.115);
   }
+
+  // ── Cá thường đang được KÉO VỀ phía nhân vật mình ──
+  if(me.state==='reeling'&&curFish&&myBankTip){
+    const pct=fishMaxHP?clamp(1-fishHP/fishMaxHP,0,1):0;
+    const farX=myBankTip.rx+W*0.10, farY=H*0.55;
+    const fx=lerp(farX,myBankTip.rx,pct);            // càng kéo, cá càng về gần
+    const fy=lerp(farY,myBankTip.ry+12*0.65,pct);
+    ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.lineWidth=1.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(myBankTip.rx,myBankTip.ry);
+    ctx.quadraticCurveTo((myBankTip.rx+fx)/2,(myBankTip.ry+fy)/2+12,fx,fy); ctx.stroke();
+    const wob=Math.sin(t*10)*4;                       // cá vùng vẫy
+    drawFishShape(fx,fy+wob,9+pct*7,-1,curFish.col,0.95,t*4);
+  }
 }
 
-function drawBankCharacter(px,py,s,p,isMe,t,zig){
-  py+=Math.sin(t*2)*1.4*s;       // nhún nhẹ
+function drawBankCharacter(px,py,s,p,isMe,t,zig,act){
+  const ph=t;
+  let lean=0, rodAng=-0.95, shift=0, bob=Math.sin(ph*2)*1.4*s;
+  if(act==='cast'){              // quăng cần: ngả ra sau, cần vung ngược
+    rodAng=-2.2; lean=-0.22;
+  }else if(act==='wait'){        // chờ cá: cần chĩa ra mặt nước
+    rodAng=-0.5; lean=0.05+Math.sin(ph*1.5)*0.03;
+  }else if(act==='reel'){        // kéo cá: nhịp giật cần
+    const c=Math.sin(ph*9);
+    rodAng=-0.72+c*0.38; lean=0.13+c*0.12; shift=c*1.6*s;
+  }else if(act==='boss'){        // đấu boss: GIẰNG CO
+    const j=Math.sin(ph*4);      // j>0: mình kéo về (ngả sau) | j<0: boss kéo ra (chúi tới)
+    rodAng=-0.9+(-j)*0.5; lean=-0.18-j*0.2; shift=-j*4*s;
+  }else if(act==='bossIdle'){
+    lean=0.04+Math.sin(ph*2)*0.03; rodAng=-0.7;
+  }else{                         // idle
+    lean=Math.sin(ph*1.6)*0.03;
+  }
+
   ctx.save();
+  // bóng
   ctx.fillStyle='rgba(0,0,0,0.25)';
   ctx.beginPath(); ctx.ellipse(px,py+2,9*s,3*s,0,0,7); ctx.fill();
+
+  // thân (xoay quanh chân)
+  const ang=lean*0.4;
+  ctx.save();
+  ctx.translate(px+shift,py-bob);
+  ctx.rotate(ang);
   const body=isMe?'#2cc6ff':'#c98b52';
-  ctx.fillStyle=body; ctx.fillRect(px-4*s,py-18*s,8*s,18*s);          // thân
+  ctx.fillStyle=body; ctx.fillRect(-4*s,-18*s,8*s,18*s);              // thân
   ctx.fillStyle=isMe?'#ffe1a6':'#ffe0b2';
-  ctx.beginPath(); ctx.arc(px,py-24*s,6*s,0,7); ctx.fill();           // đầu
+  ctx.beginPath(); ctx.arc(0,-24*s,6*s,0,7); ctx.fill();             // đầu
   ctx.fillStyle=isMe?'#1f6dad':'#6b4a2a';
-  ctx.beginPath(); ctx.arc(px,py-26*s,7*s,Math.PI,0); ctx.fill();      // nón
-  ctx.strokeStyle='#caa46a'; ctx.lineWidth=2*s; ctx.lineCap='round';   // cần
-  ctx.beginPath(); ctx.moveTo(px+3*s,py-12*s); ctx.lineTo(px+22*s,py-30*s); ctx.stroke();
-  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1;            // dây
-  ctx.beginPath(); ctx.moveTo(px+22*s,py-30*s); ctx.lineTo(px+27*s,py+8*s); ctx.stroke();
-  // ID Discord trên đầu
-  const label=String(p.id);
-  ctx.font='700 8px Be Vietnam Pro';
+  ctx.beginPath(); ctx.arc(0,-26*s,7*s,Math.PI,0); ctx.fill();        // nón
+  // tay + cần
+  const handX=4*s, handY=-15*s, rodLen=26*s;
+  const tx=handX+Math.cos(rodAng)*rodLen, ty=handY+Math.sin(rodAng)*rodLen;
+  ctx.strokeStyle=body; ctx.lineWidth=2.5*s; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-1*s,-13*s); ctx.lineTo(handX,handY); ctx.stroke();   // cánh tay
+  ctx.strokeStyle='#caa46a'; ctx.lineWidth=2*s;
+  ctx.beginPath(); ctx.moveTo(handX,handY); ctx.lineTo(tx,ty); ctx.stroke();        // cần
+  ctx.restore();
+
+  // toạ độ đầu cần trong hệ thế giới (áp lại phép quay/dời)
+  const cos=Math.cos(ang), sn=Math.sin(ang);
+  const rx=(px+shift)+tx*cos-ty*sn;
+  const ry=(py-bob)+tx*sn+ty*cos;
+
+  // tên Discord trên đầu
+  let label=String(p.name||'?'); if(label.length>14)label=label.slice(0,13)+'…';
+  ctx.font='700 9px Be Vietnam Pro';
   const w=ctx.measureText(label).width+8;
-  const ly=py-40*s-zig;
+  const ly=py-bob-42*s-zig;
   ctx.fillStyle=isMe?'rgba(20,90,150,0.92)':'rgba(8,24,40,0.85)';
   ctx.strokeStyle=isMe?'#5fd0ff':'#2f5a7d'; ctx.lineWidth=1;
-  roundRect(px-w/2,ly,w,12,6); ctx.fill(); ctx.stroke();
+  roundRect(px-w/2,ly,w,13,6); ctx.fill(); ctx.stroke();
   ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(label,px,ly+6);
+  ctx.fillText(label,px,ly+7);
   ctx.restore();
+  return {rx,ry};
 }
 
-function drawBossAndRopes(t){if(!bossState.active||!bossState.type)return;const bx=bossState.x*W,by=bossState.y*H;const bossLen=Math.min(W,H)*(0.30+bossState.type.power*0.045);const shakeX=(Math.random()-0.5)*(bossState.hp<bossState.maxHp*0.3?8:1.5);drawFishShape(bx+shakeX,by,bossLen,-1,bossState.type.col,1,t*0.6,true);const bw=Math.min(W*0.55,180);ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw,15);ctx.fillStyle='#ff3333';ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw*(bossState.hp/bossState.maxHp),15);ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.textAlign='center';ctx.fillText(`❤️ ${fmtN(bossState.hp)}/${fmtN(bossState.maxHp)}`,bx,by-bossLen/2-39);const mp=anglerPos(me.x);const tip=drawAngler(mp.px,mp.py,0.9,{lv:me.lv,name:me.name,state:myLine.engaged?'reeling':'idle'},true,t);myTip=tip;if(myLine.engaged){ctx.strokeStyle='#00ffaa';ctx.lineWidth=2.5;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(tip.rx,tip.ry);const midX=(tip.rx+bx)/2,midY=(tip.ry+by)/2+20;ctx.quadraticCurveTo(midX,midY,bx,by);ctx.stroke();}}
+function drawBossAndRopes(t){
+  if(!bossState.active||!bossState.type)return;
+  let bx=bossState.x*W, by=bossState.y*H;
+  const bossLen=Math.min(W,H)*(0.30+bossState.type.power*0.045);
+  // GIẰNG CO khi mình đang đấu: tug>0 mình kéo boss về | tug<0 boss vùng ra
+  let tug=0;
+  if(myLine.engaged){ tug=Math.sin(t*4); bx+=-tug*W*0.025; by+=Math.abs(tug)*6; }
+  const lowHp=bossState.hp<bossState.maxHp*0.3;
+  const shakeX=(Math.random()-0.5)*(lowHp?8:1.5);
+  drawFishShape(bx+shakeX,by,bossLen,-1,bossState.type.col,1,t*0.6,true);
+  // thanh máu
+  const bw=Math.min(W*0.55,180);
+  ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw,15);
+  ctx.fillStyle='#ff3333'; ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw*(bossState.hp/bossState.maxHp),15);
+  ctx.fillStyle='#fff'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+  ctx.fillText(`❤️ ${fmtN(bossState.hp)}/${fmtN(bossState.maxHp)}`,bx,by-bossLen/2-39);
+  // dây câu từ nhân vật mình trên bờ → boss, giật theo nhịp giằng co
+  if(myLine.engaged&&myBankTip){
+    ctx.strokeStyle = tug>0 ? '#00ffaa' : '#ffd23f';   // xanh: mình kéo về | vàng: boss kéo ra
+    ctx.lineWidth = 2+Math.abs(tug)*2.2; ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(myBankTip.rx,myBankTip.ry);
+    const midX=(myBankTip.rx+bx)/2, midY=(myBankTip.ry+by)/2 - tug*16;  // dây bật lên/xuống
+    ctx.quadraticCurveTo(midX,midY,bx,by-bossLen*0.08);
+    ctx.stroke();
+    if(tug<-0.85) emitSplash(bx,by,2,1.6);             // boss quẫy bắn nước
+    myTip=myBankTip;
+  }
+}
 
 function drawAngler(px,py,scale,info,isMe,t){const S=scale;let lean=0,rodBend=0,armUp=0;if(info.state==='reeling'){const cycle=Math.sin(t*8);lean=-0.15+cycle*0.1;armUp=0.4+cycle*0.3;rodBend=0.4;}const totalLean=lean;ctx.save();ctx.translate(px,py);ctx.fillStyle='rgba(0,0,0,0.28)';ctx.beginPath();ctx.ellipse(0,4*S,14*S,4*S,0,0,7);ctx.fill();ctx.save();ctx.rotate(totalLean*0.3);const body=isMe?'#1b2a3a':'#26323f';ctx.fillStyle=body;ctx.fillRect(-6*S,-16*S,4*S,18*S);ctx.fillRect(2*S,-16*S,4*S,18*S);ctx.beginPath();ctx.moveTo(-8*S,-34*S);ctx.lineTo(8*S,-34*S);ctx.lineTo(7*S,-14*S);ctx.lineTo(-7*S,-14*S);ctx.closePath();ctx.fill();ctx.beginPath();ctx.arc(0,-40*S,7*S,0,7);ctx.fill();ctx.fillStyle=isMe?'#0e1620':'#161e27';ctx.beginPath();ctx.arc(0,-42*S,8*S,Math.PI,0);ctx.fill();const shoulderX=3*S,shoulderY=-32*S;const handX=shoulderX+(7+armUp*3)*S,handY=shoulderY+(6-armUp*8)*S;ctx.lineWidth=3*S;ctx.strokeStyle=body;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(shoulderX,shoulderY);ctx.lineTo(handX,handY);ctx.stroke();const rodLen=45*S;const baseAng=-0.9+rodBend*0.5;const tipX=handX+Math.cos(baseAng)*rodLen;const tipY=handY+Math.sin(baseAng)*rodLen;ctx.strokeStyle='#caa46a';ctx.lineWidth=2*S;ctx.beginPath();ctx.moveTo(handX,handY);ctx.lineTo(tipX,tipY);ctx.stroke();ctx.restore();ctx.restore();ctx.save();ctx.translate(px,py-55*S);ctx.font=`700 10px 'Be Vietnam Pro'`;const label=`Lv${info.lv} ${info.name}`;const w=ctx.measureText(label).width+12;ctx.fillStyle=isMe?'rgba(20,90,150,0.85)':'rgba(8,24,40,0.8)';ctx.strokeStyle=isMe?'#5fd0ff':'#2f5a7d';ctx.lineWidth=1;roundRect(-w/2,-8,w,16,8);ctx.fill();ctx.stroke();ctx.fillStyle=isMe?'#fff':'#cfe6f7';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0);ctx.restore();return{rx:tipX,ry:tipY};}
 
