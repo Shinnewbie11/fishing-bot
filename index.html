@@ -6,14 +6,16 @@
 <title>🎣 Câu Cá Online 2D</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* ... (giữ nguyên CSS như file gốc) ... */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;width:100%;background:#04121f;font-family:'Be Vietnam Pro',sans-serif;overflow:hidden;color:#fff;user-select:none;position:fixed;inset:0;touch-action:none;overscroll-behavior:none}
 #wrap{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#04121f;overflow:hidden}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
-/* ... CSS còn lại giữ nguyên ... */
+
+/* ── HUD chung ── */
 .hud{position:absolute;pointer-events:none;z-index:5}
 .hud *{pointer-events:auto}
+
+/* Góc trên trái: info người chơi */
 #pinfo{top:10px;left:10px;display:flex;gap:8px;align-items:flex-start}
 #avatar{width:46px;height:46px;border-radius:8px;background:linear-gradient(135deg,#2a4d6e,#16344f);border:2px solid #5fd0ff;display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto}
 #pstats{font-size:11px;line-height:1.5}
@@ -24,19 +26,27 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 #xpfill{background:linear-gradient(90deg,#3a9bff,#73d2ff)}
 #stamfill{background:linear-gradient(90deg,#ff8a2a,#ffd23f)}
 #pstats small{color:#bcd6ec;font-size:9px}
+
+/* Góc trên phải: xu + nút */
 #topright{top:10px;right:10px;display:flex;align-items:center;gap:8px}
 #coins{background:rgba(8,24,40,.85);border:1px solid #ffd23f;border-radius:18px;padding:5px 12px 5px 8px;font-weight:800;color:#ffd23f;font-size:13px;display:flex;align-items:center;gap:5px}
 .icobtn{width:34px;height:34px;border-radius:50%;background:rgba(8,24,40,.85);border:1px solid #2f5a7d;color:#bcd6ec;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
 .icobtn:hover{border-color:#5fd0ff;color:#5fd0ff;transform:scale(1.08)}
+
+/* Giữa trên: thông tin con cá đang câu / boss */
 #fishhud{top:8px;left:50%;transform:translateX(-50%);text-align:center;opacity:0;transition:.3s}
 #fishhud.show{opacity:1}
 #fishhud .ftit{font-weight:800;font-size:13px;color:#ff7a7a;text-shadow:1px 1px 2px #000}
 #fishbar{width:230px;height:13px;background:rgba(0,0,0,.6);border:1px solid #ff7a7a;border-radius:7px;overflow:hidden;margin:3px auto 0;position:relative}
 #fishbar > i{position:absolute;inset:0;background:linear-gradient(90deg,#c0392b,#ff5a5a);border-radius:7px;transition:width .15s}
 #fishbar span{position:absolute;inset:0;font-size:9px;line-height:13px;text-align:center;font-weight:800;text-shadow:1px 1px 1px #000}
+
+/* Online indicator */
 #netstat{position:absolute;top:52px;right:10px;font-size:10px;background:rgba(8,24,40,.85);padding:4px 9px;border-radius:12px;border:1px solid #2f5a7d;color:#9fc;display:flex;align-items:center;gap:5px;z-index:5}
 #netstat .dot{width:8px;height:8px;border-radius:50%;background:#ffb02a;box-shadow:0 0 6px #ffb02a}
 #netstat.live .dot{background:#37e07a;box-shadow:0 0 6px #37e07a}
+
+/* Chat dưới trái */
 #chatbox{bottom:88px;left:10px;width:250px;max-width:46%;z-index:5}
 #chatlog{max-height:118px;overflow-y:auto;font-size:11px;line-height:1.5;display:flex;flex-direction:column;justify-content:flex-end;mask-image:linear-gradient(to top,#000 70%,transparent)}
 #chatlog::-webkit-scrollbar{width:0}
@@ -47,19 +57,29 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 #chatinput{flex:1;background:rgba(4,16,28,.9);border:1px solid #2f5a7d;border-radius:14px;padding:6px 11px;color:#fff;font-size:11px;font-family:inherit;outline:none}
 #chatinput:focus{border-color:#5fd0ff}
 #chatsend{background:#1f6dad;border:none;border-radius:14px;padding:0 12px;color:#fff;font-size:13px;cursor:pointer}
+
+/* Nút reel góc phải dưới + chiều dài cáp */
 #reelarea{bottom:14px;right:14px;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:6}
 #reelbtn{width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#3a3f48,#15181d);border:4px solid #4a525c;color:#dfe8f0;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.6);position:relative;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.15;transition:.1s}
 #reelbtn:active{transform:scale(.94)}
 #reelbtn .spokes{position:absolute;inset:8px;border-radius:50%;border:2px dashed #6a727c}
 #reeldepth{font-size:10px;color:#bcd6ec;background:rgba(8,24,40,.8);padding:3px 9px;border-radius:10px;border:1px solid #2f5a7d}
+
+/* Nút cast chính giữa dưới */
 #castbtn{bottom:24px;left:50%;transform:translateX(-50%);padding:15px 40px;border:none;border-radius:30px;background:linear-gradient(135deg,#0f7ad4,#2cc6ff);color:#fff;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 6px 22px rgba(44,198,255,.55);z-index:6;letter-spacing:.5px;transition:.12s}
 #castbtn:active{transform:translateX(-50%) scale(.95)}
 #castbtn.charging{background:linear-gradient(135deg,#c08400,#ffc400)}
 #castbtn:disabled{opacity:.45;cursor:default}
+
+/* power bar khi quăng */
 #power{bottom:74px;left:50%;transform:translateX(-50%);width:200px;height:11px;background:rgba(0,0,0,.6);border:1px solid #2cc6ff;border-radius:7px;overflow:hidden;opacity:0;transition:opacity .2s;z-index:6}
 #power.show{opacity:1}
 #power > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#37e07a,#ffd23f,#ff5a5a)}
+
+/* hint */
 #hint{top:50%;left:50%;transform:translate(-50%,-50%);font-weight:800;font-size:15px;color:#fff;text-shadow:2px 2px 4px #000,0 0 14px rgba(44,198,255,.7);background:rgba(4,16,28,.5);padding:10px 22px;border-radius:20px;text-align:center;z-index:5;transition:.3s;pointer-events:none}
+
+/* Bảng config Firebase */
 #cfgbtn{position:absolute;bottom:14px;left:14px;z-index:7;background:rgba(8,24,40,.85);border:1px solid #2f5a7d;color:#9fc;font-size:10px;padding:7px 11px;border-radius:12px;cursor:pointer}
 #cfgbtn:hover{border-color:#5fd0ff}
 #login{position:absolute;inset:0;background:rgba(2,8,16,.95);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
@@ -73,27 +93,42 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .mbtns{display:flex;gap:8px;margin-top:16px}
 .mbtns button{flex:1;padding:13px;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-size:14px;font-family:inherit}
 #loginbtn{background:linear-gradient(135deg,#0f7ad4,#2cc6ff);color:#fff}
+
 #toast{position:absolute;top:90px;left:50%;transform:translateX(-50%) translateY(-12px);background:rgba(10,28,50,.96);border:1px solid #5fd0ff;border-radius:14px;padding:9px 18px;font-size:13px;font-weight:800;z-index:40;opacity:0;transition:.35s;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ───── ĐIỆN THOẠI / màn nhỏ ───── */
 @media (max-width:760px){
-  #castbtn{padding:18px 44px;font-size:17px;bottom:20px}
-  #reelbtn{width:104px;height:104px;font-size:14px}
-  #reelarea{bottom:18px;right:16px}
-  #avatar{width:40px;height:40px;font-size:20px}
-  .bar{width:108px}
-  #chatbox{width:55%;bottom:96px}
-  #chatlog{max-height:90px}
+  #castbtn{padding:16px 36px;font-size:16px;bottom:15px}
+  #reelbtn{width:110px;height:110px;font-size:14px;border-width:5px}
+  #reelbtn .spokes{inset:6px;border-width:3px}
+  #reelarea{bottom:10px;right:10px}
+  #avatar{width:36px;height:36px;font-size:18px}
+  .bar{width:90px;height:7px}
+  #pstats{font-size:10px}
+  #pstats .nm{font-size:12px}
+  #chatbox{width:40%;bottom:90px;left:5px}
+  #chatlog{max-height:80px;font-size:10px}
+  #chatinput{font-size:10px;padding:5px 8px}
   #coins{font-size:12px;padding:5px 10px}
   .icobtn{width:38px;height:38px;font-size:16px}
   #fishbar{width:min(60vw,260px)}
-  #hint{font-size:14px;width:min(80vw,360px)}
+  #hint{font-size:12px;padding:8px 16px;width:min(80vw,360px)}
 }
+
 @media (max-width:480px) and (orientation:portrait){
-  #chatbox{width:62%;bottom:160px}
+  #chatbox{width:45%;bottom:95px}
   #chatlog{max-height:70px}
+  #reelbtn{width:100px;height:100px}
 }
+
 @media (hover:none){
   #castbtn,#reelbtn,.icobtn,#chatsend{touch-action:manipulation}
+}
+
+/* Ẩn gợi ý xoay màn hình nếu người dùng cố chơi dọc */
+@media (orientation:portrait){
+  #rotate{display:none!important}
 }
 </style>
 </head>
@@ -142,8 +177,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 
   <!-- reel -->
   <div class="hud" id="reelarea">
-    <button id="reelbtn"><span class="spokes"></span>CO LẠI<br>DÂY</button>
-    <div id="reeldepth">Chiều dài cáp: <b id="depthval">0.0</b>m</div>
+    <button id="reelbtn"><span class="spokes"></span>XOAY<br>ĐỂ KÉO</button>
+    <div id="reeldepth">🎣 Còn <b id="rodUsesVal">999</b> lần</div>
   </div>
 
   <!-- power + cast -->
@@ -360,7 +395,7 @@ function sendChatNet(text){
 }
 
 // ════════════════════════════════════════════════════════════
-// CANVAS & RENDER (giữ nguyên logic vẽ từ file gốc)
+// CANVAS & RENDER
 // ════════════════════════════════════════════════════════════
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 let W=960, H=540, DPR=1;
@@ -396,80 +431,671 @@ const $=id=>document.getElementById(id);
 function toast(m){ const e=$('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2600); }
 function setHint(m){ $('hint').textContent=m; $('hint').style.opacity=m?1:0; }
 function setNet(live,label){ const n=$('netstat'); n.classList.toggle('live',live); $('netlabel').textContent=label; }
-function updateHUD(){ $('coinval').textContent=fmtN(me.coins); $('mylv').textContent=me.lv; $('myname').textContent=me.name; me.lv=lvFromXp(me.xp); const lo=xpForLv(me.lv), hi=xpForLv(me.lv+1); $('xpfill').style.width=Math.min(100,((me.xp-lo)/(hi-lo))*100)+'%'; $('xptxt').textContent=`XP ${me.xp-lo}/${hi-lo}`; $('stamfill').style.width=(me.stamina/me.staminaMax*100)+'%'; $('stamtxt').textContent=`Thể lực ${Math.round(me.stamina)}/${me.staminaMax}`; if(net.mode==='fb'){ $('reeldepth').innerHTML=`🎣 Còn <b>${me.rodUses}</b> lần câu`; } else { $('reeldepth').innerHTML=`Chiều dài cáp: <b>${me.lineDepth.toFixed(1)}</b>m`; } let bagCount=0; for(const arr of Object.values(me.inventory||{})) bagCount+=arr.length; const all=Object.values(net.players); all.sort((a,b)=>(b.best||0)-(a.best||0)); const rank=all.findIndex(p=>p.id===me.id)+1; $('rankline').textContent=`🎒 ${bagCount} cá • Nặng nhất: ${me.best?fmtW(me.best):'—'} • Hạng #${rank||'—'}/${all.length}`; }
+function updateHUD(){ 
+  $('coinval').textContent=fmtN(me.coins); 
+  $('mylv').textContent=me.lv; 
+  $('myname').textContent=me.name; 
+  me.lv=lvFromXp(me.xp); 
+  const lo=xpForLv(me.lv), hi=xpForLv(me.lv+1); 
+  $('xpfill').style.width=Math.min(100,((me.xp-lo)/(hi-lo))*100)+'%'; 
+  $('xptxt').textContent=`XP ${me.xp-lo}/${hi-lo}`; 
+  $('stamfill').style.width=(me.stamina/me.staminaMax*100)+'%'; 
+  $('stamtxt').textContent=`Thể lực ${Math.round(me.stamina)}/${me.staminaMax}`; 
+  $('rodUsesVal').textContent=me.rodUses;
+  let bagCount=0; for(const arr of Object.values(me.inventory||{})) bagCount+=arr.length; 
+  const all=Object.values(net.players); 
+  all.sort((a,b)=>(b.best||0)-(a.best||0)); 
+  const rank=all.findIndex(p=>p.id===me.id)+1; 
+  $('rankline').textContent=`🎒 ${bagCount} cá • Nặng nhất: ${me.best?fmtW(me.best):'—'} • Hạng #${rank||'—'}/${all.length}`; 
+}
 const castBtn=$('castbtn'), powerEl=$('power'), reelBtn=$('reelbtn');
-function pressStart(){ if(me.state==='biting'){ clearTimeout(biteTimer); startReel(); return; } if(me.state!=='idle') return; if(net.mode==='fb' && me.rodUses<=0){ toast('🎣 Hết lần câu! Dùng tmuacan trên Discord.'); return; } if(me.stamina<100){ toast('😩 Hết thể lực! Chờ hồi phục.'); return; } me.state='charging'; castPower=0; chargeDir=1; charging=true; castBtn.classList.add('charging'); castBtn.textContent='💪 GIỮ...'; powerEl.classList.add('show'); setHint('Giữ để lấy lực, thả ra để quăng!'); }
-function pressEnd(){ if(me.state!=='charging')return; charging=false; castBtn.classList.remove('charging'); powerEl.classList.remove('show'); doCast(); }
-setInterval(()=>{ if(!charging)return; castPower+=chargeDir*3.4; if(castPower>=100){castPower=100;chargeDir=-1;} if(castPower<=0){castPower=0;chargeDir=1;} powerEl.firstElementChild.style.width=castPower+'%'; },16);
-function doCast(){ me.state='casting'; castBtn.disabled=true; castBtn.textContent='🎣 ...'; setHint(''); if(net.mode==='fb'){ me.rodUses=Math.max(0,me.rodUses-1); writePlayer(true); updateHUD(); } const mp=anglerPos(me.x); hookX=(mp.px/W); hookY=(mp.py/H)-0.05; castProg=0; castTargetX=0.45+(me.x*0.1)+(castPower/100)*0.4; castTargetY=WATER_TOP+0.25+(castPower/100)*0.45; publishSelf(true); }
+
+// ════════════════════════════════════════════════════════════
+// CƠ CHẾ MỚI: XOAY NÚT ĐỂ KÉO DÂY (MOBILE OPTIMIZED)
+// ════════════════════════════════════════════════════════════
+let reelRotationSpeed = 0;
+let lastAngle = 0;
+let isTouchingReel = false;
+
+function getTouchAngle(touch, element) {
+  const rect = element.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  return Math.atan2(touch.clientY - cy, touch.clientX - cx);
+}
+
+reelBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  isTouchingReel = true;
+  const touch = e.touches[0];
+  lastAngle = getTouchAngle(touch, reelBtn);
+  reelBtn.style.transform = 'scale(0.95)';
+}, { passive: false });
+
+reelBtn.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (!isTouchingReel) return;
+  
+  const touch = e.touches[0];
+  const currentAngle = getTouchAngle(touch, reelBtn);
+  
+  let delta = currentAngle - lastAngle;
+  if (delta > Math.PI) delta -= 2 * Math.PI;
+  if (delta < -Math.PI) delta += 2 * Math.PI;
+  
+  if (Math.abs(delta) > 0.05) {
+    reelRotationSpeed = Math.abs(delta) * 15;
+    lastAngle = currentAngle;
+  } else {
+    reelRotationSpeed *= 0.8;
+  }
+}, { passive: false });
+
+window.addEventListener('touchend', () => {
+  isTouchingReel = false;
+  reelRotationSpeed = 0;
+  reelBtn.style.transform = 'scale(1)';
+});
+
+reelBtn.addEventListener('mousedown', () => { 
+   isTouchingReel = true; 
+   reelBtn.style.transform = 'scale(0.95)';
+});
+window.addEventListener('mouseup', () => { 
+   isTouchingReel = false; 
+   reelRotationSpeed = 0;
+   reelBtn.style.transform = 'scale(1)';
+});
+
+function pressStart(){ 
+  if(me.state==='biting'){ 
+    clearTimeout(biteTimer); 
+    startReel(); 
+    return; 
+  } 
+  if(me.state!=='idle') return; 
+  if(net.mode==='fb' && me.rodUses<=0){ 
+    toast('🎣 Hết lần câu! Dùng tmuacan trên Discord.'); 
+    return; 
+  } 
+  if(me.stamina<100){ 
+    toast('😩 Hết thể lực! Chờ hồi phục.'); 
+    return; 
+  } 
+  me.state='charging'; 
+  castPower=0; 
+  chargeDir=1; 
+  charging=true; 
+  castBtn.classList.add('charging'); 
+  castBtn.textContent='💪 GIỮ...'; 
+  powerEl.classList.add('show'); 
+  setHint('Giữ để lấy lực, thả ra để quăng!'); 
+}
+
+function pressEnd(){ 
+  if(me.state!=='charging')return; 
+  charging=false; 
+  castBtn.classList.remove('charging'); 
+  powerEl.classList.remove('show'); 
+  doCast(); 
+}
+
+setInterval(()=>{ 
+  if(!charging)return; 
+  castPower+=chargeDir*3.4; 
+  if(castPower>=100){castPower=100;chargeDir=-1;} 
+  if(castPower<=0){castPower=0;chargeDir=1;} 
+  powerEl.firstElementChild.style.width=castPower+'%'; 
+},16);
+
+function doCast(){ 
+  me.state='casting'; 
+  castBtn.disabled=true; 
+  castBtn.textContent='🎣 ...'; 
+  setHint(''); 
+  if(net.mode==='fb'){ 
+    me.rodUses=Math.max(0,me.rodUses-1); 
+    writePlayer(true); 
+    updateHUD(); 
+  } 
+  const mp=anglerPos(me.x); 
+  hookX=(mp.px/W); 
+  hookY=(mp.py/H)-0.05; 
+  castProg=0; 
+  castTargetX=0.45+(me.x*0.1)+(castPower/100)*0.4; 
+  castTargetY=WATER_TOP+0.25+(castPower/100)*0.45; 
+  publishSelf(true); 
+}
+
 let castProg=0,castTargetX=0.5,castTargetY=0.5;
-function startBite(){ me.state='biting'; setHint('🐟 CÁ CẮN CÂU! NHẤN CO DÂY NGAY!'); castBtn.textContent='⚡ KÉO!'; castBtn.disabled=false; reelBtn.style.boxShadow='0 0 24px #ffd23f'; publishSelf(true); biteTimer=setTimeout(()=>{ if(me.state==='biting'){ failCatch('Cá nhả câu mất rồi!'); } },2800); }
-function startReel(){ curFish=rollFish(); if(!curFish){ failCatch('Hụt! Không dính con nào.'); return; } curWeight=rollWeight(curFish); me.state='reeling'; setHint(''); castBtn.textContent='🎣 THẢ CÂU'; castBtn.disabled=true; reelBtn.style.boxShadow='0 6px 20px rgba(0,0,0,.6)'; fishDist=1; tension=0; fishStruggle=0; reelFrames=0; reelGood=0; reelStartT=performance.now(); fishHud(true); publishSelf(true); }
+
+function startBite(){ 
+  me.state='biting'; 
+  setHint('🐟 CÁ CẮN! XOAY NÚT ĐỂ KÉO!'); 
+  castBtn.textContent='⚡ KÉO!'; 
+  castBtn.disabled=false; 
+  reelBtn.style.boxShadow='0 0 24px #ffd23f'; 
+  publishSelf(true); 
+  biteTimer=setTimeout(()=>{ 
+    if(me.state==='biting'){ 
+      failCatch('Cá nhả câu mất rồi!'); 
+    } 
+  },2800); 
+}
+
+function startReel(){ 
+  curFish=rollFish(); 
+  if(!curFish){ 
+    failCatch('Hụt! Không dính con nào.'); 
+    return; 
+  } 
+  curWeight=rollWeight(curFish); 
+  me.state='reeling'; 
+  setHint('XOAY NÚT để kéo cá!'); 
+  castBtn.textContent='🎣 THẢ CÂU'; 
+  castBtn.disabled=true; 
+  reelBtn.style.boxShadow='0 6px 20px rgba(0,0,0,.6)'; 
+  fishDist=1; 
+  tension=0; 
+  fishStruggle=0; 
+  reelFrames=0; 
+  reelGood=0; 
+  reelStartT=performance.now(); 
+  fishHud(true); 
+  publishSelf(true); 
+}
+
 let reelFrames=0, reelGood=0, reelStartT=0, lastPullPerf=0;
-let reelHeld=false;
-reelBtn.addEventListener('mousedown',()=>reelHeld=true);
-window.addEventListener('mouseup',()=>reelHeld=false);
-reelBtn.addEventListener('touchstart',e=>{e.preventDefault();reelHeld=true;},{passive:false});
-window.addEventListener('touchend',()=>reelHeld=false);
-function fishHud(show){ const h=$('fishhud'); h.classList.toggle('show',show); if(show&&curFish){ $('ftit').textContent=`${curFish.emoji} ${curFish.name} — ${fmtW(curWeight)}`; } }
-function failCatch(msg){ me.state='idle'; curFish=null; bigFish=null; fishHud(false); castBtn.textContent='🎣 THẢ CÂU'; castBtn.disabled=false; reelBtn.style.boxShadow='0 6px 20px rgba(0,0,0,.6)'; setHint('😔 '+msg); setTimeout(()=>{ if(me.state==='idle')setHint('Nhấn giữ THẢ CÂU để câu tiếp!'); },2200); publishSelf(true); }
-function succeedCatch(){ const f=curFish, w=curWeight; const acc=reelFrames>0?reelGood/reelFrames:0.5; const secs=(performance.now()-reelStartT)/1000; const speedBonus=clamp(1-(secs-3)/12,0,1); const pull=clamp(0.45+acc*0.45+speedBonus*0.10,0,1); lastPullPerf=pull; const wf=clamp((w-f.minW)/(f.maxW-f.minW||1),0,1); let value=Math.min(MAX_PAYOUT, Math.round(f.base*(0.6+wf*0.4)*pull)); if(!me.inventory[f.id]) me.inventory[f.id]=[]; me.inventory[f.id].push({weight:w, value, map:0, caughtAt:Date.now()}); me.totalCaught=(me.totalCaught||0)+1; me.best=Math.max(me.best,w); me.xp+=Math.round(value/2000)+10; me.lv=lvFromXp(me.xp); me.staminaMax=1700+(me.lv-1)*120; const grade=pull>=0.92?'HOÀN HẢO':pull>=0.78?'Tuyệt':pull>=0.6?'Khá':'Tạm'; showCatchBanner(f,w,value,grade,pull); setHint(`🎉 ${f.name.toUpperCase()} ${fmtW(w)} • Lực kéo ${grade} → con này đáng ${fmtN(value)}🪙`); toast(`🎉 +1 ${f.name} (${grade}) — ${fmtN(value)}🪙`); curFish=null; bigFish=null; fishHud(false); me.state='idle'; castBtn.disabled=false; writePlayer(true); updateHUD(); publishSelf(true); const chatMsg=`câu được ${f.name} ${fmtW(w)} (${grade}) — ${fmtN(value)}🪙! 🎣`; if(net.mode!=='fb') net.onChat&&net.onChat({who:me.name,text:chatMsg}); else sendChatNet(chatMsg); setTimeout(()=>{ if(me.state==='idle')setHint('Nhấn giữ THẢ CÂU để câu tiếp!'); },2600); }
+
+function fishHud(show){ 
+  const h=$('fishhud'); 
+  h.classList.toggle('show',show); 
+  if(show&&curFish){ 
+    $('ftit').textContent=`${curFish.emoji} ${curFish.name} — ${fmtW(curWeight)}`; 
+  } 
+}
+
+function failCatch(msg){ 
+  me.state='idle'; 
+  curFish=null; 
+  bigFish=null; 
+  fishHud(false); 
+  castBtn.textContent='🎣 THẢ CÂU'; 
+  castBtn.disabled=false; 
+  reelBtn.style.boxShadow='0 6px 20px rgba(0,0,0,.6)'; 
+  setHint('😔 '+msg); 
+  setTimeout(()=>{ 
+    if(me.state==='idle')setHint('Nhấn giữ THẢ CÂU để câu tiếp!'); 
+  },2200); 
+  publishSelf(true); 
+}
+
+function succeedCatch(){ 
+  const f=curFish, w=curWeight; 
+  const acc=reelFrames>0?reelGood/reelFrames:0.5; 
+  const secs=(performance.now()-reelStartT)/1000; 
+  const speedBonus=clamp(1-(secs-3)/12,0,1); 
+  const pull=clamp(0.45+acc*0.45+speedBonus*0.10,0,1); 
+  lastPullPerf=pull; 
+  const wf=clamp((w-f.minW)/(f.maxW-f.minW||1),0,1); 
+  let value=Math.min(MAX_PAYOUT, Math.round(f.base*(0.6+wf*0.4)*pull)); 
+  if(!me.inventory[f.id]) me.inventory[f.id]=[]; 
+  me.inventory[f.id].push({weight:w, value, map:0, caughtAt:Date.now()}); 
+  me.totalCaught=(me.totalCaught||0)+1; 
+  me.best=Math.max(me.best,w); 
+  me.xp+=Math.round(value/2000)+10; 
+  me.lv=lvFromXp(me.xp); 
+  me.staminaMax=1700+(me.lv-1)*120; 
+  const grade=pull>=0.92?'HOÀN HẢO':pull>=0.78?'Tuyệt':pull>=0.6?'Khá':'Tạm'; 
+  showCatchBanner(f,w,value,grade,pull); 
+  setHint(`🎉 ${f.name.toUpperCase()} ${fmtW(w)} • Lực kéo ${grade} → ${fmtN(value)}🪙`); 
+  toast(`🎉 +1 ${f.name} (${grade}) — ${fmtN(value)}🪙`); 
+  curFish=null; 
+  bigFish=null; 
+  fishHud(false); 
+  me.state='idle'; 
+  castBtn.disabled=false; 
+  writePlayer(true); 
+  updateHUD(); 
+  publishSelf(true); 
+  const chatMsg=`câu được ${f.name} ${fmtW(w)} (${grade}) — ${fmtN(value)}🪙! 🎣`; 
+  if(net.mode!=='fb') net.onChat&&net.onChat({who:me.name,text:chatMsg}); 
+  else sendChatNet(chatMsg); 
+  setTimeout(()=>{ 
+    if(me.state==='idle')setHint('Nhấn giữ THẢ CÂU để câu tiếp!'); 
+  },2600); 
+}
 
 // ════════════════════════════════════════════════════════════
 // VÒNG LẶP CHÍNH
 // ════════════════════════════════════════════════════════════
 let lastT=performance.now();
-function loop(now){ requestAnimationFrame(loop); let dt=(now-lastT)/1000; lastT=now; dt=Math.min(dt,0.05); const t=now*0.001; updateFishing(dt,t); if(me.state==='idle'||me.state==='waiting'){ me.stamina=Math.min(me.staminaMax, me.stamina+90*dt); } drawScene(t); drawBgMonsters(dt,t); const ids=Object.keys(net.players); ids.sort((a,b)=>anglerPos(net.players[a].x||0.5).py - anglerPos(net.players[b].x||0.5).py); for(const id of ids){ const p=net.players[id]; if(!p)continue; const isMe=(id===me.id); const info=isMe?{lv:me.lv,name:me.name,state:me.state}:{lv:p.lv||1,name:p.name||'?',state:p.state||'idle'}; const mp=anglerPos(isMe?me.x:(p.x||0.5)); const sc=0.9+(isMe?me.x:(p.x||0.5))*0.5; const tip=drawAngler(mp.px,mp.py,sc,info,isMe,t); if(isMe){ myTip=tip; } if(!isMe && (info.state==='waiting'||info.state==='biting'||info.state==='reeling')){ const depth=(p.lineDepth||1.5); const hx=mp.px+60*sc+depth*14, hy=mp.py-20*sc+depth*22; drawLine(tip.rx,tip.ry,hx,hy,0.35,t,info.state==='biting'); ctx.fillStyle='#e74c3c'; ctx.beginPath(); ctx.arc(hx,hy,3.5*sc,0,7); ctx.fill(); } } drawMyTackle(t); if(bigFish) drawBigFish(dt,t); drawSplash(dt); drawCatchBanner(dt); }
-function updateFishing(dt,t){ if(me.state==='casting'){ castProg=Math.min(castProg+dt*1.6,1); const e=1-Math.pow(1-castProg,3); hookX=lerp(hookX,castTargetX,e*0.5); hookY=lerp(hookY,castTargetY,e*0.5); me.lineDepth=castProg*((castTargetY-WATER_TOP)*30); if(castProg>=1){ me.state='waiting'; setHint('⏳ Chờ cá cắn...'); emitSplash(hookX*W,hookY*H,14,3); publishSelf(true); waitTimer=setTimeout(startBite, 1800+Math.random()*4000); } } else if(me.state==='waiting'){ hookY=castTargetY+Math.sin(t*1.5)*0.004; me.lineDepth=(hookY-WATER_TOP)*30; } else if(me.state==='biting'){ hookY=castTargetY+0.02+Math.max(0,Math.sin(t*16))*0.012; if(Math.random()<0.2) emitSplash(hookX*W,hookY*H,2,1.5); } else if(me.state==='reeling'){ const freq=2.2+curFish.power*0.35; const amp=curFish.boss?1.0:0.7; fishStruggle=Math.max(0, Math.sin(t*freq-curFish.power*0.5))*amp; const struggling=fishStruggle>0.35; const pull=curFish.power*0.25; if(reelHeld && me.stamina>0){ fishDist=Math.max(0, fishDist-dt*0.32/Math.max(1,curFish.power*0.4)); me.stamina-=(20+curFish.power*8)*dt; tension+=(struggling?(0.55+pull*0.1):0.12)*dt-0.1*dt; }else{ tension-=0.5*dt; fishDist=Math.min(1, fishDist+(struggling?0.06:0.015)*dt*pull); } tension=clamp(tension,0,1); me.stamina=Math.max(0,me.stamina); reelFrames++; if(reelHeld && tension>0.25 && tension<0.85) reelGood++; myReelJerk=struggling?fishStruggle:myReelJerk*0.9; myReelBoss=curFish.boss; const mp=anglerPos(me.x); const baseX=mp.px/W, baseY=mp.py/H; hookX=lerp(baseX+0.06, castTargetX, fishDist); hookY=lerp(baseY-0.02, castTargetY+0.03, fishDist); me.lineDepth=fishDist*((castTargetY-WATER_TOP)*30); $('fishbar').firstElementChild.style.width=((1-fishDist)*100)+'%'; $('fishbartxt').textContent=`${Math.round((1-fishDist)*100)}% • Căng: ${Math.round(tension*100)}%`; $('fishbar').style.borderColor=tension>0.8?'#ff2a2a':tension>0.55?'#ffae42':'#ff7a7a'; if(struggling) shake(tension*(curFish.boss?6:3)+fishStruggle*(curFish.boss?4:1.5)); if(tension>=1){ failCatch('💥 Đứt dây! Cá quá khoẻ!'); shake(10); myReelJerk=0; return; } if(me.stamina<200 && reelHeld){ setHint('😫 Sắp hết thể lực! Nhả tay cho cá nghỉ rồi kéo tiếp.'); } else if(curFish.boss && struggling){ setHint('🐉 QUÁI VẬT ĐANG GIẬT MẠNH! Nhả bớt kẻo đứt!'); } else { setHint(tension>0.7?'⚠️ Dây căng quá! Nhả bớt!':'⚡ Giữ CO DÂY để kéo, nhả khi cá giật mạnh!'); } if(fishDist<=0.02 && !bigFish){ myReelJerk=0; spawnBigFish(); } publishSelf(); } else { myReelJerk*=0.85; } }
+function loop(now){ 
+  requestAnimationFrame(loop); 
+  let dt=(now-lastT)/1000; 
+  lastT=now; 
+  dt=Math.min(dt,0.05); 
+  const t=now*0.001; 
+  updateFishing(dt,t); 
+  if(me.state==='idle'||me.state==='waiting'){ 
+    me.stamina=Math.min(me.staminaMax, me.stamina+90*dt); 
+  } 
+  drawScene(t); 
+  drawBgMonsters(dt,t); 
+  const ids=Object.keys(net.players); 
+  ids.sort((a,b)=>anglerPos(net.players[a].x||0.5).py - anglerPos(net.players[b].x||0.5).py); 
+  for(const id of ids){ 
+    const p=net.players[id]; 
+    if(!p)continue; 
+    const isMe=(id===me.id); 
+    const info=isMe?{lv:me.lv,name:me.name,state:me.state}:{lv:p.lv||1,name:p.name||'?',state:p.state||'idle'}; 
+    const mp=anglerPos(isMe?me.x:(p.x||0.5)); 
+    const sc=0.9+(isMe?me.x:(p.x||0.5))*0.5; 
+    const tip=drawAngler(mp.px,mp.py,sc,info,isMe,t); 
+    if(isMe){ myTip=tip; } 
+    if(!isMe && (info.state==='waiting'||info.state==='biting'||info.state==='reeling')){ 
+      const depth=(p.lineDepth||1.5); 
+      const hx=mp.px+60*sc+depth*14, hy=mp.py-20*sc+depth*22; 
+      drawLine(tip.rx,tip.ry,hx,hy,0.35,t,info.state==='biting'); 
+      ctx.fillStyle='#e74c3c'; 
+      ctx.beginPath(); 
+      ctx.arc(hx,hy,3.5*sc,0,7); 
+      ctx.fill(); 
+    } 
+  } 
+  drawMyTackle(t); 
+  if(bigFish) drawBigFish(dt,t); 
+  drawSplash(dt); 
+  drawCatchBanner(dt); 
+}
+
+function updateFishing(dt,t){ 
+  if(me.state==='casting'){ 
+    castProg=Math.min(castProg+dt*1.6,1); 
+    const e=1-Math.pow(1-castProg,3); 
+    hookX=lerp(hookX,castTargetX,e*0.5); 
+    hookY=lerp(hookY,castTargetY,e*0.5); 
+    me.lineDepth=castProg*((castTargetY-WATER_TOP)*30); 
+    if(castProg>=1){ 
+      me.state='waiting'; 
+      setHint('⏳ Chờ cá cắn...'); 
+      emitSplash(hookX*W,hookY*H,14,3); 
+      publishSelf(true); 
+      waitTimer=setTimeout(startBite, 1800+Math.random()*4000); 
+    } 
+  } else if(me.state==='waiting'){ 
+    hookY=castTargetY+Math.sin(t*1.5)*0.004; 
+    me.lineDepth=(hookY-WATER_TOP)*30; 
+  } else if(me.state==='biting'){ 
+    hookY=castTargetY+0.02+Math.max(0,Math.sin(t*16))*0.012; 
+    if(Math.random()<0.2) emitSplash(hookX*W,hookY*H,2,1.5); 
+  } else if(me.state==='reeling'){ 
+    const freq=2.2+curFish.power*0.35; 
+    const amp=curFish.boss?1.0:0.7; 
+    fishStruggle=Math.max(0, Math.sin(t*freq-curFish.power*0.5))*amp; 
+    const struggling=fishStruggle>0.35; 
+    const pull=curFish.power*0.25; 
+    
+    // ── XỬ LÝ KÉO DÂY THEO TỐC ĐỘ XOAY ──
+    if (reelRotationSpeed > 0.5 && me.stamina > 0) {
+      const reelPower = reelRotationSpeed / Math.max(1, curFish.power * 0.6);
+      fishDist = Math.max(0, fishDist - dt * reelPower);
+      me.stamina -= (10 + curFish.power * 5 + reelRotationSpeed) * dt;
+      tension += (struggling ? (0.4 + pull * 0.1) : 0.1) * dt + (reelRotationSpeed * 0.02);
+    } else {
+      tension -= 0.5 * dt;
+      fishDist = Math.min(1, fishDist + (struggling ? 0.06 : 0.015) * dt * pull);
+    }
+    
+    tension=clamp(tension,0,1); 
+    me.stamina=Math.max(0,me.stamina); 
+    reelFrames++; 
+    if(reelRotationSpeed > 1 && tension>0.25 && tension<0.85) reelGood++; 
+    myReelJerk=struggling?fishStruggle:myReelJerk*0.9; 
+    myReelBoss=curFish.boss; 
+    const mp=anglerPos(me.x); 
+    const baseX=mp.px/W, baseY=mp.py/H; 
+    hookX=lerp(baseX+0.06, castTargetX, fishDist); 
+    hookY=lerp(baseY-0.02, castTargetY+0.03, fishDist); 
+    me.lineDepth=fishDist*((castTargetY-WATER_TOP)*30); 
+    $('fishbar').firstElementChild.style.width=((1-fishDist)*100)+'%'; 
+    $('fishbartxt').textContent=`${Math.round((1-fishDist)*100)}% • Căng: ${Math.round(tension*100)}%`; 
+    $('fishbar').style.borderColor=tension>0.8?'#ff2a2a':tension>0.55?'#ffae42':'#ff7a7a'; 
+    if(struggling) shake(tension*(curFish.boss?6:3)+fishStruggle*(curFish.boss?4:1.5)); 
+    if(tension>=1){ 
+      failCatch('💥 Đứt dây! Cá quá khoẻ!'); 
+      shake(10); 
+      myReelJerk=0; 
+      return; 
+    } 
+    if(me.stamina<200 && reelRotationSpeed>2){ 
+      setHint('😫 Sắp hết thể lực! Ngừng xoay để nghỉ!'); 
+    } else if(curFish.boss && struggling){ 
+      setHint('🐉 QUÁI VẬT ĐANG GIẬT! Xoay chậm thôi!'); 
+    } else { 
+      setHint(reelRotationSpeed>3?'⚡ Xoay nhanh lên!':tension>0.7?'⚠️ Dây căng! Xoay chậm!':'Xoay nút để kéo cá!'); 
+    } 
+    if(fishDist<=0.02 && !bigFish){ 
+      myReelJerk=0; 
+      spawnBigFish(); 
+    } 
+    publishSelf(); 
+  } else { 
+    myReelJerk*=0.85; 
+  } 
+}
+
 let myReelJerk=0, myReelBoss=false;
-function spawnBigFish(){ const mp=anglerPos(me.x); const wf=Math.min(1, Math.log10(curWeight+1)/3.4); const baseLen=Math.min(W,H); const len=baseLen*(0.12+wf*0.42); const isBoss=curFish.power>=3; bigFish={ prog:0, x:hookX, y:hookY, targetX:mp.px/W, targetY:mp.py/H-0.06, len, col:curFish.col, done:false, boss:isBoss, shownBanner:false }; setHint(isBoss?'🌊🐉 QUÁI VẬT KHỔNG LỒ TRỒI LÊN!':'🌊 Cá đang trồi lên!'); fishHud(false); emitSplash(hookX*W,hookY*H, isBoss?40:24, isBoss?7:5); shake(isBoss?7:4); }
-function drawBigFish(dt,t){ const b=bigFish; b.prog+=dt*(b.boss?0.42:0.62); if(b.prog<1){ const e=1-Math.pow(1-Math.min(b.prog/0.7,1),2.2); const surfaceY=WATER_TOP+0.18; b.curY=lerp(hookY+0.3, surfaceY, e); b.curX=hookX; const len=b.len*(0.45+e*0.75); drawFishShape(b.curX*W,b.curY*H,len,-1,b.col,1,t,b.boss); if(b.prog>0.35 && Math.random()<0.5) emitSplash(b.curX*W,(WATER_TOP+0.04)*H, b.boss?8:4, 5); if(b.boss) shake(1.5+e*2); } else if(b.prog<2.0){ const p=b.prog-1; b.curX=lerp(hookX,0.5,Math.min(p*2,1)*0.6); b.curY=WATER_TOP+0.2+Math.sin(t*3)*0.02; const len=b.len*(1.2+Math.sin(t*4)*0.04); drawFishShape(b.curX*W,b.curY*H,len,-1,b.col,1,t*1.4,b.boss); if(Math.random()<0.4) emitSplash(b.curX*W,b.curY*H,4,3); if(b.boss && Math.sin(t*8)>0.5) shake(2); if(!b.shownBanner){ b.shownBanner=true; setHint(`${curFish.emoji} ${curFish.name} ${fmtW(curWeight)} — kéo vào bờ!`); } } else if(b.prog<2.8){ const p=(b.prog-2)/0.8, e=p*p; b.curX=lerp(0.5*0.6+hookX*0.4,b.targetX,e); b.curY=lerp(WATER_TOP+0.2,b.targetY,e); const len=b.len*(1.3+e*2.4); const dir=b.targetX>b.curX?1:-1; drawFishShape(b.curX*W,b.curY*H,len,dir,b.col,1,t*1.8,b.boss); shake(2+e*6); if(Math.random()<0.5) emitSplash(b.curX*W,b.curY*H,5,3); } else if(!b.done){ b.done=true; emitSplash(b.targetX*W,b.targetY*H,28,6); shake(b.boss?9:6); succeedCatch(); } }
-let catchBanner=null; function showCatchBanner(f,w,payout,grade,pull){ catchBanner={f,w,payout,grade,pull:pull||0,life:1.3}; }
-function drawCatchBanner(dt){ if(!catchBanner)return; const b=catchBanner; b.life-=dt*0.45; if(b.life<=0){ catchBanner=null; return; } const a=Math.min(1,b.life*2.5); const pop=b.life>1.15?(1-(b.life-1.15)/0.15):1; ctx.save(); ctx.globalAlpha=a; ctx.translate(W*0.5, H*0.16); ctx.scale(pop,pop); const txt=`${b.f.emoji} ${b.f.name}`; const sub=`${fmtW(b.w)} • ${b.f.rar}`; const money=`+${fmtN(b.payout||0)} 🪙  •  Lực kéo: ${b.grade||''}`; ctx.font=`900 ${Math.min(W*0.05,30)}px 'Be Vietnam Pro'`; ctx.textAlign='center'; ctx.textBaseline='middle'; const tw=Math.max(ctx.measureText(txt).width, ctx.measureText(money).width)+50; ctx.fillStyle='rgba(8,16,30,0.85)'; ctx.strokeStyle=b.f.col; ctx.lineWidth=3; roundRect(-tw/2,-46,tw,92,14); ctx.fill(); ctx.stroke(); ctx.shadowColor='#000'; ctx.shadowBlur=6; ctx.fillStyle=b.f.col; ctx.fillText(txt,0,-24); ctx.font=`800 ${Math.min(W*0.03,17)}px 'Be Vietnam Pro'`; ctx.fillStyle='#cfe6f7'; ctx.fillText(sub,0,2); ctx.font=`900 ${Math.min(W*0.034,20)}px 'Be Vietnam Pro'`; ctx.fillStyle='#ffd23f'; ctx.fillText(money,0,26); ctx.restore(); }
-function drawLine(x1,y1,x2,y2,alpha,t,wobble){ ctx.save(); ctx.globalAlpha=alpha; ctx.strokeStyle='#eaf6ff'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(x1,y1); const sag=(wobble?6+Math.sin(t*14)*3:14); ctx.quadraticCurveTo((x1+x2)/2,(y1+y2)/2+sag,x2,y2); ctx.stroke(); ctx.restore(); }
-let myTip={rx:0,ry:0}; function drawMyTackle(t){ if(me.state==='idle'||me.state==='charging')return; const tipx=myTip.rx||0, tipy=myTip.ry||0; const wobble=me.state==='biting' || (me.state==='reeling'&&myReelJerk>0.3); drawLine(tipx,tipy,hookX*W,hookY*H,0.85,t,wobble); ctx.fillStyle='#e74c3c'; ctx.beginPath(); ctx.arc(hookX*W,hookY*H,5,0,7); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(hookX*W,hookY*H+5,4,0,Math.PI); ctx.fill(); }
-const sparks=[]; function emitSplash(x,y,n,p){ for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2; sparks.push({x,y,vx:Math.cos(a)*p*30*(0.5+Math.random()),vy:-Math.abs(Math.random())*p*60-20,life:1}); } }
-function drawSplash(dt){ ctx.save(); ctx.fillStyle='rgba(220,245,255,0.85)'; for(let i=sparks.length-1;i>=0;i--){ const s=sparks[i]; s.life-=dt*1.4; s.vy+=600*dt; s.x+=s.vx*dt; s.y+=s.vy*dt; if(s.life<=0){ sparks.splice(i,1); continue; } ctx.globalAlpha=s.life; ctx.beginPath(); ctx.arc(s.x,s.y,2.5*s.life+1,0,7); ctx.fill(); } ctx.restore(); }
-let shakeAmt=0; function shake(a){ shakeAmt=Math.max(shakeAmt,a); }
-function lerp(a,b,k){return a+(b-a)*k;} function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
-function applyShake(){ if(shakeAmt>0.2){ const ox=(Math.random()-0.5)*shakeAmt, oy=(Math.random()-0.5)*shakeAmt; ctx.setTransform(DPR,0,0,DPR,ox*DPR,oy*DPR); shakeAmt*=0.85; } else { ctx.setTransform(DPR,0,0,DPR,0,0); shakeAmt=0; } }
-const _drawScene=drawScene; drawScene=function(t){ applyShake(); _drawScene(t); };
+
+function spawnBigFish(){ 
+  const mp=anglerPos(me.x); 
+  const wf=Math.min(1, Math.log10(curWeight+1)/3.4); 
+  const baseLen=Math.min(W,H); 
+  const len=baseLen*(0.12+wf*0.42); 
+  const isBoss=curFish.power>=3; 
+  bigFish={ prog:0, x:hookX, y:hookY, targetX:mp.px/W, targetY:mp.py/H-0.06, len, col:curFish.col, done:false, boss:isBoss, shownBanner:false }; 
+  setHint(isBoss?'🌊 QUÁI VẬT KHỔNG LỒ!':'🌊 Cá đang trồi lên!'); 
+  fishHud(false); 
+  emitSplash(hookX*W,hookY*H, isBoss?40:24, isBoss?7:5); 
+  shake(isBoss?7:4); 
+}
+
+function drawBigFish(dt,t){ 
+  const b=bigFish; 
+  b.prog+=dt*(b.boss?0.42:0.62); 
+  if(b.prog<1){ 
+    const e=1-Math.pow(1-Math.min(b.prog/0.7,1),2.2); 
+    const surfaceY=WATER_TOP+0.18; 
+    b.curY=lerp(hookY+0.3, surfaceY, e); 
+    b.curX=hookX; 
+    const len=b.len*(0.45+e*0.75); 
+    drawFishShape(b.curX*W,b.curY*H,len,-1,b.col,1,t,b.boss); 
+    if(b.prog>0.35 && Math.random()<0.5) emitSplash(b.curX*W,(WATER_TOP+0.04)*H, b.boss?8:4, 5); 
+    if(b.boss) shake(1.5+e*2); 
+  } else if(b.prog<2.0){ 
+    const p=b.prog-1; 
+    b.curX=lerp(hookX,0.5,Math.min(p*2,1)*0.6); 
+    b.curY=WATER_TOP+0.2+Math.sin(t*3)*0.02; 
+    const len=b.len*(1.2+Math.sin(t*4)*0.04); 
+    drawFishShape(b.curX*W,b.curY*H,len,-1,b.col,1,t*1.4,b.boss); 
+    if(Math.random()<0.4) emitSplash(b.curX*W,b.curY*H,4,3); 
+    if(b.boss && Math.sin(t*8)>0.5) shake(2); 
+    if(!b.shownBanner){ 
+      b.shownBanner=true; 
+      setHint(`${curFish.emoji} ${curFish.name} ${fmtW(curWeight)}`); 
+    } 
+  } else if(b.prog<2.8){ 
+    const p=(b.prog-2)/0.8, e=p*p; 
+    b.curX=lerp(0.5*0.6+hookX*0.4,b.targetX,e); 
+    b.curY=lerp(WATER_TOP+0.2,b.targetY,e); 
+    const len=b.len*(1.3+e*2.4); 
+    const dir=b.targetX>b.curX?1:-1; 
+    drawFishShape(b.curX*W,b.curY*H,len,dir,b.col,1,t*1.8,b.boss); 
+    shake(2+e*6); 
+    if(Math.random()<0.5) emitSplash(b.curX*W,b.curY*H,5,3); 
+  } else if(!b.done){ 
+    b.done=true; 
+    emitSplash(b.targetX*W,b.targetY*H,28,6); 
+    shake(b.boss?9:6); 
+    succeedCatch(); 
+  } 
+}
+
+let catchBanner=null; 
+function showCatchBanner(f,w,payout,grade,pull){ 
+  catchBanner={f,w,payout,grade,pull:pull||0,life:1.3}; 
+}
+
+function drawCatchBanner(dt){ 
+  if(!catchBanner)return; 
+  const b=catchBanner; 
+  b.life-=dt*0.45; 
+  if(b.life<=0){ 
+    catchBanner=null; 
+    return; 
+  } 
+  const a=Math.min(1,b.life*2.5); 
+  const pop=b.life>1.15?(1-(b.life-1.15)/0.15):1; 
+  ctx.save(); 
+  ctx.globalAlpha=a; 
+  ctx.translate(W*0.5, H*0.16); 
+  ctx.scale(pop,pop); 
+  const txt=`${b.f.emoji} ${b.f.name}`; 
+  const sub=`${fmtW(b.w)} • ${b.f.rar}`; 
+  const money=`+${fmtN(b.payout||0)} 🪙  •  Lực kéo: ${b.grade||''}`; 
+  ctx.font=`900 ${Math.min(W*0.05,30)}px 'Be Vietnam Pro'`; 
+  ctx.textAlign='center'; 
+  ctx.textBaseline='middle'; 
+  const tw=Math.max(ctx.measureText(txt).width, ctx.measureText(money).width)+50; 
+  ctx.fillStyle='rgba(8,16,30,0.85)'; 
+  ctx.strokeStyle=b.f.col; 
+  ctx.lineWidth=3; 
+  roundRect(-tw/2,-46,tw,92,14); 
+  ctx.fill(); 
+  ctx.stroke(); 
+  ctx.shadowColor='#000'; 
+  ctx.shadowBlur=6; 
+  ctx.fillStyle=b.f.col; 
+  ctx.fillText(txt,0,-24); 
+  ctx.font=`800 ${Math.min(W*0.03,17)}px 'Be Vietnam Pro'`; 
+  ctx.fillStyle='#cfe6f7'; 
+  ctx.fillText(sub,0,2); 
+  ctx.font=`900 ${Math.min(W*0.034,20)}px 'Be Vietnam Pro'`; 
+  ctx.fillStyle='#ffd23f'; 
+  ctx.fillText(money,0,26); 
+  ctx.restore(); 
+}
+
+function drawLine(x1,y1,x2,y2,alpha,t,wobble){ 
+  ctx.save(); 
+  ctx.globalAlpha=alpha; 
+  ctx.strokeStyle='#eaf6ff'; 
+  ctx.lineWidth=1.4; 
+  ctx.beginPath(); 
+  ctx.moveTo(x1,y1); 
+  const sag=(wobble?6+Math.sin(t*14)*3:14); 
+  ctx.quadraticCurveTo((x1+x2)/2,(y1+y2)/2+sag,x2,y2); 
+  ctx.stroke(); 
+  ctx.restore(); 
+}
+
+let myTip={rx:0,ry:0}; 
+
+function drawMyTackle(t){ 
+  if(me.state==='idle'||me.state==='charging')return; 
+  const tipx=myTip.rx||0, tipy=myTip.ry||0; 
+  const wobble=me.state==='biting' || (me.state==='reeling'&&myReelJerk>0.3); 
+  drawLine(tipx,tipy,hookX*W,hookY*H,0.85,t,wobble); 
+  ctx.fillStyle='#e74c3c'; 
+  ctx.beginPath(); 
+  ctx.arc(hookX*W,hookY*H,5,0,7); 
+  ctx.fill(); 
+  ctx.fillStyle='#fff'; 
+  ctx.beginPath(); 
+  ctx.arc(hookX*W,hookY*H+5,4,0,Math.PI); 
+  ctx.fill(); 
+}
+
+const sparks=[]; 
+function emitSplash(x,y,n,p){ 
+  for(let i=0;i<n;i++){ 
+    const a=Math.random()*Math.PI*2; 
+    sparks.push({x,y,vx:Math.cos(a)*p*30*(0.5+Math.random()),vy:-Math.abs(Math.random())*p*60-20,life:1}); 
+  } 
+}
+
+function drawSplash(dt){ 
+  ctx.save(); 
+  ctx.fillStyle='rgba(220,245,255,0.85)'; 
+  for(let i=sparks.length-1;i>=0;i--){ 
+    const s=sparks[i]; 
+    s.life-=dt*1.4; 
+    s.vy+=600*dt; 
+    s.x+=s.vx*dt; 
+    s.y+=s.vy*dt; 
+    if(s.life<=0){ 
+      sparks.splice(i,1); 
+      continue; 
+    } 
+    ctx.globalAlpha=s.life; 
+    ctx.beginPath(); 
+    ctx.arc(s.x,s.y,2.5*s.life+1,0,7); 
+    ctx.fill(); 
+  } 
+  ctx.restore(); 
+}
+
+let shakeAmt=0; 
+function shake(a){ 
+  shakeAmt=Math.max(shakeAmt,a); 
+}
+
+function lerp(a,b,k){return a+(b-a)*k;} 
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function applyShake(){ 
+  if(shakeAmt>0.2){ 
+    const ox=(Math.random()-0.5)*shakeAmt, oy=(Math.random()-0.5)*shakeAmt; 
+    ctx.setTransform(DPR,0,0,DPR,ox*DPR,oy*DPR); 
+    shakeAmt*=0.85; 
+  } else { 
+    ctx.setTransform(DPR,0,0,DPR,0,0); 
+    shakeAmt=0; 
+  } 
+}
+
+const _drawScene=drawScene; 
+drawScene=function(t){ 
+  applyShake(); 
+  _drawScene(t); 
+};
 
 // ════════════════════════════════════════════════════════════
 // CHAT UI
 // ════════════════════════════════════════════════════════════
-const chatlog=$('chatlog'); function addChatLine(who,text,sys){ const d=document.createElement('div'); if(sys){ d.className='sys'; d.textContent='⚙️ '+text; } else d.innerHTML=`<span class="who">${esc(who)}:</span> ${esc(text)}`; chatlog.appendChild(d); while(chatlog.children.length>40) chatlog.removeChild(chatlog.firstChild); chatlog.scrollTop=chatlog.scrollHeight; }
-function redrawChat(arr){ chatlog.innerHTML=''; arr.forEach(m=>addChatLine(m.who,m.text)); }
-function esc(s){ return (s+'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
-net.onChat=m=>addChatLine(m.who,m.text); net.onPlayersChange=()=>updateHUD();
-$('chatsend').addEventListener('click',doSendChat); $('chatinput').addEventListener('keydown',e=>{ if(e.key==='Enter')doSendChat(); });
-function doSendChat(){ const v=$('chatinput').value.trim(); if(!v)return; $('chatinput').value=''; sendChatNet(v); }
+const chatlog=$('chatlog'); 
+function addChatLine(who,text,sys){ 
+  const d=document.createElement('div'); 
+  if(sys){ 
+    d.className='sys'; 
+    d.textContent='⚙️ '+text; 
+  } else {
+    d.innerHTML=`<span class="who">${esc(who)}:</span> ${esc(text)}`; 
+  }
+  chatlog.appendChild(d); 
+  while(chatlog.children.length>40) chatlog.removeChild(chatlog.firstChild); 
+  chatlog.scrollTop=chatlog.scrollHeight; 
+}
+
+function redrawChat(arr){ 
+  chatlog.innerHTML=''; 
+  arr.forEach(m=>addChatLine(m.who,m.text)); 
+}
+
+function esc(s){ 
+  return (s+'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); 
+}
+
+net.onChat=m=>addChatLine(m.who,m.text); 
+net.onPlayersChange=()=>updateHUD();
+
+$('chatsend').addEventListener('click',doSendChat); 
+$('chatinput').addEventListener('keydown',e=>{ if(e.key==='Enter')doSendChat(); });
+
+function doSendChat(){ 
+  const v=$('chatinput').value.trim(); 
+  if(!v)return; 
+  $('chatinput').value=''; 
+  sendChatNet(v); 
+}
 
 // ════════════════════════════════════════════════════════════
 // NÚT & INIT
 // ════════════════════════════════════════════════════════════
-castBtn.addEventListener('mousedown',pressStart); castBtn.addEventListener('mouseup',pressEnd); castBtn.addEventListener('mouseleave',()=>{ if(me.state==='charging')pressEnd(); }); castBtn.addEventListener('touchstart',e=>{e.preventDefault();pressStart();},{passive:false}); castBtn.addEventListener('touchend',e=>{e.preventDefault();pressEnd();},{passive:false});
-$('btnRank').addEventListener('click',()=>{ const all=Object.values(net.players).slice().sort((a,b)=>(b.best||0)-(a.best||0)).slice(0,5); let s='🏆 BẢNG XẾP HẠNG (cá nặng nhất):\n'+all.map((p,i)=>`${i+1}. ${p.id===me.id?'★ ':''}${p.name} — ${p.best?fmtW(p.best):'chưa có'}`).join('\n'); toast('Xem bảng xếp hạng ở chat 👇'); addChatLine('',s.replace(/\n/g,' | '),true); });
+castBtn.addEventListener('mousedown',pressStart); 
+castBtn.addEventListener('mouseup',pressEnd); 
+castBtn.addEventListener('mouseleave',()=>{ if(me.state==='charging')pressEnd(); }); 
+castBtn.addEventListener('touchstart',e=>{e.preventDefault();pressStart();},{passive:false}); 
+castBtn.addEventListener('touchend',e=>{e.preventDefault();pressEnd();},{passive:false});
+
+$('btnRank').addEventListener('click',()=>{ 
+  const all=Object.values(net.players).slice().sort((a,b)=>(b.best||0)-(a.best||0)).slice(0,5); 
+  let s='🏆 BẢNG XẾP HẠNG:\n'+all.map((p,i)=>`${i+1}. ${p.id===me.id?'★ ':''}${p.name} — ${p.best?fmtW(p.best):'chưa có'}`).join('\n'); 
+  toast('Xem bảng xếp hạng ở chat 👇'); 
+  addChatLine('',s.replace(/\n/g,' | '),true); 
+});
+
 $('btnChat').addEventListener('click',()=>$('chatinput').focus());
 
 // ════════════════════════════════════════════════════════════
 // ĐĂNG NHẬP: token + password
 // ════════════════════════════════════════════════════════════
 let _pendingToken=null, _pendingSession=null;
-async function tryLogin(){ const pw=($('loginpw').value||'').trim().toUpperCase(); $('loginerr').textContent=''; if(!_pendingSession){ $('loginerr').textContent='Phiên không hợp lệ.'; return; } if(pw!==String(_pendingSession.password||'').toUpperCase()){ $('loginerr').textContent='❌ Sai mật khẩu!'; return; } $('loginbtn').disabled=true; $('loginbtn').textContent='Đang vào...'; try{ await startOnline(_pendingToken,_pendingSession); $('login').classList.remove('show'); if(net._demoTimer)clearInterval(net._demoTimer); if(net._chatTimer)clearInterval(net._chatTimer); Object.keys(net.players).forEach(k=>{ if(net.players[k]&&net.players[k]._bot) delete net.players[k]; }); addChatLine('','Đã vào hồ! Câu cá sẽ đồng bộ với Discord.',true); setHint('Nhấn giữ THẢ CÂU để lấy lực!'); updateHUD(); }catch(e){ $('loginerr').textContent='❌ '+(e.message||e); $('loginbtn').disabled=false; $('loginbtn').textContent='Vào Game'; } }
-$('loginbtn').addEventListener('click',tryLogin); $('loginpw').addEventListener('keydown',e=>{ if(e.key==='Enter')tryLogin(); });
+
+async function tryLogin(){ 
+  const pw=($('loginpw').value||'').trim().toUpperCase(); 
+  $('loginerr').textContent=''; 
+  if(!_pendingSession){ 
+    $('loginerr').textContent='Phiên không hợp lệ.'; 
+    return; 
+  } 
+  if(pw!==String(_pendingSession.password||'').toUpperCase()){ 
+    $('loginerr').textContent='❌ Sai mật khẩu!'; 
+    return; 
+  } 
+  $('loginbtn').disabled=true; 
+  $('loginbtn').textContent='Đang vào...'; 
+  try{ 
+    await startOnline(_pendingToken,_pendingSession); 
+    $('login').classList.remove('show'); 
+    if(net._demoTimer)clearInterval(net._demoTimer); 
+    if(net._chatTimer)clearInterval(net._chatTimer); 
+    Object.keys(net.players).forEach(k=>{ if(net.players[k]&&net.players[k]._bot) delete net.players[k]; }); 
+    addChatLine('','Đã vào hồ! Câu cá sẽ đồng bộ với Discord.',true); 
+    setHint('Xoay nút CO DÂY để kéo cá!'); 
+    updateHUD(); 
+  }catch(e){ 
+    $('loginerr').textContent='❌ '+(e.message||e); 
+    $('loginbtn').disabled=false; 
+    $('loginbtn').textContent='Vào Game'; 
+  } 
+}
+
+$('loginbtn').addEventListener('click',tryLogin); 
+$('loginpw').addEventListener('keydown',e=>{ if(e.key==='Enter')tryLogin(); });
 
 // ════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════
-me.name='Bạn'+Math.floor(Math.random()*900+100); resize();
-const _pp=document.getElementById('playportrait'); if(_pp) _pp.addEventListener('click',()=>{ allowPortrait=true; checkOrientation(); });
+me.name='Bạn'+Math.floor(Math.random()*900+100); 
+resize();
+const _pp=document.getElementById('playportrait'); 
+if(_pp) _pp.addEventListener('click',()=>{ allowPortrait=true; checkOrientation(); });
+
 const _token=new URLSearchParams(location.search).get('t');
 if(_token && FIREBASE_CONFIG.databaseURL){
   setNet(false,'Đang tải phiên...');
-  fetchSession(_token).then(s=>{ _pendingToken=_token; _pendingSession=s; me.name=s.username||me.name; $('logininfo').textContent=`Xin chào ${s.username||'bạn'}! Nhập mật khẩu trong DM Discord.`; $('login').classList.add('show'); $('loginpw').focus(); updateHUD(); }).catch(e=>{ setNet(false,'Lỗi phiên — chơi thử'); toast('⚠️ '+(e.message||e)); startDemo(); });
-}else{ startDemo(); addChatLine('','Chế độ chơi thử (Demo). Vào game thật bằng lệnh tcauonline trên Discord.',true); }
-updateHUD(); setHint('Nhấn giữ THẢ CÂU để lấy lực!'); requestAnimationFrame(loop);
+  fetchSession(_token).then(s=>{ 
+    _pendingToken=_token; 
+    _pendingSession=s; 
+    me.name=s.username||me.name; 
+    $('logininfo').textContent=`Xin chào ${s.username||'bạn'}! Nhập mật khẩu trong DM Discord.`; 
+    $('login').classList.add('show'); 
+    $('loginpw').focus(); 
+    updateHUD(); 
+  }).catch(e=>{ 
+    setNet(false,'Lỗi phiên — chơi thử'); 
+    toast('⚠️ '+(e.message||e)); 
+    startDemo(); 
+  });
+}else{ 
+  startDemo(); 
+  addChatLine('','Chế độ chơi thử (Demo). Vào game thật bằng lệnh tcauonline trên Discord.',true); 
+}
+
+updateHUD(); 
+setHint('Nhấn giữ THẢ CÂU để lấy lực!'); 
+requestAnimationFrame(loop);
 setInterval(()=>{ if(net.mode==='fb') publishSelf(); }, 1000);
 </script>
 </body>
