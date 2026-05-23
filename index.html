@@ -571,13 +571,12 @@ castBtn.addEventListener('mousedown',pressStart); castBtn.addEventListener('mous
 castBtn.addEventListener('touchstart',e=>{e.preventDefault();pressStart();},{passive:false}); castBtn.addEventListener('touchend',e=>{e.preventDefault();pressEnd();},{passive:false});
 
 // ════════════════════════════════════════════════════════════
-// 🔐 LOGIN SYSTEM & INIT (ĐỒNG BỘ VỚI FIREBASE)
+// 🔐 LOGIN SYSTEM & INIT (ĐỒNG BỘ VỚI FIREBASE THẬT)
 // ════════════════════════════════════════════════════════════
 
 // Cấu hình Firebase (PHẢI GIỐNG HỆT TRONG FISHING.JS CỦA BOT)
 const FB_CONFIG = {
-  databaseURL: "https://fishing-bot-e8d42-default-rtdb.firebaseio.com",
-  // Các trường khác không cần thiết cho việc đọc session đơn giản
+  databaseURL: "https://fishing-bot-e8d42-default-rtdb.firebaseio.com"
 };
 
 let _pendingToken = null;
@@ -596,8 +595,8 @@ async function tryLogin(){
   const storedPw = String(_pendingSession.password || '').toUpperCase();
 
   if(pwClean !== storedPw){ 
-    $('loginerr').textContent = '❌ Sai mật khẩu!'; 
-    console.log('Nhập:', pwClean, '| Đúng:', storedPw); // Debug
+    $('loginerr').textContent = '❌ Sai mật khẩu! Hãy kiểm tra lại tin nhắn Discord.'; 
+    console.log('Bạn nhập:', pwClean, '| Hệ thống yêu cầu:', storedPw);
     return; 
   } 
   
@@ -635,10 +634,17 @@ const _token = new URLSearchParams(location.search).get('t');
 if(_token){
   // ✅ CHẾ ĐỘ CÓ TOKEN: KẾT NỐI FIREBASE ĐỂ LẤY PASSWORD THẬT
   $('login').classList.add('show');
-  $('logininfo').textContent = "Đang xác thực với Server...";
+  $('logininfo').innerHTML = "⏳ Đang kết nối Server...<br>Vui lòng chờ giây lát.";
+  $('loginpw').style.display = 'none'; // Ẩn ô nhập khi đang tải
+  $('mbtns').style.display = 'none';   // Ẩn nút bấm khi đang tải
   _pendingToken = _token;
 
-  // Khởi tạo Firebase App
+  // Khởi tạo Firebase App nếu chưa có
+  if (typeof firebase === 'undefined') {
+      $('logininfo').innerHTML = "❌ Lỗi: Thiếu thư viện Firebase.<br>Hãy kiểm tra lại code HTML.";
+      return;
+  }
+  
   if (!firebase.apps.length) {
       firebase.initializeApp(FB_CONFIG);
   }
@@ -648,31 +654,33 @@ if(_token){
   db.ref(`sessions/${_token}`).once('value').then((snapshot) => {
       const data = snapshot.val();
       
-      if (data && data.secret === 'datBatKyChuan123') { // Kiểm tra secret khớp với bot
+      // Kiểm tra Secret Key khớp với Bot (datBatKyChuan123)
+      if (data && data.secret === 'datBatKyChuan123') { 
           if (Date.now() < data.expiresAt) {
-              // Session hợp lệ
+              // Session hợp lệ -> Hiện form đăng nhập
               _pendingSession = {
                   userId: data.userId,
                   username: data.username,
                   password: data.password // 👉 LẤY PASSWORD THẬT TỪ BOT
               };
+              
               $('logininfo').innerHTML = `Xin chào <b>${data.username}</b>!<br>Nhập mật khẩu đã nhận qua DM Discord.`;
+              $('loginpw').style.display = 'block'; // Hiện lại ô nhập
+              $('mbtns').style.display = 'flex';     // Hiện lại nút bấm
               $('loginpw').focus();
           } else {
-              $('logininfo').textContent = "Phiên đăng nhập đã hết hạn (10 phút). Hãy gõ lại tcauonline trên Discord.";
-              $('loginbtn').style.display = 'none';
+              $('logininfo').textContent = "⏰ Phiên đăng nhập đã hết hạn (10 phút). Hãy gõ lại tcauonline trên Discord.";
           }
       } else {
-          $('logininfo').textContent = "Token không hợp lệ hoặc sai Secret Key.";
-          $('loginbtn').style.display = 'none';
+          $('logininfo').textContent = "❌ Token không hợp lệ hoặc sai Secret Key.";
       }
   }).catch((error) => {
       console.error(error);
-      $('logininfo').textContent = "Lỗi kết nối Server. Vui lòng thử lại sau.";
+      $('logininfo').textContent = "❌ Lỗi kết nối Server. Vui lòng thử lại sau.";
   });
 
 } else {
-  // ✅ CHẾ ĐỘ KHÁCH
+  // ✅ CHẾ ĐỘ KHÁCH (KHÔNG CẦN LOGIN)
   me.id = 'guest_' + Math.floor(Math.random()*10000);
   loadProgress();
   updateHUD();
