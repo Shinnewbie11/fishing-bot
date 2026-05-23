@@ -88,8 +88,6 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 #actbtn.exhausted{background:#555;box-shadow:none}
 @keyframes reelPulse{0%{box-shadow:0 0 0 rgba(255,210,63,0)}50%{box-shadow:0 0 26px rgba(255,210,63,.6)}100%{box-shadow:0 0 0 rgba(255,210,63,0)}}
 
-#rodInfo{position:absolute;bottom:calc(4px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:10px;color:#bcd6ec;background:rgba(8,24,40,.7);padding:2px 9px;border-radius:9px;border:1px solid #2f5a7d;z-index:6}
-
 #toast{position:absolute;top:calc(130px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:rgba(10,28,50,.96);border:1px solid #5fd0ff;border-radius:14px;padding:8px 16px;font-size:12px;font-weight:800;z-index:40;opacity:0;transition:.35s;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.5);display:none}
 #toast.show{display:block;opacity:1;transform:translateX(-50%) translateY(10px)}
 </style>
@@ -143,9 +141,6 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   <div id="power"><i></i></div>
 
   <button id="actbtn">🎣 QUĂNG CẦN<small>giữ để quăng xa</small></button>
-  <div id="rodInfo">🎣 Còn <b id="rodUsesVal">999</b> lần quăng</div>
-
-  <div id="toast"></div>
 </div>
 
 <script>
@@ -161,17 +156,16 @@ const FISH=[
   {id:'hoi', name:'Cá Hồi',       emoji:'🦑', base:1_000_000,   rar:'Huyền Thoại', col:'#e17055', minW:20,  maxW:120,  power:100,  rate:1, boss:true},
   {id:'rong',name:'Cá Rồng',      emoji:'🐲', base:100_000_000, rar:'Thần Thoại',  col:'#ffd700', minW:500, maxW:3000, power:200, rate:0.01, boss:true},
 ];
-const MISS_RATE=70;  // tỉ lệ câu hụt cá thường (~70%)
+const MISS_RATE=70;
 
-// Lực quăng (power 0..1) ảnh hưởng tỉ lệ: quăng xa = ít hụt hơn + dễ ra cá hiếm/boss
 function rollFish(power){
   power=Math.max(0,Math.min(1,power||0));
-  const miss=Math.max(58,MISS_RATE-power*12);  // quăng xa giảm hụt một chút (70% → ~58%)
+  const miss=Math.max(58,MISS_RATE-power*12);
   if(Math.random()*100<miss)return null;
   const weights=FISH.map(f=>{
     let w=f.rate;
-    if(f.boss)      w*=(0.4+power*2.0);   // quăng càng xa càng dễ gặp cá hiếm/boss
-    else            w*=(1.3-power*0.5);   // cá thường thì ngược lại
+    if(f.boss)      w*=(0.4+power*2.0);
+    else            w*=(1.3-power*0.5);
     return Math.max(0.0001,w);
   });
   const tot=weights.reduce((a,b)=>a+b,0);
@@ -194,7 +188,7 @@ const $=id=>document.getElementById(id);
 const me={
   id:'guest', name:'Khách', lv:1, xp:0, coins:100000, x:0.18,
   state:'idle',                 // idle | charging | waiting | reeling
-  stamina:1000, staminaMax:1000, best:0, rodUses:999,
+  stamina:1000, staminaMax:1000, best:0,
   inventory:{}, totalCaught:0, totalEarned:0, exhaustedAt:null, pullStrength:0.045
 };
 const FB_CONFIG={databaseURL:"https://fishing-bot-e8d42-default-rtdb.firebaseio.com"};
@@ -202,7 +196,7 @@ const GAME_SECRET='datBatKyChuan123';
 
 function getSaveKey(){return `fishing_save_${me.id}`;}
 function saveProgress(){
-  const data={coins:me.coins,lv:me.lv,xp:me.xp,stamina:me.stamina,staminaMax:me.staminaMax,pullStrength:me.pullStrength,rodUses:me.rodUses,inventory:me.inventory,totalCaught:me.totalCaught,totalEarned:me.totalEarned,best:me.best,exhaustedAt:me.exhaustedAt,lastSave:Date.now()};
+  const data={coins:me.coins,lv:me.lv,xp:me.xp,stamina:me.stamina,staminaMax:me.staminaMax,pullStrength:me.pullStrength,inventory:me.inventory,totalCaught:me.totalCaught,totalEarned:me.totalEarned,best:me.best,exhaustedAt:me.exhaustedAt,lastSave:Date.now()};
   try{localStorage.setItem(getSaveKey(),JSON.stringify(data));}catch(e){}
 }
 function loadProgress(){
@@ -210,7 +204,7 @@ function loadProgress(){
   if(!raw)return;
   try{
     const d=JSON.parse(raw);
-    for(const k of ['coins','lv','xp','stamina','staminaMax','pullStrength','rodUses','inventory','totalCaught','totalEarned','best','exhaustedAt'])
+    for(const k of ['coins','lv','xp','stamina','staminaMax','pullStrength','inventory','totalCaught','totalEarned','best','exhaustedAt'])
       if(d[k]!==undefined)me[k]=d[k];
   }catch(e){console.error('Lỗi load save',e);}
 }
@@ -221,17 +215,16 @@ window.addEventListener('beforeunload',saveProgress);
    TRẠNG THÁI BOSS (máu CHUNG) + DÂY CÂU CỦA TÔI
 ════════════════════════════════════════════════════════════ */
 let bossState={active:false,hp:0,maxHp:0,type:null,x:0.5,y:0.35,spawnTime:0,duration:180,resolved:false};
-let myLine={engaged:false,tension:0,knockedOut:false};   // dây câu boss của riêng tôi
-let myBossContribution=0;                                // dmg tôi đóng góp ván boss này
+let myLine={engaged:false,tension:0,knockedOut:false};
+let myBossContribution=0;
 
-// Câu cá thường (máu RIÊNG từng người)
 let curFish=null, curFishWeight=0, fishHP=0, fishMaxHP=0;
 
 let db=null, _online=false, _token=null;
-let otherPlayers=[];          // những người đang online (hiện trên bờ): {id,name,lv,act}
+let otherPlayers=[];
 let presenceRef=null;
-let myBankTip=null;           // toạ độ đầu cần của nhân vật mình (để nối dây tới boss/cá)
-let _lastAct='idle';          // trạng thái hành động gần nhất (để đồng bộ presence)
+let myBankTip=null;
+let _lastAct='idle';
 
 /* ════════════════════════════════════════════════════════════
    THÔNG BÁO / UI CHUNG
@@ -266,12 +259,10 @@ function updateHUD(){
   $('stamfill').style.width=(me.stamina/me.staminaMax*100)+'%';
   $('stamtxt').textContent=`TL ${Math.round(me.stamina)}/${me.staminaMax}`;
   $('stamfill').classList.toggle('danger',me.stamina<=0);
-  $('rodUsesVal').textContent=me.rodUses;
   let bag=0;for(const arr of Object.values(me.inventory||{}))bag+=arr.length;
   $('rankline').textContent=`🎒 ${bag} cá • Nặng nhất: ${me.best?fmtW(me.best):'—'}`;
 }
 
-// Kiệt sức: nghỉ 5 phút. Trả về true nếu đang kiệt sức.
 function checkExhaustion(){
   if(me.stamina<=0&&!me.exhaustedAt){
     me.exhaustedAt=Date.now();
@@ -299,7 +290,7 @@ function checkExhaustion(){
    NÚT HÀNH ĐỘNG DUY NHẤT (quăng cần → spam kéo)
 ════════════════════════════════════════════════════════════ */
 const actbtn=$('actbtn'), powerEl=$('power'), powerLbl=$('powerlbl');
-let chargePower=0;            // lực đang nạp (0..100)
+let chargePower=0;
 let lastReelTime=0; const REEL_COOLDOWN=80;
 
 function updateButton(){
@@ -322,7 +313,6 @@ function updateButton(){
 // ───── bắt đầu nạp lực quăng ─────
 function startCharge(){
   if(checkExhaustion())return;
-  if(me.rodUses<=0){showCenterNotify("🎣 HẾT CẦN!","Mua thêm cần để câu tiếp.",false);return;}
   if(me.stamina<=0){showCenterNotify("😩 Hết Thể Lực!","Phải chờ hồi phục mới câu được!",false);return;}
   me.state='charging'; chargePower=0;
   powerEl.firstElementChild.style.width='0%';
@@ -346,9 +336,8 @@ setInterval(()=>{
   powerLbl.textContent=chargePower>=85?'🔥 QUĂNG CỰC XA!':(chargePower>=45?'Quăng xa':'Quăng gần');
 },16);
 
-// ───── quăng cần ─────
+// ───── quăng cần (không trừ rodUses) ─────
 function doCast(power){
-  me.rodUses--;
   me.stamina=Math.max(0,me.stamina-50);
   me.state='waiting';
   emitSplash(W*(0.18+power*0.55),H*(0.40+power*0.18),12,3+power*2);
@@ -356,21 +345,20 @@ function doCast(power){
   const waitMs=1200+Math.random()*1800;
   setTimeout(()=>{
     if(me.state!=='waiting')return;
-    if(bossState.active){ // boss xuất hiện trong lúc chờ → huỷ câu thường
+    if(bossState.active){
       me.state='idle'; updateButton(); return;
     }
     const fish=rollFish(power);
     if(!fish){failCatch('Hụt! Không dính con nào.');return;}
-    if(fish.boss){           // dính cá hiếm → triệu hồi BOSS chung cho tất cả
+    if(fish.boss){
       me.state='idle';
       spawnBoss(fish.id);
       updateButton();
       return;
     }
-    // ─── cá thường: máu RIÊNG của tôi ───
     curFish=fish;
     curFishWeight=rollWeight(fish);
-    fishMaxHP=Math.round(60+curFishWeight*fish.power*8)+200;  // +200 máu mỗi con
+    fishMaxHP=Math.round(60+curFishWeight*fish.power*8)+200;
     fishHP=fishMaxHP;
     me.state='reeling';
     $('fishhud').classList.add('show');
@@ -406,10 +394,12 @@ function landFish(){
   const f=curFish;
   const wr=clamp(curFishWeight/f.maxW,0,1);
   let val=Math.round(f.base*(0.4+wr*0.8)); val=Math.min(val,MAX_PAYOUT);
+  // Cộng tiền trực tiếp vào ví
   me.coins+=val;
+  me.totalEarned+=val;
   if(!me.inventory[f.id])me.inventory[f.id]=[];
   me.inventory[f.id].push({weight:curFishWeight,value:val,caughtAt:Date.now()});
-  me.totalCaught++; me.totalEarned+=val;
+  me.totalCaught++;
   me.best=Math.max(me.best,curFishWeight);
   me.xp+=Math.round(val/2000)+10;
   checkLevelUp();
@@ -425,21 +415,16 @@ function landFish(){
 function spawnBoss(forceId){
   const types=FISH.filter(f=>f.boss);
   const type=forceId?(FISH.find(f=>f.id===forceId)||types[0]):types[Math.floor(Math.random()*types.length)];
-  // Boss nhỏ (Cá Chép) = 100M máu, boss to hơn tự scale lên theo độ hiếm
-  // Chép(500k)→100M | Cá Hồi(5M)→1B | Cá Rồng(100M)→20B
   const hp=Math.max(100_000_000,Math.round(type.base*200));
   if(db&&_online){
-    // ghi boss chung lên Firebase → mọi client đều thấy qua listener
     db.ref('globalBoss').set({active:true,typeId:type.id,hp:hp,maxHp:hp,spawnTime:Date.now(),duration:180,contributions:{}})
       .catch(e=>console.error('spawn boss err',e));
   }else{
-    // chế độ demo offline
     bossState={active:true,hp:hp,maxHp:hp,type:type,x:0.5,y:0.35,spawnTime:Date.now(),duration:180,resolved:false};
     onBossAppear();
   }
 }
 
-// Trạng thái hành động hiện tại của mình (để người khác thấy mình đang quăng/kéo/đấu boss)
 function currentAct(){
   if(bossState.active&&myLine.engaged)return 'boss';
   if(bossState.active)return 'bossIdle';
@@ -452,24 +437,22 @@ function pushPresence(){
   if(!presenceRef)return;
   presenceRef.set({id:me.id,name:me.name,lv:me.lv,act:_lastAct,t:Date.now()}).catch(()=>{});
 }
-// Đồng bộ "ai đang online" qua Firebase node presence/{id}
 function setupPresence(){
   if(!db||!_online)return;
   presenceRef=db.ref('presence/'+me.id);
-  presenceRef.onDisconnect().remove();   // tự xoá khi đóng game/mất mạng
+  presenceRef.onDisconnect().remove();
   _lastAct=currentAct();
   pushPresence();
-  setInterval(pushPresence,20000);        // nhịp tim mỗi 20s để giữ "còn online"
+  setInterval(pushPresence,20000);
   db.ref('presence').on('value',snap=>{
     const v=snap.val()||{};
     const now=Date.now();
     const arr=[];
     for(const [id,p] of Object.entries(v)){
       if(!p)continue;
-      if(now-(p.t||0)>70000)continue;     // quá 70s không nhịp tim → coi như offline
+      if(now-(p.t||0)>70000)continue;
       arr.push({id:String(id),name:p.name||'?',lv:p.lv||1,act:p.act||'idle'});
     }
-    // đưa mình lên đầu danh sách cho dễ thấy
     arr.sort((a,b)=>(a.id===me.id?-1:b.id===me.id?1:0));
     otherPlayers=arr;
   });
@@ -498,7 +481,6 @@ function listenGlobalBoss(){
 }
 
 function onBossAppear(){
-  // boss xuất hiện → ép tất cả phải câu boss, huỷ câu cá thường đang dở
   if(me.state==='reeling'||me.state==='waiting'||me.state==='charging'){
     me.state='idle'; curFish=null;
     powerEl.classList.remove('show'); powerLbl.classList.remove('show');
@@ -525,7 +507,6 @@ function onBossDefeated(b){
   bossState.active=false;
   $('bossTimer').style.display='none'; $('fishhud').classList.remove('show');
   myLine={engaged:false,tension:0,knockedOut:false};
-  // chia thưởng theo % đóng góp dmg của từng người
   const contribs=b.contributions||{};
   let total=0; for(const v of Object.values(contribs))total+=(v||0);
   let mine=contribs[me.id]!=null?contribs[me.id]:myBossContribution;
@@ -535,6 +516,7 @@ function onBossDefeated(b){
   if(mine>0){
     let reward=Math.round(pool*share*(1+me.lv*0.05));
     reward=Math.min(reward,MAX_PAYOUT);
+    // Cộng tiền trực tiếp vào ví
     me.coins+=reward; me.totalEarned+=reward;
     me.xp+=Math.round(reward/2000)+30;
     checkLevelUp();
@@ -547,7 +529,6 @@ function onBossDefeated(b){
   updateButton(); updateHUD(); saveProgress();
 }
 
-// móc câu vào boss (lần bấm đầu)
 function engageBoss(){
   if(checkExhaustion())return;
   if(me.stamina<10){showCenterNotify("😩 Thiếu thể lực!","Nghỉ chút rồi câu Boss tiếp.",false);return;}
@@ -556,7 +537,6 @@ function engageBoss(){
   updateButton();
 }
 
-// gây sát thương lên boss (máu CHUNG)
 function bossAttack(){
   const now=Date.now(); if(now-lastReelTime<REEL_COOLDOWN)return; lastReelTime=now;
   if(checkExhaustion())return;
@@ -569,7 +549,6 @@ function bossAttack(){
   }else{
     me.stamina-=2;
     myLine.tension+=0.035;
-    // dmg scale theo máu boss → vẫn hạ được trong 3 phút khi đông người (~3-4k cú/cả server)
     const dmg=Math.round(Math.max(1,bossState.maxHp/4000)*(1+me.lv*0.1));
     damageBoss(dmg);
     me.xp+=1;
@@ -585,12 +564,11 @@ function bossAttack(){
 
 function damageBoss(dmg){
   myBossContribution+=dmg;
-  bossState.hp=Math.max(0,bossState.hp-dmg);   // cập nhật nhanh tại chỗ
+  bossState.hp=Math.max(0,bossState.hp-dmg);
   if(db&&_online){
     db.ref('globalBoss/hp').transaction(c=>c===null?c:Math.max(0,c-dmg));
     db.ref('globalBoss/contributions/'+me.id).transaction(c=>(c||0)+dmg);
   }else{
-    // demo offline: tự xử lý hạ gục
     if(bossState.hp<=0&&!bossState.resolved){
       bossState.resolved=true;
       onBossDefeated({maxHp:bossState.maxHp,contributions:{[me.id]:myBossContribution}});
@@ -599,7 +577,7 @@ function damageBoss(dmg){
 }
 
 /* ════════════════════════════════════════════════════════════
-   GẮN SỰ KIỆN CHO NÚT (pointer events — chạy tốt cả chuột & cảm ứng)
+   GẮN SỰ KIỆN CHO NÚT
 ════════════════════════════════════════════════════════════ */
 function onPointerDown(e){
   e.preventDefault();
@@ -624,7 +602,7 @@ $('btnSpawnBoss').addEventListener('click',()=>spawnBoss());
 $('btnChat').addEventListener('click',()=>$('chatbox').classList.toggle('hide'));
 
 /* ════════════════════════════════════════════════════════════
-   CANVAS / VẼ CẢNH (giữ nguyên phong cách gốc)
+   CANVAS / VẼ CẢNH
 ════════════════════════════════════════════════════════════ */
 const cv=$('cv'),ctx=cv.getContext('2d');
 let W=window.innerWidth,H=window.innerHeight,DPR=1;
@@ -640,7 +618,6 @@ function shade(hex,f){const c=hx(hex);return `rgb(${clamp(c[0]*f,0,255)|0},${cla
 function hexA(hex,a){const c=hx(hex);return `rgba(${c[0]},${c[1]},${c[2]},${a})`;}
 function hx(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');return [parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)];}
 function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-function anglerPos(x){return{px:0.05*W+x*0.12*W,py:0.55*H+x*0.36*H};}
 const scene={sky1:'#bfe3f5',sky2:'#dff1fb',w1:'#2f86c4',w2:'#1c5f93',w3:'#0a2d4d',rock:'#5a4632',floor:'#143a2a'};
 
 let lastT=performance.now(),myTip={rx:0,ry:0};
@@ -649,9 +626,7 @@ function loop(now){
   let dt=(now-lastT)/1000;lastT=now;dt=Math.min(dt,0.05);
   const t=now*0.001;
   checkExhaustion();
-  // Đồng bộ trạng thái hành động cho người khác thấy (chỉ ghi khi đổi trạng thái)
   if(_online){const a=currentAct();if(a!==_lastAct){_lastAct=a;pushPresence();}}
-  // Thể lực KHÔNG tự hồi. Chỉ hồi đầy 100% sau khi cạn (0) và chờ đủ 5 phút (xử lý ở checkExhaustion).
 
   if(bossState.active){
     const rem=Math.max(0,bossState.duration-(Date.now()-bossState.spawnTime)/1000);
@@ -664,9 +639,7 @@ function loop(now){
     }
   }
 
-  // thanh fishhud: cá thường = tiến độ kéo, boss = độ căng dây
-  if(me.state==='reeling'){ /* đã set trong reelTap */ }
-  else if(bossState.active&&myLine.engaged){
+  if(bossState.active&&myLine.engaged){
     $('fishhud').classList.add('show');
     $('ftit').textContent='🪢 Độ căng dây (đứt = phải móc lại)';
     const tn=clamp(myLine.tension,0,1)*100;
@@ -682,13 +655,11 @@ function loop(now){
 
 function drawScene(t){applyShake();let g=ctx.createLinearGradient(0,0,0,H*WATER_TOP);g.addColorStop(0,scene.sky1);g.addColorStop(1,scene.sky2);ctx.fillStyle=g;ctx.fillRect(0,0,W,H*WATER_TOP);g=ctx.createLinearGradient(0,H*WATER_TOP,0,H);g.addColorStop(0,scene.w1);g.addColorStop(0.5,scene.w2);g.addColorStop(1,scene.w3);ctx.fillStyle=g;ctx.fillRect(0,H*WATER_TOP,W,H*(1-WATER_TOP));ctx.save();ctx.globalCompositeOperation='lighter';for(let i=0;i<6;i++){const bx=(i/6)*W+Math.sin(t*0.3+i)*20;const grd=ctx.createLinearGradient(bx,H*WATER_TOP,bx-60,H);grd.addColorStop(0,'rgba(180,230,255,0.10)');grd.addColorStop(1,'rgba(180,230,255,0)');ctx.fillStyle=grd;ctx.beginPath();ctx.moveTo(bx-18,H*WATER_TOP);ctx.lineTo(bx+18,H*WATER_TOP);ctx.lineTo(bx-50,H);ctx.lineTo(bx-120,H);ctx.closePath();ctx.fill();}ctx.restore();ctx.strokeStyle='rgba(220,245,255,0.55)';ctx.lineWidth=2;ctx.beginPath();for(let x=0;x<=W;x+=8){const y=H*WATER_TOP+Math.sin(x*0.04+t*2)*2.5+Math.sin(x*0.013-t*1.3)*2;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();ctx.fillStyle=scene.rock;ctx.beginPath();ctx.moveTo(0,H*0.45);ctx.bezierCurveTo(W*0.05,H*0.5,W*0.02,H*0.7,W*0.14,H*0.78);ctx.bezierCurveTo(W*0.18,H*0.82,W*0.1,H*0.95,W*0.16,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=2;for(let i=0;i<5;i++){ctx.beginPath();const yy=H*(0.55+i*0.08);ctx.moveTo(0,yy);ctx.bezierCurveTo(W*0.04,yy+8,W*0.06,yy-6,W*0.12,yy+10);ctx.stroke();}g=ctx.createLinearGradient(0,H*0.9,0,H);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,scene.floor);ctx.fillStyle=g;ctx.fillRect(0,H*0.85,W,H*0.15);for(const f of ambientFish){f.x+=f.sp*0.003;if(f.x>1.1)f.x=-0.1;if(f.x<-0.1)f.x=1.1;drawFishShape(f.x*W,f.y*H+Math.sin(t+f.ph)*6,f.sz,f.sp<0?-1:1,f.col,0.5,t+f.ph);}}
 
-// ── Bờ góc trên-trái + nhân vật người chơi online (ID Discord trên đầu) ──
 function drawBank(t){
   const top=H*WATER_TOP;
   const bankRight=Math.min(W*0.48,380);
   const bankTop=top+H*0.005;
   const bankBot=top+H*0.135;
-  // thân bờ (đất)
   let g=ctx.createLinearGradient(0,bankTop,0,bankBot);
   g.addColorStop(0,'#7a5a36'); g.addColorStop(1,'#3f2e1c');
   ctx.fillStyle=g;
@@ -698,20 +669,17 @@ function drawBank(t){
   ctx.quadraticCurveTo(bankRight+16,(bankTop+bankBot)/2,bankRight-12,bankBot);
   ctx.lineTo(0,bankBot+H*0.02);
   ctx.closePath(); ctx.fill();
-  // mặt cỏ
   ctx.fillStyle='#4caf50';
   ctx.beginPath();
   ctx.moveTo(0,bankTop-H*0.035);
   ctx.lineTo(bankRight,bankTop);
   ctx.quadraticCurveTo(bankRight*0.5,bankTop-5,0,bankTop-H*0.035+5);
   ctx.closePath(); ctx.fill();
-  // mép sóng vỗ bờ
   ctx.strokeStyle='rgba(220,245,255,0.45)'; ctx.lineWidth=2;
   ctx.beginPath();
   for(let x=0;x<=bankRight;x+=8){const y=bankBot+Math.sin(x*0.05+t*3)*2; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
   ctx.stroke();
 
-  // nhân vật: nếu chưa có presence thì hiện chính mình
   const list=otherPlayers.length?otherPlayers:[{id:me.id,name:me.name,lv:me.lv,act:currentAct()}];
   const maxShow=Math.min(list.length,8);
   const cols=Math.min(maxShow,4)||1;
@@ -723,7 +691,7 @@ function drawBank(t){
     const row=Math.floor(i/4), col=i%4;
     const px=20+col*stepX+stepX*0.5;
     const py=baseY+row*H*0.05;
-    const zig=(i%2)?6:0;  // so le nhãn để bớt chồng
+    const zig=(i%2)?6:0;
     const isMe=list[i].id===me.id;
     const act=isMe?currentAct():(list[i].act||'idle');
     const tip=drawBankCharacter(px,py,row?0.55:0.65,list[i],isMe,t+i,zig,act);
@@ -734,16 +702,15 @@ function drawBank(t){
     ctx.fillText('+'+(list.length-maxShow)+' người đang câu...',20,baseY+H*0.115);
   }
 
-  // ── Cá thường đang được KÉO VỀ phía nhân vật mình ──
   if(me.state==='reeling'&&curFish&&myBankTip){
     const pct=fishMaxHP?clamp(1-fishHP/fishMaxHP,0,1):0;
     const farX=myBankTip.rx+W*0.10, farY=H*0.55;
-    const fx=lerp(farX,myBankTip.rx,pct);            // càng kéo, cá càng về gần
+    const fx=lerp(farX,myBankTip.rx,pct);
     const fy=lerp(farY,myBankTip.ry+12*0.65,pct);
     ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.lineWidth=1.5; ctx.setLineDash([]);
     ctx.beginPath(); ctx.moveTo(myBankTip.rx,myBankTip.ry);
     ctx.quadraticCurveTo((myBankTip.rx+fx)/2,(myBankTip.ry+fy)/2+12,fx,fy); ctx.stroke();
-    const wob=Math.sin(t*10)*4;                       // cá vùng vẫy
+    const wob=Math.sin(t*10)*4;
     drawFishShape(fx,fy+wob,9+pct*7,-1,curFish.col,0.95,t*4);
   }
 }
@@ -751,53 +718,41 @@ function drawBank(t){
 function drawBankCharacter(px,py,s,p,isMe,t,zig,act){
   const ph=t;
   let lean=0, rodAng=-0.95, shift=0, bob=Math.sin(ph*2)*1.4*s;
-  if(act==='cast'){              // quăng cần: ngả ra sau, cần vung ngược
-    rodAng=-2.2; lean=-0.22;
-  }else if(act==='wait'){        // chờ cá: cần chĩa ra mặt nước
-    rodAng=-0.5; lean=0.05+Math.sin(ph*1.5)*0.03;
-  }else if(act==='reel'){        // kéo cá: nhịp giật cần
-    const c=Math.sin(ph*9);
-    rodAng=-0.72+c*0.38; lean=0.13+c*0.12; shift=c*1.6*s;
-  }else if(act==='boss'){        // đấu boss: GIẰNG CO
-    const j=Math.sin(ph*4);      // j>0: mình kéo về (ngả sau) | j<0: boss kéo ra (chúi tới)
-    rodAng=-0.9+(-j)*0.5; lean=-0.18-j*0.2; shift=-j*4*s;
-  }else if(act==='bossIdle'){
-    lean=0.04+Math.sin(ph*2)*0.03; rodAng=-0.7;
-  }else{                         // idle
-    lean=Math.sin(ph*1.6)*0.03;
-  }
+  if(act==='cast'){rodAng=-2.2; lean=-0.22;}
+  else if(act==='wait'){rodAng=-0.5; lean=0.05+Math.sin(ph*1.5)*0.03;}
+  else if(act==='reel'){const c=Math.sin(ph*9);rodAng=-0.72+c*0.38; lean=0.13+c*0.12; shift=c*1.6*s;}
+  else if(act==='boss'){const j=Math.sin(ph*4);rodAng=-0.9+(-j)*0.5; lean=-0.18-j*0.2; shift=-j*4*s;}
+  else if(act==='bossIdle'){lean=0.04+Math.sin(ph*2)*0.03; rodAng=-0.7;}
+  else{lean=Math.sin(ph*1.6)*0.03;}
 
   ctx.save();
-  // bóng
   ctx.fillStyle='rgba(0,0,0,0.25)';
   ctx.beginPath(); ctx.ellipse(px,py+2,9*s,3*s,0,0,7); ctx.fill();
 
-  // thân (xoay quanh chân)
   const ang=lean*0.4;
   ctx.save();
   ctx.translate(px+shift,py-bob);
   ctx.rotate(ang);
   const body=isMe?'#2cc6ff':'#c98b52';
-  ctx.fillStyle=body; ctx.fillRect(-4*s,-18*s,8*s,18*s);              // thân
+  ctx.fillStyle=body; ctx.fillRect(-4*s,-18*s,8*s,18*s);
   ctx.fillStyle=isMe?'#ffe1a6':'#ffe0b2';
-  ctx.beginPath(); ctx.arc(0,-24*s,6*s,0,7); ctx.fill();             // đầu
-  ctx.fillStyle=isMe?'#1f6dad':'#6b4a2a';
-  ctx.beginPath(); ctx.arc(0,-26*s,7*s,Math.PI,0); ctx.fill();        // nón
-  // tay + cần
-  const handX=4*s, handY=-15*s, rodLen=26*s;
+  ctx.beginPath(); ctx.arc(0,-24*s,6*s,0,7); ctx.fill();
+  ctx.fillStyle=isMe?'#0e1620':'#161e27';
+  ctx.beginPath(); ctx.arc(0,-26*s,7*s,Math.PI,0); ctx.fill();
+  const shoulderX=3*s,shoulderY=-32*s;
+  const handX=shoulderX+(7)*s,handY=shoulderY+(6)*s;
+  ctx.lineWidth=3*s;ctx.strokeStyle=body;ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(shoulderX,shoulderY); ctx.lineTo(handX,handY); ctx.stroke();
+  const rodLen=26*s;
   const tx=handX+Math.cos(rodAng)*rodLen, ty=handY+Math.sin(rodAng)*rodLen;
-  ctx.strokeStyle=body; ctx.lineWidth=2.5*s; ctx.lineCap='round';
-  ctx.beginPath(); ctx.moveTo(-1*s,-13*s); ctx.lineTo(handX,handY); ctx.stroke();   // cánh tay
   ctx.strokeStyle='#caa46a'; ctx.lineWidth=2*s;
-  ctx.beginPath(); ctx.moveTo(handX,handY); ctx.lineTo(tx,ty); ctx.stroke();        // cần
+  ctx.beginPath(); ctx.moveTo(handX,handY); ctx.lineTo(tx,ty); ctx.stroke();
   ctx.restore();
 
-  // toạ độ đầu cần trong hệ thế giới (áp lại phép quay/dời)
   const cos=Math.cos(ang), sn=Math.sin(ang);
   const rx=(px+shift)+tx*cos-ty*sn;
   const ry=(py-bob)+tx*sn+ty*cos;
 
-  // tên Discord trên đầu
   let label=String(p.name||'?'); if(label.length>14)label=label.slice(0,13)+'…';
   ctx.font='700 9px Be Vietnam Pro';
   const w=ctx.measureText(label).width+8;
@@ -811,186 +766,48 @@ function drawBankCharacter(px,py,s,p,isMe,t,zig,act){
   return {rx,ry};
 }
 
-// ═══════════ NGOẠI HÌNH RIÊNG CHO TỪNG BOSS ═══════════
-function bossGlow(len,col){
-  const g=ctx.createRadialGradient(0,0,len*0.3,0,0,len*1.7);
-  g.addColorStop(0,hexA(col,0.35)); g.addColorStop(1,hexA(col,0));
-  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,len*1.7,0,7); ctx.fill();
-}
-function bossEye(x,y,r){
-  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
-  const eg=ctx.createRadialGradient(x,y,0,x,y,r);
-  eg.addColorStop(0,'#ff3030'); eg.addColorStop(0.6,'#a00'); eg.addColorStop(1,'#400');
-  ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(x,y,r*0.8,0,7); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x+r*0.25,y-r*0.25,r*0.22,0,7); ctx.fill();
-}
+function bossGlow(len,col){const g=ctx.createRadialGradient(0,0,len*0.3,0,0,len*1.7);g.addColorStop(0,hexA(col,0.35));g.addColorStop(1,hexA(col,0));ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,len*1.7,0,7);ctx.fill();}
+function bossEye(x,y,r){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();const eg=ctx.createRadialGradient(x,y,0,x,y,r);eg.addColorStop(0,'#ff3030');eg.addColorStop(0.6,'#a00');eg.addColorStop(1,'#400');ctx.fillStyle=eg;ctx.beginPath();ctx.arc(x,y,r*0.8,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x+r*0.25,y-r*0.25,r*0.22,0,7);ctx.fill();}
 
-// 🐡 Cá Chép Vàng — koi vây lượn, có râu
-function drawKoi(bx,by,len,col,t){
-  ctx.save(); ctx.translate(bx,by); bossGlow(len,col);
-  const h=len*0.5, wag=Math.sin(t*4)*len*0.14;
-  ctx.fillStyle=hexA(col,0.85);                         // đuôi xoè
-  ctx.beginPath();
-  ctx.moveTo(len*0.7,0);
-  ctx.quadraticCurveTo(len*1.2,-h*0.9+wag,len*1.55,-h*1.1+wag);
-  ctx.quadraticCurveTo(len*1.05,0,len*1.55,h*1.1+wag);
-  ctx.quadraticCurveTo(len*1.2,h*0.9+wag,len*0.7,0);
-  ctx.closePath(); ctx.fill();
-  const bg=ctx.createLinearGradient(0,-h,0,h);          // thân
-  bg.addColorStop(0,shade(col,1.3)); bg.addColorStop(0.5,col); bg.addColorStop(1,shade(col,0.7));
-  ctx.fillStyle=bg; ctx.beginPath(); ctx.ellipse(0,0,len*0.85,h,0,0,7); ctx.fill();
-  ctx.beginPath();                                       // mõm trái
-  ctx.moveTo(-len*0.8,0);
-  ctx.quadraticCurveTo(-len*1.15,-h*0.45,-len*1.28,0);
-  ctx.quadraticCurveTo(-len*1.15,h*0.45,-len*0.8,0);
-  ctx.closePath(); ctx.fill();
-  const dwag=Math.sin(t*4+1)*len*0.07;
-  ctx.fillStyle=hexA(shade(col,0.9),0.92);               // vây lưng lượn
-  ctx.beginPath(); ctx.moveTo(-len*0.3,-h*0.9);
-  ctx.quadraticCurveTo(0,-h*1.7+dwag,len*0.45,-h*0.8);
-  ctx.quadraticCurveTo(0,-h*0.95,-len*0.3,-h*0.9); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(-len*0.25,h*0.45);         // vây bụng lượn
-  ctx.quadraticCurveTo(-len*0.05,h*1.35+dwag,len*0.25,h*0.7);
-  ctx.quadraticCurveTo(-len*0.05,h*0.65,-len*0.25,h*0.45); ctx.closePath(); ctx.fill();
-  ctx.save();                                            // vảy
-  ctx.beginPath(); ctx.ellipse(0,0,len*0.85,h,0,0,7); ctx.clip();
-  ctx.globalAlpha=0.3; ctx.strokeStyle=shade(col,0.6); ctx.lineWidth=Math.max(1,len*0.02);
-  for(let i=-3;i<6;i++){ ctx.beginPath(); ctx.arc(-len*0.6+i*len*0.22,0,len*0.4,-1,1); ctx.stroke(); }
-  ctx.restore();
-  ctx.strokeStyle=shade(col,0.7); ctx.lineWidth=Math.max(1.5,len*0.02); ctx.lineCap='round';
-  const bw=Math.sin(t*3)*len*0.05;                       // 2 sợi râu
-  ctx.beginPath(); ctx.moveTo(-len*1.22,h*0.06); ctx.quadraticCurveTo(-len*1.55,h*0.25+bw,-len*1.62,h*0.5); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-len*1.22,-h*0.04); ctx.quadraticCurveTo(-len*1.55,-h*0.02+bw,-len*1.68,h*0.18); ctx.stroke();
-  bossEye(-len*0.72,-h*0.25,len*0.14);
-  ctx.restore();
-}
+function drawKoi(bx,by,len,col,t){ctx.save();ctx.translate(bx,by);bossGlow(len,col);const h=len*0.5,wag=Math.sin(t*4)*len*0.14;ctx.fillStyle=hexA(col,0.85);ctx.beginPath();ctx.moveTo(len*0.7,0);ctx.quadraticCurveTo(len*1.2,-h*0.9+wag,len*1.55,-h*1.1+wag);ctx.quadraticCurveTo(len*1.05,0,len*1.55,h*1.1+wag);ctx.quadraticCurveTo(len*1.2,h*0.9+wag,len*0.7,0);ctx.closePath();ctx.fill();const bg=ctx.createLinearGradient(0,-h,0,h);bg.addColorStop(0,shade(col,1.3));bg.addColorStop(0.5,col);bg.addColorStop(1,shade(col,0.7));ctx.fillStyle=bg;ctx.beginPath();ctx.ellipse(0,0,len*0.85,h,0,0,7);ctx.fill();ctx.beginPath();ctx.moveTo(-len*0.8,0);ctx.quadraticCurveTo(-len*1.15,-h*0.45,-len*1.28,0);ctx.quadraticCurveTo(-len*1.15,h*0.45,-len*0.8,0);ctx.closePath();ctx.fill();const dwag=Math.sin(t*4+1)*len*0.07;ctx.fillStyle=hexA(shade(col,0.9),0.92);ctx.beginPath();ctx.moveTo(-len*0.3,-h*0.9);ctx.quadraticCurveTo(0,-h*1.7+dwag,len*0.45,-h*0.8);ctx.quadraticCurveTo(0,-h*0.95,-len*0.3,-h*0.9);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(-len*0.25,h*0.45);ctx.quadraticCurveTo(-len*0.05,h*1.35+dwag,len*0.25,h*0.7);ctx.quadraticCurveTo(-len*0.05,h*0.65,-len*0.25,h*0.45);ctx.closePath();ctx.fill();ctx.save();ctx.beginPath();ctx.ellipse(0,0,len*0.85,h,0,0,7);ctx.clip();ctx.globalAlpha=0.3;ctx.strokeStyle=shade(col,0.6);ctx.lineWidth=Math.max(1,len*0.02);for(let i=-3;i<6;i++){ctx.beginPath();ctx.arc(-len*0.6+i*len*0.22,0,len*0.4,-1,1);ctx.stroke();}ctx.restore();ctx.strokeStyle=shade(col,0.7);ctx.lineWidth=Math.max(1.5,len*0.02);ctx.lineCap='round';const bw=Math.sin(t*3)*len*0.05;ctx.beginPath();ctx.moveTo(-len*1.22,h*0.06);ctx.quadraticCurveTo(-len*1.55,h*0.25+bw,-len*1.62,h*0.5);ctx.stroke();ctx.beginPath();ctx.moveTo(-len*1.22,-h*0.04);ctx.quadraticCurveTo(-len*1.55,-h*0.02+bw,-len*1.68,h*0.18);ctx.stroke();bossEye(-len*0.72,-h*0.25,len*0.14);ctx.restore();}
 
-// 🐟 Cá Hồi — thân thoi, hàm móc, đuôi chẻ
-function drawSalmon(bx,by,len,col,t){
-  ctx.save(); ctx.translate(bx,by); bossGlow(len,col);
-  const h=len*0.42, wag=Math.sin(t*5)*len*0.12;
-  ctx.fillStyle=shade(col,0.85);                         // đuôi chẻ
-  ctx.beginPath(); ctx.moveTo(len*0.8,0);
-  ctx.lineTo(len*1.4,-h*0.95+wag); ctx.lineTo(len*1.12,0);
-  ctx.lineTo(len*1.4,h*0.95+wag); ctx.closePath(); ctx.fill();
-  const bg=ctx.createLinearGradient(0,-h,0,h);           // thân thoi
-  bg.addColorStop(0,shade(col,1.35)); bg.addColorStop(0.45,col);
-  bg.addColorStop(0.55,'#d94f6e'); bg.addColorStop(1,shade(col,0.7));
-  ctx.fillStyle=bg; ctx.beginPath();
-  ctx.moveTo(len*0.85,0);
-  ctx.quadraticCurveTo(len*0.2,-h,-len*0.75,-h*0.5);
-  ctx.quadraticCurveTo(-len*1.25,-h*0.15,-len*1.32,0);
-  ctx.quadraticCurveTo(-len*1.18,h*0.4,-len*0.9,h*0.22); // hàm móc dưới
-  ctx.quadraticCurveTo(-len*0.2,h,len*0.85,0);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle=shade(col,0.75);                         // vây lưng
-  ctx.beginPath(); ctx.moveTo(-len*0.1,-h*0.85);
-  ctx.lineTo(len*0.3,-h*1.3+wag*0.4); ctx.lineTo(len*0.42,-h*0.7); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(-len*0.2,h*0.6);           // vây bụng
-  ctx.lineTo(-len*0.0,h*1.2+wag*0.4); ctx.lineTo(len*0.25,h*0.6); ctx.closePath(); ctx.fill();
-  ctx.globalAlpha=0.5; ctx.fillStyle=shade(col,0.5);     // đốm
-  const sp=[[-0.5,-0.3],[-0.2,-0.45],[0.1,-0.2],[-0.35,-0.05],[0.0,0.1],[0.3,-0.35]];
-  for(const[a,b]of sp){ ctx.beginPath(); ctx.arc(len*a,h*b,len*0.05,0,7); ctx.fill(); }
-  ctx.globalAlpha=1;
-  bossEye(-len*0.95,-h*0.22,len*0.12);
-  ctx.restore();
-}
+function drawSalmon(bx,by,len,col,t){ctx.save();ctx.translate(bx,by);bossGlow(len,col);const h=len*0.42,wag=Math.sin(t*5)*len*0.12;ctx.fillStyle=shade(col,0.85);ctx.beginPath();ctx.moveTo(len*0.8,0);ctx.lineTo(len*1.4,-h*0.95+wag);ctx.lineTo(len*1.12,0);ctx.lineTo(len*1.4,h*0.95+wag);ctx.closePath();ctx.fill();const bg=ctx.createLinearGradient(0,-h,0,h);bg.addColorStop(0,shade(col,1.35));bg.addColorStop(0.45,col);bg.addColorStop(0.55,'#d94f6e');bg.addColorStop(1,shade(col,0.7));ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(len*0.85,0);ctx.quadraticCurveTo(len*0.2,-h,-len*0.75,-h*0.5);ctx.quadraticCurveTo(-len*1.25,-h*0.15,-len*1.32,0);ctx.quadraticCurveTo(-len*1.18,h*0.4,-len*0.9,h*0.22);ctx.quadraticCurveTo(-len*0.2,h,len*0.85,0);ctx.closePath();ctx.fill();ctx.fillStyle=shade(col,0.75);ctx.beginPath();ctx.moveTo(-len*0.1,-h*0.85);ctx.lineTo(len*0.3,-h*1.3+wag*0.4);ctx.lineTo(len*0.42,-h*0.7);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(-len*0.2,h*0.6);ctx.lineTo(-len*0.0,h*1.2+wag*0.4);ctx.lineTo(len*0.25,h*0.6);ctx.closePath();ctx.fill();ctx.globalAlpha=0.5;ctx.fillStyle=shade(col,0.5);const sp=[[-0.5,-0.3],[-0.2,-0.45],[0.1,-0.2],[-0.35,-0.05],[0.0,0.1],[0.3,-0.35]];for(const[a,b]of sp){ctx.beginPath();ctx.arc(len*a,h*b,len*0.05,0,7);ctx.fill();}ctx.globalAlpha=1;bossEye(-len*0.95,-h*0.22,len*0.12);ctx.restore();}
 
-// 🐲 Cá Rồng — rồng á Đông: thân rắn, sừng, râu, bờm
-function drawDragon(bx,by,len,col,t){
-  ctx.save(); ctx.translate(bx,by); bossGlow(len,col);
-  const N=22, x0=-len*1.1, x1=len*1.5, pts=[];
-  for(let i=0;i<=N;i++){
-    const u=i/N, x=x0+(x1-x0)*u;
-    const y=Math.sin(u*Math.PI*2.2+t*3)*len*0.3*(0.5+0.5*(1-u));
-    const th=len*0.26*(1-u*0.82)*(u<0.06?u/0.06:1);
-    pts.push({x,y,th});
-  }
-  const top=[],bot=[];
-  for(let i=0;i<pts.length;i++){
-    const p=pts[i], pa=pts[Math.max(0,i-1)], pb=pts[Math.min(pts.length-1,i+1)];
-    const dx=pb.x-pa.x, dy=pb.y-pa.y, dl=Math.hypot(dx,dy)||1, nx=-dy/dl, ny=dx/dl;
-    top.push({x:p.x+nx*p.th,y:p.y+ny*p.th}); bot.push({x:p.x-nx*p.th,y:p.y-ny*p.th});
-  }
-  const bg=ctx.createLinearGradient(0,-len*0.5,0,len*0.5);
-  bg.addColorStop(0,shade(col,1.3)); bg.addColorStop(0.5,col); bg.addColorStop(1,shade(col,0.7));
-  ctx.fillStyle=bg; ctx.beginPath(); ctx.moveTo(top[0].x,top[0].y);
-  for(const p of top)ctx.lineTo(p.x,p.y);
-  for(let i=bot.length-1;i>=0;i--)ctx.lineTo(bot[i].x,bot[i].y);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle=shade(col,0.8);                          // bờm gai trên lưng
-  for(let i=2;i<top.length-1;i+=2){ const p=top[i];
-    ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-len*0.04,p.y-len*0.13); ctx.lineTo(p.x+len*0.06,p.y-len*0.03); ctx.closePath(); ctx.fill(); }
-  ctx.save(); ctx.globalAlpha=0.25; ctx.strokeStyle=shade(col,0.55); ctx.lineWidth=Math.max(1,len*0.015);
-  for(let i=2;i<pts.length-2;i++){ const p=pts[i]; ctx.beginPath(); ctx.arc(p.x,p.y,p.th*0.7,0,7); ctx.stroke(); }
-  ctx.restore();
-  // ── đầu rồng ──
-  ctx.save(); ctx.translate(pts[0].x,pts[0].y);
-  const hl=len*0.55, hh=len*0.4;
-  ctx.fillStyle=shade(col,0.7);                          // bờm sau đầu
-  for(let k=-1;k<=1;k++){ ctx.beginPath();
-    ctx.moveTo(hl*0.2,k*hh*0.4); ctx.quadraticCurveTo(hl*0.9,k*hh*0.9,hl*0.7,k*hh*1.3);
-    ctx.quadraticCurveTo(hl*0.4,k*hh*0.6,hl*0.2,k*hh*0.4); ctx.closePath(); ctx.fill(); }
-  const hg=ctx.createLinearGradient(0,-hh,0,hh);          // đầu
-  hg.addColorStop(0,shade(col,1.3)); hg.addColorStop(1,shade(col,0.75));
-  ctx.fillStyle=hg; ctx.beginPath();
-  ctx.moveTo(hl*0.3,-hh*0.6);
-  ctx.quadraticCurveTo(-hl*0.6,-hh*0.7,-hl*1.1,-hh*0.15);
-  ctx.quadraticCurveTo(-hl*1.28,0,-hl*1.1,hh*0.22);
-  ctx.quadraticCurveTo(-hl*0.6,hh*0.55,hl*0.3,hh*0.6);
-  ctx.quadraticCurveTo(hl*0.5,0,hl*0.3,-hh*0.6); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle=shade(col,0.85); ctx.lineWidth=Math.max(2,len*0.045); ctx.lineCap='round';   // sừng
-  ctx.beginPath(); ctx.moveTo(hl*0.1,-hh*0.5); ctx.quadraticCurveTo(hl*0.7,-hh*1.0,hl*1.05,-hh*0.6); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(hl*0.0,-hh*0.55); ctx.quadraticCurveTo(hl*0.5,-hh*1.2,hl*0.78,-hh*1.0); ctx.stroke();
-  ctx.strokeStyle=shade(col,0.95); ctx.lineWidth=Math.max(1.5,len*0.022);                       // râu
-  const ww=Math.sin(t*3)*hh*0.2;
-  ctx.beginPath(); ctx.moveTo(-hl*1.1,hh*0.05); ctx.quadraticCurveTo(-hl*1.85,hh*0.3+ww,-hl*1.6,hh*0.85); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-hl*1.05,-hh*0.05); ctx.quadraticCurveTo(-hl*1.75,-hh*0.45+ww,-hl*1.95,-hh*0.05); ctx.stroke();
-  ctx.fillStyle='#fff';                                                                          // răng
-  for(let k=0;k<3;k++){ const tx=-hl*0.95+k*hl*0.28; ctx.beginPath(); ctx.moveTo(tx,hh*0.28); ctx.lineTo(tx+hl*0.05,hh*0.48); ctx.lineTo(tx+hl*0.1,hh*0.28); ctx.closePath(); ctx.fill(); }
-  bossEye(-hl*0.5,-hh*0.22,len*0.14);
-  ctx.restore();
-  ctx.restore();
-}
+function drawDragon(bx,by,len,col,t){ctx.save();ctx.translate(bx,by);bossGlow(len,col);const N=22,x0=-len*1.1,x1=len*1.5,pts=[];for(let i=0;i<=N;i++){const u=i/N,x=x0+(x1-x0)*u;const y=Math.sin(u*Math.PI*2.2+t*3)*len*0.3*(0.5+0.5*(1-u));const th=len*0.26*(1-u*0.82)*(u<0.06?u/0.06:1);pts.push({x,y,th});}const top=[],bot=[];for(let i=0;i<pts.length;i++){const p=pts[i],pa=pts[Math.max(0,i-1)],pb=pts[Math.min(pts.length-1,i+1)];const dx=pb.x-pa.x,dy=pb.y-pa.y,dl=Math.hypot(dx,dy)||1,nx=-dy/dl,ny=dx/dl;top.push({x:p.x+nx*p.th,y:p.y+ny*p.th});bot.push({x:p.x-nx*p.th,y:p.y-ny*p.th});}const bg=ctx.createLinearGradient(0,-len*0.5,0,len*0.5);bg.addColorStop(0,shade(col,1.3));bg.addColorStop(0.5,col);bg.addColorStop(1,shade(col,0.7));ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(top[0].x,top[0].y);for(const p of top)ctx.lineTo(p.x,p.y);for(let i=bot.length-1;i>=0;i--)ctx.lineTo(bot[i].x,bot[i].y);ctx.closePath();ctx.fill();ctx.fillStyle=shade(col,0.8);for(let i=2;i<top.length-1;i+=2){const p=top[i];ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-len*0.04,p.y-len*0.13);ctx.lineTo(p.x+len*0.06,p.y-len*0.03);ctx.closePath();ctx.fill();}ctx.save();ctx.globalAlpha=0.25;ctx.strokeStyle=shade(col,0.55);ctx.lineWidth=Math.max(1,len*0.015);for(let i=2;i<pts.length-2;i++){const p=pts[i];ctx.beginPath();ctx.arc(p.x,p.y,p.th*0.7,0,7);ctx.stroke();}ctx.restore();ctx.save();ctx.translate(pts[0].x,pts[0].y);const hl=len*0.55,hh=len*0.4;ctx.fillStyle=shade(col,0.7);for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(hl*0.2,k*hh*0.4);ctx.quadraticCurveTo(hl*0.9,k*hh*0.9,hl*0.7,k*hh*1.3);ctx.quadraticCurveTo(hl*0.4,k*hh*0.6,hl*0.2,k*hh*0.4);ctx.closePath();ctx.fill();}const hg=ctx.createLinearGradient(0,-hh,0,hh);hg.addColorStop(0,shade(col,1.3));hg.addColorStop(1,shade(col,0.75));ctx.fillStyle=hg;ctx.beginPath();ctx.moveTo(hl*0.3,-hh*0.6);ctx.quadraticCurveTo(-hl*0.6,-hh*0.7,-hl*1.1,-hh*0.15);ctx.quadraticCurveTo(-hl*1.28,0,-hl*1.1,hh*0.22);ctx.quadraticCurveTo(-hl*0.6,hh*0.55,hl*0.3,hh*0.6);ctx.quadraticCurveTo(hl*0.5,0,hl*0.3,-hh*0.6);ctx.closePath();ctx.fill();ctx.strokeStyle=shade(col,0.85);ctx.lineWidth=Math.max(2,len*0.045);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(hl*0.1,-hh*0.5);ctx.quadraticCurveTo(hl*0.7,-hh*1.0,hl*1.05,-hh*0.6);ctx.stroke();ctx.beginPath();ctx.moveTo(hl*0.0,-hh*0.55);ctx.quadraticCurveTo(hl*0.5,-hh*1.2,hl*0.78,-hh*1.0);ctx.stroke();ctx.strokeStyle=shade(col,0.95);ctx.lineWidth=Math.max(1.5,len*0.022);const ww=Math.sin(t*3)*hh*0.2;ctx.beginPath();ctx.moveTo(-hl*1.1,hh*0.05);ctx.quadraticCurveTo(-hl*1.85,hh*0.3+ww,-hl*1.6,hh*0.85);ctx.stroke();ctx.beginPath();ctx.moveTo(-hl*1.05,-hh*0.05);ctx.quadraticCurveTo(-hl*1.75,-hh*0.45+ww,-hl*1.95,-hh*0.05);ctx.stroke();ctx.fillStyle='#fff';for(let k=0;k<3;k++){const tx=-hl*0.95+k*hl*0.28;ctx.beginPath();ctx.moveTo(tx,hh*0.28);ctx.lineTo(tx+hl*0.05,hh*0.48);ctx.lineTo(tx+hl*0.1,hh*0.28);ctx.closePath();ctx.fill();}bossEye(-hl*0.5,-hh*0.22,len*0.14);ctx.restore();ctx.restore();}
 
 function drawBoss(bx,by,len,col,t,id){
   if(id==='rong')return drawDragon(bx,by,len,col,t);
   if(id==='hoi') return drawSalmon(bx,by,len,col,t);
   if(id==='chep')return drawKoi(bx,by,len,col,t);
-  return drawFishShape(bx,by,len,-1,col,1,t*0.6,true);   // dự phòng
+  return drawFishShape(bx,by,len,-1,col,1,t*0.6,true);
 }
 
 function drawBossAndRopes(t){
   if(!bossState.active||!bossState.type)return;
   let bx=bossState.x*W, by=bossState.y*H;
   const bossLen=Math.min(W,H)*(0.30+bossState.type.power*0.045);
-  // GIẰNG CO khi mình đang đấu: tug>0 mình kéo boss về | tug<0 boss vùng ra
   let tug=0;
   if(myLine.engaged){ tug=Math.sin(t*4); bx+=-tug*W*0.025; by+=Math.abs(tug)*6; }
   const lowHp=bossState.hp<bossState.maxHp*0.3;
   const shakeX=(Math.random()-0.5)*(lowHp?8:1.5);
   drawBoss(bx+shakeX,by,bossLen,bossState.type.col,t,bossState.type.id);
-  // thanh máu
   const bw=Math.min(W*0.55,180);
-  ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw,15);
-  ctx.fillStyle='#ff3333'; ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw*(bossState.hp/bossState.maxHp),15);
-  ctx.fillStyle='#fff'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+  ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw,15);
+  ctx.fillStyle='#ff3333';ctx.fillRect(bx-bw/2,by-bossLen/2-34,bw*(bossState.hp/bossState.maxHp),15);
+  ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.textAlign='center';
   ctx.fillText(`❤️ ${fmtN(bossState.hp)}/${fmtN(bossState.maxHp)}`,bx,by-bossLen/2-39);
-  // dây câu từ nhân vật mình trên bờ → boss, giật theo nhịp giằng co
   if(myLine.engaged&&myBankTip){
-    ctx.strokeStyle = tug>0 ? '#00ffaa' : '#ffd23f';   // xanh: mình kéo về | vàng: boss kéo ra
+    ctx.strokeStyle = tug>0 ? '#00ffaa' : '#ffd23f';
     ctx.lineWidth = 2+Math.abs(tug)*2.2; ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(myBankTip.rx,myBankTip.ry);
-    const midX=(myBankTip.rx+bx)/2, midY=(myBankTip.ry+by)/2 - tug*16;  // dây bật lên/xuống
+    const midX=(myBankTip.rx+bx)/2, midY=(myBankTip.ry+by)/2 - tug*16;
     ctx.quadraticCurveTo(midX,midY,bx,by-bossLen*0.08);
     ctx.stroke();
-    if(tug<-0.85) emitSplash(bx,by,2,1.6);             // boss quẫy bắn nước
+    if(tug<-0.85) emitSplash(bx,by,2,1.6);
     myTip=myBankTip;
   }
 }
-
-function drawAngler(px,py,scale,info,isMe,t){const S=scale;let lean=0,rodBend=0,armUp=0;if(info.state==='reeling'){const cycle=Math.sin(t*8);lean=-0.15+cycle*0.1;armUp=0.4+cycle*0.3;rodBend=0.4;}const totalLean=lean;ctx.save();ctx.translate(px,py);ctx.fillStyle='rgba(0,0,0,0.28)';ctx.beginPath();ctx.ellipse(0,4*S,14*S,4*S,0,0,7);ctx.fill();ctx.save();ctx.rotate(totalLean*0.3);const body=isMe?'#1b2a3a':'#26323f';ctx.fillStyle=body;ctx.fillRect(-6*S,-16*S,4*S,18*S);ctx.fillRect(2*S,-16*S,4*S,18*S);ctx.beginPath();ctx.moveTo(-8*S,-34*S);ctx.lineTo(8*S,-34*S);ctx.lineTo(7*S,-14*S);ctx.lineTo(-7*S,-14*S);ctx.closePath();ctx.fill();ctx.beginPath();ctx.arc(0,-40*S,7*S,0,7);ctx.fill();ctx.fillStyle=isMe?'#0e1620':'#161e27';ctx.beginPath();ctx.arc(0,-42*S,8*S,Math.PI,0);ctx.fill();const shoulderX=3*S,shoulderY=-32*S;const handX=shoulderX+(7+armUp*3)*S,handY=shoulderY+(6-armUp*8)*S;ctx.lineWidth=3*S;ctx.strokeStyle=body;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(shoulderX,shoulderY);ctx.lineTo(handX,handY);ctx.stroke();const rodLen=45*S;const baseAng=-0.9+rodBend*0.5;const tipX=handX+Math.cos(baseAng)*rodLen;const tipY=handY+Math.sin(baseAng)*rodLen;ctx.strokeStyle='#caa46a';ctx.lineWidth=2*S;ctx.beginPath();ctx.moveTo(handX,handY);ctx.lineTo(tipX,tipY);ctx.stroke();ctx.restore();ctx.restore();ctx.save();ctx.translate(px,py-55*S);ctx.font=`700 10px 'Be Vietnam Pro'`;const label=`Lv${info.lv} ${info.name}`;const w=ctx.measureText(label).width+12;ctx.fillStyle=isMe?'rgba(20,90,150,0.85)':'rgba(8,24,40,0.8)';ctx.strokeStyle=isMe?'#5fd0ff':'#2f5a7d';ctx.lineWidth=1;roundRect(-w/2,-8,w,16,8);ctx.fill();ctx.stroke();ctx.fillStyle=isMe?'#fff':'#cfe6f7';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0);ctx.restore();return{rx:tipX,ry:tipY};}
 
 const sparks=[];function emitSplash(x,y,n,p){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2;sparks.push({x,y,vx:Math.cos(a)*p*30*(0.5+Math.random()),vy:-Math.abs(Math.random())*p*60-20,life:1});}}
 function drawSplash(dt){ctx.save();ctx.fillStyle='rgba(220,245,255,0.85)';for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.life-=dt*1.4;s.vy+=600*dt;s.x+=s.vx*dt;s.y+=s.vy*dt;if(s.life<=0){sparks.splice(i,1);continue;}ctx.globalAlpha=s.life;ctx.beginPath();ctx.arc(s.x,s.y,2.5*s.life+1,0,7);ctx.fill();}ctx.restore();}
@@ -998,7 +815,7 @@ let shakeAmt=0;function shake(a){shakeAmt=Math.max(shakeAmt,a);}
 function applyShake(){if(shakeAmt>0.2){const ox=(Math.random()-0.5)*shakeAmt,oy=(Math.random()-0.5)*shakeAmt;ctx.setTransform(DPR,0,0,DPR,ox*DPR,oy*DPR);shakeAmt*=0.85;}else{ctx.setTransform(DPR,0,0,DPR,0,0);shakeAmt=0;}}
 
 /* ════════════════════════════════════════════════════════════
-   CHAT (cục bộ — giữ nguyên như bản gốc)
+   CHAT
 ════════════════════════════════════════════════════════════ */
 const chatlog=$('chatlog');
 function addChatLine(who,text,sys){const d=document.createElement('div');if(sys){d.className='sys';d.textContent='⚙️ '+text;}else d.innerHTML=`<span class="who">${esc(who)}:</span> ${esc(text)}`;chatlog.appendChild(d);while(chatlog.children.length>40)chatlog.removeChild(chatlog.firstChild);chatlog.scrollTop=chatlog.scrollHeight;}
@@ -1017,7 +834,6 @@ async function initGame(){
   _token=params.get('t');
   const demo=params.get('demo')==='1';
 
-  // Chế độ demo offline để dev test giao diện (không cần token, không sync cloud)
   if(!_token&&demo){
     me.id='demo'; me.name='Demo';
     loadProgress(); updateHUD();
@@ -1045,13 +861,13 @@ async function initGame(){
     if(Date.now()>data.expiresAt){setLoading(false);showCenterNotify("⏰ Link hết hạn","Link đã hết hiệu lực sau 24 giờ. Dùng tcauonline để lấy link mới.",false);disableGame();return;}
 
     me.id=data.userId; me.name=data.username||'Người chơi';
-    for(const k of ['coins','rodUses','inventory','stamina','staminaMax','pullStrength','exhaustedAt','lv','xp','totalCaught','totalEarned'])
+    for(const k of ['coins','inventory','stamina','staminaMax','pullStrength','exhaustedAt','lv','xp','totalCaught','totalEarned'])
       if(data[k]!==undefined)me[k]=data[k];
     loadProgress();
 
     _online=true;
-    listenGlobalBoss();   // lắng nghe boss CHUNG
-    setupPresence();      // hiện người chơi online lên bờ
+    listenGlobalBoss();
+    setupPresence();
 
     setLoading(false); updateHUD(); setHintCenter();
     addChatLine('','✅ Đã kết nối! Quăng cần để câu, gặp Boss thì cả server cùng đánh! 🎣',true);
@@ -1062,7 +878,7 @@ async function initGame(){
       if(!_online)return;
       try{
         await db.ref(`players/${me.id}`).update({
-          coins:me.coins,rodUses:me.rodUses,inventory:me.inventory,stamina:me.stamina,staminaMax:me.staminaMax,
+          coins:me.coins,inventory:me.inventory,stamina:me.stamina,staminaMax:me.staminaMax,
           pullStrength:me.pullStrength,exhaustedAt:me.exhaustedAt,lv:me.lv,xp:me.xp,
           totalCaught:me.totalCaught,totalEarned:me.totalEarned,webUpdatedAt:Date.now(),updatedAt:Date.now()
         });
