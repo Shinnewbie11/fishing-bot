@@ -356,10 +356,10 @@ function updateHUD(){
   $('rankline').textContent=`🎒 ${bag} cá • Nặng nhất: ${me.best?fmtW(me.best):'—'}`;
 }
 function checkExhaustion(){
-  if(me.stamina<=0&&!me.exhaustedAt){me.exhaustedAt=Date.now();showCenterNotify("💥 Kiệt Sức!","Bạn phải nghỉ 5 phút để hồi phục!",false);saveProgress();}
+  if(me.stamina<=0&&!me.exhaustedAt){me.exhaustedAt=Date.now();showCenterNotify("💥 Kiệt Sức!","Bạn phải nghỉ 30 giây để hồi phục!",false);saveProgress();}
   const timerEl=$('staminaTimer');
   if(me.exhaustedAt){
-    const remaining=5*60*1000-(Date.now()-me.exhaustedAt);
+    const remaining=30*1000-(Date.now()-me.exhaustedAt);
     if(remaining>0){
       timerEl.style.display='block';
       const h=Math.floor(remaining/3600000),m2=Math.floor((remaining%3600000)/60000),s=Math.floor((remaining%60000)/1000);
